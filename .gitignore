@@ -1,0 +1,27 @@
+# Claude Code (personal)
+.claude/settings.local.json
+
+# Python (v1 de referencia)
+__pycache__/
+*.pyc
+build/
+dist/
+*.md.tmp
+.playwright-mcp/
+
+# Rust / Tauri
+target/
+**/gen/schemas/
+
+# Node / UI
+node_modules/
+ui/dist/
+
+# Sistema / editores
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Copia de referencia de la v1 (no se publica)
+_v1/
