@@ -1,0 +1,1581 @@
+{
+ "session_id": "11111111-2222-3333-4444-555555555555",
+ "ado_cache_items": {
+  "111111": {
+   "state": "Active",
+   "priority": 2,
+   "pactada": "2026-12-15T00:00:00Z",
+   "estimate": 20
+  },
+  "222222": {
+   "state": "Resolved",
+   "priority": 1,
+   "pactada": "2026-11-30",
+   "estimate": 4
+  },
+  "333333": {
+   "state": "Resolved",
+   "priority": 3,
+   "estimate": 6
+  },
+  "444444": {
+   "state": "New",
+   "priority": "",
+   "estimate": 0
+  }
+ },
+ "read_only": {
+  "instructions": "Estado de los work items (WI) de la carpeta _work: una subcarpeta por WI (o un grupo `grp-…` con una subcarpeta por WI) con el estado en el frontmatter del README.md y las tareas en '## Pendientes'.\n\n## Cómo trabajar con Workboard\n- Workboard es la app donde el usuario sigue cada work item (WI): una carpeta en `_work` con el estado en el frontmatter de su README.md y las tareas en `## Pendientes`.\n- Estado, tipo, ambientes, notas (resumen de una línea), rama y pendientes se leen y cambian SOLO con las herramientas del MCP `workboard`: workboard_session, workboard_get_wi, workboard_set_estado, workboard_add_task, workboard_complete_task, workboard_add_note y workboard_marcar_ejecutado. No edites el frontmatter del README a mano.\n- Al empezar, llamá a workboard_session: devuelve los WI de esta sesión, sus carpetas y sus pendientes.\n- Estados: pendiente, plan, en-curso, diag, codeado, qa, prod, descartado, desconocido. Tipos: bug, us, task, fix (us = user story, fix = arreglo sin work item). Ambientes: dev, qa, prod.\n- Fecha pactada (AAAA-MM-DD) y horas pactadas también van con workboard_set_estado, pero solo si el usuario te las da: no las estimes por tu cuenta. workboard_get_wi muestra prioridad, fecha pactada, período (del 20 al 19) y horas pactadas, propias o de Azure.\n- Si encontrás algo que queda por hacer, cargalo como pendiente. Al cerrar un paso, actualizá el estado y el resumen.\n- Solo podés escribir en los WI de esta sesión.\n\n### Archivos de cada WI\n- Los scripts y documentos de un WI van en SU carpeta (la ruta está en el contexto de la sesión). Si la sesión es de un grupo (carpeta `grp-…`), lo que es de un solo WI va en la subcarpeta de ese WI y lo compartido en la carpeta del grupo. Con varios WI sin grupo, cada archivo va a la carpeta del WI al que corresponde.\n- Workboard agrupa los archivos por el tipo que lleva el nombre: MIGRATION_ / SEED_ / ROLLBACK_ (migraciones), FIX_ (fixes), DIAG_ / VERIF_ (diagnósticos), PLAN_ / HANDOFF_ / QA_ y .md (documentación); el código (.py, .ps1…) va a scripts. Usá esos prefijos, por ejemplo `DIAG_WI<número>_<qué mira>.sql`, salvo que el proyecto defina otra convención.\n- Workboard registra qué scripts se corrieron y en qué ambiente. Lo marca el usuario: si te dice que corrió un script, registralo con workboard_marcar_ejecutado. Nunca lo marques por tu cuenta.\n- No muevas, renombres ni borres carpetas de `_work`: agrupar y eliminar se hace desde Workboard.\n\n### Tools\n- El usuario promueve como tools los scripts útiles de sesiones anteriores. Antes de escribir un script para algo repetitivo, mirá workboard_list_tools y, si hay uno, correlo con workboard_run_tool.\n",
+  "calls": [
+   {
+    "tool": "workboard_session",
+    "args": {},
+    "ok": {
+     "modo": "solo lectura",
+     "raiz": "<ROOT>",
+     "instrucciones": "## Cómo trabajar con Workboard\n- Workboard es la app donde el usuario sigue cada work item (WI): una carpeta en `_work` con el estado en el frontmatter de su README.md y las tareas en `## Pendientes`.\n- Estado, tipo, ambientes, notas (resumen de una línea), rama y pendientes se leen y cambian SOLO con las herramientas del MCP `workboard`: workboard_session, workboard_get_wi, workboard_set_estado, workboard_add_task, workboard_complete_task, workboard_add_note y workboard_marcar_ejecutado. No edites el frontmatter del README a mano.\n- Al empezar, llamá a workboard_session: devuelve los WI de esta sesión, sus carpetas y sus pendientes.\n- Estados: pendiente, plan, en-curso, diag, codeado, qa, prod, descartado, desconocido. Tipos: bug, us, task, fix (us = user story, fix = arreglo sin work item). Ambientes: dev, qa, prod.\n- Fecha pactada (AAAA-MM-DD) y horas pactadas también van con workboard_set_estado, pero solo si el usuario te las da: no las estimes por tu cuenta. workboard_get_wi muestra prioridad, fecha pactada, período (del 20 al 19) y horas pactadas, propias o de Azure.\n- Si encontrás algo que queda por hacer, cargalo como pendiente. Al cerrar un paso, actualizá el estado y el resumen.\n- Solo podés escribir en los WI de esta sesión.\n\n### Archivos de cada WI\n- Los scripts y documentos de un WI van en SU carpeta (la ruta está en el contexto de la sesión). Si la sesión es de un grupo (carpeta `grp-…`), lo que es de un solo WI va en la subcarpeta de ese WI y lo compartido en la carpeta del grupo. Con varios WI sin grupo, cada archivo va a la carpeta del WI al que corresponde.\n- Workboard agrupa los archivos por el tipo que lleva el nombre: MIGRATION_ / SEED_ / ROLLBACK_ (migraciones), FIX_ (fixes), DIAG_ / VERIF_ (diagnósticos), PLAN_ / HANDOFF_ / QA_ y .md (documentación); el código (.py, .ps1…) va a scripts. Usá esos prefijos, por ejemplo `DIAG_WI<número>_<qué mira>.sql`, salvo que el proyecto defina otra convención.\n- Workboard registra qué scripts se corrieron y en qué ambiente. Lo marca el usuario: si te dice que corrió un script, registralo con workboard_marcar_ejecutado. Nunca lo marques por tu cuenta.\n- No muevas, renombres ni borres carpetas de `_work`: agrupar y eliminar se hace desde Workboard.\n\n### Tools\n- El usuario promueve como tools los scripts útiles de sesiones anteriores. Antes de escribir un script para algo repetitivo, mirá workboard_list_tools y, si hay uno, correlo con workboard_run_tool.\n"
+    }
+   },
+   {
+    "tool": "workboard_list_wis",
+    "args": {},
+    "ok": {
+     "total": 8,
+     "wis": [
+      {
+       "carpeta": "arreglo-sin-wi",
+       "ruta": "<ROOT>\\arreglo-sin-wi",
+       "wis": [
+        "444444",
+        "555555"
+       ],
+       "titulo": "Arreglo sin work item",
+       "estado": "codeado",
+       "tipo": "fix",
+       "ambientes": [],
+       "rama": "",
+       "notas": "",
+       "pendientes_abiertos": 0,
+       "readme": "<ROOT>\\arreglo-sin-wi\\README.md"
+      },
+      {
+       "carpeta": "grp-checkout",
+       "ruta": "<ROOT>\\grp-checkout",
+       "wis": [],
+       "titulo": "Checkout",
+       "estado": "en-curso",
+       "tipo": "",
+       "ambientes": [],
+       "rama": "",
+       "notas": "grupo del checkout",
+       "pendientes_abiertos": 1,
+       "readme": "<ROOT>\\grp-checkout\\README.md",
+       "grupo_de": [
+        "grp-checkout/wi444444-carrito",
+        "grp-checkout/wi555555-envio"
+       ]
+      },
+      {
+       "carpeta": "grp-checkout/wi444444-carrito",
+       "ruta": "<ROOT>\\grp-checkout\\wi444444-carrito",
+       "wis": [
+        "444444"
+       ],
+       "titulo": "Carrito",
+       "estado": "diag",
+       "tipo": "task",
+       "ambientes": [],
+       "rama": "",
+       "notas": "",
+       "pendientes_abiertos": 0,
+       "readme": "<ROOT>\\grp-checkout\\wi444444-carrito\\README.md",
+       "grupo": "grp-checkout"
+      },
+      {
+       "carpeta": "grp-checkout/wi555555-envio",
+       "ruta": "<ROOT>\\grp-checkout\\wi555555-envio",
+       "wis": [
+        "555555"
+       ],
+       "titulo": "Envío",
+       "estado": "pendiente",
+       "tipo": "",
+       "ambientes": [],
+       "rama": "",
+       "notas": "",
+       "pendientes_abiertos": 0,
+       "readme": "<ROOT>\\grp-checkout\\wi555555-envio\\README.md",
+       "grupo": "grp-checkout"
+      },
+      {
+       "carpeta": "wi111111-login-con-sso",
+       "ruta": "<ROOT>\\wi111111-login-con-sso",
+       "wis": [
+        "111111"
+       ],
+       "titulo": "Login con SSO",
+       "estado": "en-curso",
+       "tipo": "us",
+       "ambientes": [
+        "dev"
+       ],
+       "rama": "feature/111111-sso",
+       "notas": "falta: revisar el callback",
+       "pendientes_abiertos": 2,
+       "readme": "<ROOT>\\wi111111-login-con-sso\\README.md",
+       "prioridad": 2,
+       "fecha_pactada": "2026-11-25",
+       "periodo": "2026-11 (del 20 de ese mes al 19 del siguiente)",
+       "horas_pactadas": "12.5"
+      },
+      {
+       "carpeta": "wi222222-333333-pagos",
+       "ruta": "<ROOT>\\wi222222-333333-pagos",
+       "wis": [
+        "222222",
+        "333333"
+       ],
+       "titulo": "Pagos duplicados",
+       "estado": "qa",
+       "tipo": "bug",
+       "ambientes": [
+        "dev",
+        "qa"
+       ],
+       "rama": "",
+       "notas": "",
+       "pendientes_abiertos": 1,
+       "readme": "<ROOT>\\wi222222-333333-pagos\\README.md",
+       "prioridad": 1,
+       "fecha_pactada": "2026-11-30 (Azure)",
+       "periodo": "2026-11 (del 20 de ese mes al 19 del siguiente)",
+       "horas_pactadas": "10 (Azure)"
+      },
+      {
+       "carpeta": "wi666666-plan-pendiente",
+       "ruta": "<ROOT>\\wi666666-plan-pendiente",
+       "wis": [
+        "666666"
+       ],
+       "titulo": "Plan pendiente",
+       "estado": "plan",
+       "tipo": "",
+       "ambientes": [],
+       "rama": "",
+       "notas": "",
+       "pendientes_abiertos": 0,
+       "readme": "<ROOT>\\wi666666-plan-pendiente\\README.md"
+      },
+      {
+       "carpeta": "wi777777-sin-readme",
+       "ruta": "<ROOT>\\wi777777-sin-readme",
+       "wis": [
+        "777777"
+       ],
+       "titulo": "",
+       "estado": "",
+       "tipo": "",
+       "ambientes": [],
+       "rama": "",
+       "notas": "",
+       "pendientes_abiertos": 0,
+       "readme": "<ROOT>\\wi777777-sin-readme\\README.md"
+      }
+     ]
+    }
+   },
+   {
+    "tool": "workboard_list_wis",
+    "args": {
+     "incluir_cerrados": true
+    },
+    "ok": {
+     "total": 9,
+     "wis": [
+      {
+       "carpeta": "arreglo-sin-wi",
+       "ruta": "<ROOT>\\arreglo-sin-wi",
+       "wis": [
+        "444444",
+        "555555"
+       ],
+       "titulo": "Arreglo sin work item",
+       "estado": "codeado",
+       "tipo": "fix",
+       "ambientes": [],
+       "rama": "",
+       "notas": "",
+       "pendientes_abiertos": 0,
+       "readme": "<ROOT>\\arreglo-sin-wi\\README.md"
+      },
+      {
+       "carpeta": "grp-checkout",
+       "ruta": "<ROOT>\\grp-checkout",
+       "wis": [],
+       "titulo": "Checkout",
+       "estado": "en-curso",
+       "tipo": "",
+       "ambientes": [],
+       "rama": "",
+       "notas": "grupo del checkout",
+       "pendientes_abiertos": 1,
+       "readme": "<ROOT>\\grp-checkout\\README.md",
+       "grupo_de": [
+        "grp-checkout/wi444444-carrito",
+        "grp-checkout/wi555555-envio"
+       ]
+      },
+      {
+       "carpeta": "grp-checkout/wi444444-carrito",
+       "ruta": "<ROOT>\\grp-checkout\\wi444444-carrito",
+       "wis": [
+        "444444"
+       ],
+       "titulo": "Carrito",
+       "estado": "diag",
+       "tipo": "task",
+       "ambientes": [],
+       "rama": "",
+       "notas": "",
+       "pendientes_abiertos": 0,
+       "readme": "<ROOT>\\grp-checkout\\wi444444-carrito\\README.md",
+       "grupo": "grp-checkout"
+      },
+      {
+       "carpeta": "grp-checkout/wi555555-envio",
+       "ruta": "<ROOT>\\grp-checkout\\wi555555-envio",
+       "wis": [
+        "555555"
+       ],
+       "titulo": "Envío",
+       "estado": "pendiente",
+       "tipo": "",
+       "ambientes": [],
+       "rama": "",
+       "notas": "",
+       "pendientes_abiertos": 0,
+       "readme": "<ROOT>\\grp-checkout\\wi555555-envio\\README.md",
+       "grupo": "grp-checkout"
+      },
+      {
+       "carpeta": "wi111111-copia-vieja",
+       "ruta": "<ROOT>\\wi111111-copia-vieja",
+       "wis": [
+        "111111"
+       ],
+       "titulo": "Copia vieja de sesión",
+       "estado": "descartado",
+       "tipo": "",
+       "ambientes": [],
+       "rama": "",
+       "notas": "",
+       "pendientes_abiertos": 0,
+       "readme": "<ROOT>\\wi111111-copia-vieja\\README.md",
+       "prioridad": 2,
+       "fecha_pactada": "2026-12-15 (Azure)",
+       "periodo": "2026-11 (del 20 de ese mes al 19 del siguiente)",
+       "horas_pactadas": "20 (Azure)"
+      },
+      {
+       "carpeta": "wi111111-login-con-sso",
+       "ruta": "<ROOT>\\wi111111-login-con-sso",
+       "wis": [
+        "111111"
+       ],
+       "titulo": "Login con SSO",
+       "estado": "en-curso",
+       "tipo": "us",
+       "ambientes": [
+        "dev"
+       ],
+       "rama": "feature/111111-sso",
+       "notas": "falta: revisar el callback",
+       "pendientes_abiertos": 2,
+       "readme": "<ROOT>\\wi111111-login-con-sso\\README.md",
+       "prioridad": 2,
+       "fecha_pactada": "2026-11-25",
+       "periodo": "2026-11 (del 20 de ese mes al 19 del siguiente)",
+       "horas_pactadas": "12.5"
+      },
+      {
+       "carpeta": "wi222222-333333-pagos",
+       "ruta": "<ROOT>\\wi222222-333333-pagos",
+       "wis": [
+        "222222",
+        "333333"
+       ],
+       "titulo": "Pagos duplicados",
+       "estado": "qa",
+       "tipo": "bug",
+       "ambientes": [
+        "dev",
+        "qa"
+       ],
+       "rama": "",
+       "notas": "",
+       "pendientes_abiertos": 1,
+       "readme": "<ROOT>\\wi222222-333333-pagos\\README.md",
+       "prioridad": 1,
+       "fecha_pactada": "2026-11-30 (Azure)",
+       "periodo": "2026-11 (del 20 de ese mes al 19 del siguiente)",
+       "horas_pactadas": "10 (Azure)"
+      },
+      {
+       "carpeta": "wi666666-plan-pendiente",
+       "ruta": "<ROOT>\\wi666666-plan-pendiente",
+       "wis": [
+        "666666"
+       ],
+       "titulo": "Plan pendiente",
+       "estado": "plan",
+       "tipo": "",
+       "ambientes": [],
+       "rama": "",
+       "notas": "",
+       "pendientes_abiertos": 0,
+       "readme": "<ROOT>\\wi666666-plan-pendiente\\README.md"
+      },
+      {
+       "carpeta": "wi777777-sin-readme",
+       "ruta": "<ROOT>\\wi777777-sin-readme",
+       "wis": [
+        "777777"
+       ],
+       "titulo": "",
+       "estado": "",
+       "tipo": "",
+       "ambientes": [],
+       "rama": "",
+       "notas": "",
+       "pendientes_abiertos": 0,
+       "readme": "<ROOT>\\wi777777-sin-readme\\README.md"
+      }
+     ]
+    }
+   },
+   {
+    "tool": "workboard_list_wis",
+    "args": {
+     "estado": "descartado"
+    },
+    "ok": {
+     "total": 1,
+     "wis": [
+      {
+       "carpeta": "wi111111-copia-vieja",
+       "ruta": "<ROOT>\\wi111111-copia-vieja",
+       "wis": [
+        "111111"
+       ],
+       "titulo": "Copia vieja de sesión",
+       "estado": "descartado",
+       "tipo": "",
+       "ambientes": [],
+       "rama": "",
+       "notas": "",
+       "pendientes_abiertos": 0,
+       "readme": "<ROOT>\\wi111111-copia-vieja\\README.md",
+       "prioridad": 2,
+       "fecha_pactada": "2026-12-15 (Azure)",
+       "periodo": "2026-11 (del 20 de ese mes al 19 del siguiente)",
+       "horas_pactadas": "20 (Azure)"
+      }
+     ]
+    }
+   },
+   {
+    "tool": "workboard_list_wis",
+    "args": {
+     "buscar": "CHECKOUT"
+    },
+    "ok": {
+     "total": 3,
+     "wis": [
+      {
+       "carpeta": "grp-checkout",
+       "ruta": "<ROOT>\\grp-checkout",
+       "wis": [],
+       "titulo": "Checkout",
+       "estado": "en-curso",
+       "tipo": "",
+       "ambientes": [],
+       "rama": "",
+       "notas": "grupo del checkout",
+       "pendientes_abiertos": 1,
+       "readme": "<ROOT>\\grp-checkout\\README.md",
+       "grupo_de": [
+        "grp-checkout/wi444444-carrito",
+        "grp-checkout/wi555555-envio"
+       ]
+      },
+      {
+       "carpeta": "grp-checkout/wi444444-carrito",
+       "ruta": "<ROOT>\\grp-checkout\\wi444444-carrito",
+       "wis": [
+        "444444"
+       ],
+       "titulo": "Carrito",
+       "estado": "diag",
+       "tipo": "task",
+       "ambientes": [],
+       "rama": "",
+       "notas": "",
+       "pendientes_abiertos": 0,
+       "readme": "<ROOT>\\grp-checkout\\wi444444-carrito\\README.md",
+       "grupo": "grp-checkout"
+      },
+      {
+       "carpeta": "grp-checkout/wi555555-envio",
+       "ruta": "<ROOT>\\grp-checkout\\wi555555-envio",
+       "wis": [
+        "555555"
+       ],
+       "titulo": "Envío",
+       "estado": "pendiente",
+       "tipo": "",
+       "ambientes": [],
+       "rama": "",
+       "notas": "",
+       "pendientes_abiertos": 0,
+       "readme": "<ROOT>\\grp-checkout\\wi555555-envio\\README.md",
+       "grupo": "grp-checkout"
+      }
+     ]
+    }
+   },
+   {
+    "tool": "workboard_list_wis",
+    "args": {
+     "buscar": "444444"
+    },
+    "ok": {
+     "total": 2,
+     "wis": [
+      {
+       "carpeta": "arreglo-sin-wi",
+       "ruta": "<ROOT>\\arreglo-sin-wi",
+       "wis": [
+        "444444",
+        "555555"
+       ],
+       "titulo": "Arreglo sin work item",
+       "estado": "codeado",
+       "tipo": "fix",
+       "ambientes": [],
+       "rama": "",
+       "notas": "",
+       "pendientes_abiertos": 0,
+       "readme": "<ROOT>\\arreglo-sin-wi\\README.md"
+      },
+      {
+       "carpeta": "grp-checkout/wi444444-carrito",
+       "ruta": "<ROOT>\\grp-checkout\\wi444444-carrito",
+       "wis": [
+        "444444"
+       ],
+       "titulo": "Carrito",
+       "estado": "diag",
+       "tipo": "task",
+       "ambientes": [],
+       "rama": "",
+       "notas": "",
+       "pendientes_abiertos": 0,
+       "readme": "<ROOT>\\grp-checkout\\wi444444-carrito\\README.md",
+       "grupo": "grp-checkout"
+      }
+     ]
+    }
+   },
+   {
+    "tool": "workboard_get_wi",
+    "args": {
+     "wi": "wi111111-login-con-sso"
+    },
+    "ok": {
+     "carpeta": "wi111111-login-con-sso",
+     "ruta": "<ROOT>\\wi111111-login-con-sso",
+     "wis": [
+      "111111"
+     ],
+     "titulo": "Login con SSO",
+     "estado": "en-curso",
+     "tipo": "us",
+     "ambientes": [
+      "dev"
+     ],
+     "rama": "feature/111111-sso",
+     "notas": "falta: revisar el callback",
+     "pendientes_abiertos": 2,
+     "readme": "<ROOT>\\wi111111-login-con-sso\\README.md",
+     "prioridad": 2,
+     "fecha_pactada": "2026-11-25",
+     "periodo": "2026-11 (del 20 de ese mes al 19 del siguiente)",
+     "horas_pactadas": "12.5",
+     "frontmatter": {
+      "estado": "en-curso",
+      "tipo": "us",
+      "ambientes": [
+       "dev"
+      ],
+      "notas": "falta: revisar el callback",
+      "rama": "feature/111111-sso",
+      "pactada": "2026-11-25",
+      "horas": "12,5"
+     },
+     "pendientes": [
+      {
+       "indice": 0,
+       "texto": "Configurar el proveedor",
+       "hecha": false
+      },
+      {
+       "indice": 1,
+       "texto": "Crear la tabla de sesiones",
+       "hecha": true
+      },
+      {
+       "indice": 2,
+       "texto": "Probar   con   espacios",
+       "hecha": false
+      }
+     ],
+     "archivos": [
+      {
+       "ruta": "wi111111-login-con-sso/DIAG_WI111111_usuarios.sql",
+       "categoria": "diag",
+       "ejecutado": {}
+      },
+      {
+       "ruta": "wi111111-login-con-sso/MIGRATION_WI111111_sesiones.sql",
+       "categoria": "migracion",
+       "ejecutado": {}
+      },
+      {
+       "ruta": "wi111111-login-con-sso/README.md",
+       "categoria": "doc"
+      },
+      {
+       "ruta": "wi111111-login-con-sso/ROLLBACK_WI111111_sesiones.sql",
+       "categoria": "migracion",
+       "ejecutado": {}
+      },
+      {
+       "ruta": "wi111111-login-con-sso/captura.png",
+       "categoria": "otro"
+      },
+      {
+       "ruta": "wi111111-login-con-sso/consulta.sql",
+       "categoria": "sql",
+       "ejecutado": {}
+      },
+      {
+       "ruta": "wi111111-login-con-sso/datos.bin",
+       "categoria": "otro"
+      },
+      {
+       "ruta": "wi111111-login-con-sso/docs/PLAN_sso.md",
+       "categoria": "doc"
+      },
+      {
+       "ruta": "wi111111-login-con-sso/docs/flujo.drawio",
+       "categoria": "doc"
+      },
+      {
+       "ruta": "wi111111-login-con-sso/gen_diag.py",
+       "categoria": "script",
+       "ejecutado": {}
+      }
+     ],
+     "deploy": "1. Correr la migración.\n### Detalle\nSigue dentro del deploy."
+    }
+   },
+   {
+    "tool": "workboard_get_wi",
+    "args": {
+     "wi": "111111"
+    },
+    "error": "ToolError",
+    "message": "111111 está en varias carpetas: wi111111-copia-vieja, wi111111-login-con-sso. Pasá el nombre de la carpeta"
+   },
+   {
+    "tool": "workboard_get_wi",
+    "args": {
+     "wi": "#222222"
+    },
+    "ok": {
+     "carpeta": "wi222222-333333-pagos",
+     "ruta": "<ROOT>\\wi222222-333333-pagos",
+     "wis": [
+      "222222",
+      "333333"
+     ],
+     "titulo": "Pagos duplicados",
+     "estado": "qa",
+     "tipo": "bug",
+     "ambientes": [
+      "dev",
+      "qa"
+     ],
+     "rama": "",
+     "notas": "",
+     "pendientes_abiertos": 1,
+     "readme": "<ROOT>\\wi222222-333333-pagos\\README.md",
+     "prioridad": 1,
+     "fecha_pactada": "2026-11-30 (Azure)",
+     "periodo": "2026-11 (del 20 de ese mes al 19 del siguiente)",
+     "horas_pactadas": "10 (Azure)",
+     "frontmatter": {
+      "estado": "qa",
+      "tipo": "bug",
+      "ambientes": [
+       "dev",
+       "qa"
+      ]
+     },
+     "pendientes": [
+      {
+       "indice": 0,
+       "texto": "Verificar en QA",
+       "hecha": false
+      }
+     ],
+     "archivos": [
+      {
+       "ruta": "wi222222-333333-pagos/FIX_WI222222_duplicados.sql",
+       "categoria": "fix",
+       "ejecutado": {}
+      },
+      {
+       "ruta": "wi222222-333333-pagos/README.md",
+       "categoria": "doc"
+      }
+     ],
+     "deploy": ""
+    }
+   },
+   {
+    "tool": "workboard_get_wi",
+    "args": {
+     "wi": "333333"
+    },
+    "ok": {
+     "carpeta": "wi222222-333333-pagos",
+     "ruta": "<ROOT>\\wi222222-333333-pagos",
+     "wis": [
+      "222222",
+      "333333"
+     ],
+     "titulo": "Pagos duplicados",
+     "estado": "qa",
+     "tipo": "bug",
+     "ambientes": [
+      "dev",
+      "qa"
+     ],
+     "rama": "",
+     "notas": "",
+     "pendientes_abiertos": 1,
+     "readme": "<ROOT>\\wi222222-333333-pagos\\README.md",
+     "prioridad": 1,
+     "fecha_pactada": "2026-11-30 (Azure)",
+     "periodo": "2026-11 (del 20 de ese mes al 19 del siguiente)",
+     "horas_pactadas": "10 (Azure)",
+     "frontmatter": {
+      "estado": "qa",
+      "tipo": "bug",
+      "ambientes": [
+       "dev",
+       "qa"
+      ]
+     },
+     "pendientes": [
+      {
+       "indice": 0,
+       "texto": "Verificar en QA",
+       "hecha": false
+      }
+     ],
+     "archivos": [
+      {
+       "ruta": "wi222222-333333-pagos/FIX_WI222222_duplicados.sql",
+       "categoria": "fix",
+       "ejecutado": {}
+      },
+      {
+       "ruta": "wi222222-333333-pagos/README.md",
+       "categoria": "doc"
+      }
+     ],
+     "deploy": ""
+    }
+   },
+   {
+    "tool": "workboard_get_wi",
+    "args": {
+     "wi": "grp-checkout"
+    },
+    "ok": {
+     "carpeta": "grp-checkout",
+     "ruta": "<ROOT>\\grp-checkout",
+     "wis": [],
+     "titulo": "Checkout",
+     "estado": "en-curso",
+     "tipo": "",
+     "ambientes": [],
+     "rama": "",
+     "notas": "grupo del checkout",
+     "pendientes_abiertos": 1,
+     "readme": "<ROOT>\\grp-checkout\\README.md",
+     "grupo_de": [
+      "grp-checkout/wi444444-carrito",
+      "grp-checkout/wi555555-envio"
+     ],
+     "frontmatter": {
+      "estado": "en-curso",
+      "notas": "grupo del checkout"
+     },
+     "pendientes": [
+      {
+       "indice": 0,
+       "texto": "Coordinar deploy",
+       "hecha": false
+      }
+     ],
+     "archivos": [
+      {
+       "ruta": "grp-checkout/README.md",
+       "categoria": "doc"
+      },
+      {
+       "ruta": "grp-checkout/VERIF_checkout.sql",
+       "categoria": "diag",
+       "ejecutado": {}
+      },
+      {
+       "ruta": "grp-checkout/_privado/x.txt",
+       "categoria": "doc"
+      }
+     ],
+     "deploy": ""
+    }
+   },
+   {
+    "tool": "workboard_get_wi",
+    "args": {
+     "wi": "444444"
+    },
+    "error": "ToolError",
+    "message": "444444 está en varias carpetas: arreglo-sin-wi, grp-checkout/wi444444-carrito. Pasá el nombre de la carpeta"
+   },
+   {
+    "tool": "workboard_get_wi",
+    "args": {
+     "wi": "000000"
+    },
+    "error": "ToolError",
+    "message": "No encontré el WI '000000'. Buscalo con workboard_list_wis"
+   },
+   {
+    "tool": "workboard_set_estado",
+    "args": {
+     "wi": "222222",
+     "estado": "prod"
+    },
+    "error": "ToolError",
+    "message": "El MCP de Workboard está en solo lectura fuera de una sesión (WORKBOARD_MCP_WRITE=1 lo habilita)"
+   },
+   {
+    "tool": "workboard_list_tools",
+    "args": {},
+    "ok": {
+     "tools": []
+    }
+   },
+   {
+    "tool": "workboard_run_tool",
+    "args": {
+     "nombre": "x"
+    },
+    "error": "ToolError",
+    "message": "Las tools solo se corren dentro de una sesión lanzada por Workboard"
+   }
+  ],
+  "readmes_changed": {},
+  "events": [],
+  "runs": {},
+  "notes": {}
+ },
+ "write_all": {
+  "instructions": "Estado de los work items (WI) de la carpeta _work: una subcarpeta por WI (o un grupo `grp-…` con una subcarpeta por WI) con el estado en el frontmatter del README.md y las tareas en '## Pendientes'.\n\n## Cómo trabajar con Workboard\n- Workboard es la app donde el usuario sigue cada work item (WI): una carpeta en `_work` con el estado en el frontmatter de su README.md y las tareas en `## Pendientes`.\n- Estado, tipo, ambientes, notas (resumen de una línea), rama y pendientes se leen y cambian SOLO con las herramientas del MCP `workboard`: workboard_session, workboard_get_wi, workboard_set_estado, workboard_add_task, workboard_complete_task, workboard_add_note y workboard_marcar_ejecutado. No edites el frontmatter del README a mano.\n- Al empezar, llamá a workboard_session: devuelve los WI de esta sesión, sus carpetas y sus pendientes.\n- Estados: pendiente, plan, en-curso, diag, codeado, qa, prod, descartado, desconocido. Tipos: bug, us, task, fix (us = user story, fix = arreglo sin work item). Ambientes: dev, qa, prod.\n- Fecha pactada (AAAA-MM-DD) y horas pactadas también van con workboard_set_estado, pero solo si el usuario te las da: no las estimes por tu cuenta. workboard_get_wi muestra prioridad, fecha pactada, período (del 20 al 19) y horas pactadas, propias o de Azure.\n- Si encontrás algo que queda por hacer, cargalo como pendiente. Al cerrar un paso, actualizá el estado y el resumen.\n- Solo podés escribir en los WI de esta sesión.\n\n### Archivos de cada WI\n- Los scripts y documentos de un WI van en SU carpeta (la ruta está en el contexto de la sesión). Si la sesión es de un grupo (carpeta `grp-…`), lo que es de un solo WI va en la subcarpeta de ese WI y lo compartido en la carpeta del grupo. Con varios WI sin grupo, cada archivo va a la carpeta del WI al que corresponde.\n- Workboard agrupa los archivos por el tipo que lleva el nombre: MIGRATION_ / SEED_ / ROLLBACK_ (migraciones), FIX_ (fixes), DIAG_ / VERIF_ (diagnósticos), PLAN_ / HANDOFF_ / QA_ y .md (documentación); el código (.py, .ps1…) va a scripts. Usá esos prefijos, por ejemplo `DIAG_WI<número>_<qué mira>.sql`, salvo que el proyecto defina otra convención.\n- Workboard registra qué scripts se corrieron y en qué ambiente. Lo marca el usuario: si te dice que corrió un script, registralo con workboard_marcar_ejecutado. Nunca lo marques por tu cuenta.\n- No muevas, renombres ni borres carpetas de `_work`: agrupar y eliminar se hace desde Workboard.\n\n### Tools\n- El usuario promueve como tools los scripts útiles de sesiones anteriores. Antes de escribir un script para algo repetitivo, mirá workboard_list_tools y, si hay uno, correlo con workboard_run_tool.\n",
+  "calls": [
+   {
+    "tool": "workboard_session",
+    "args": {},
+    "ok": {
+     "modo": "escritura",
+     "raiz": "<ROOT>",
+     "instrucciones": "## Cómo trabajar con Workboard\n- Workboard es la app donde el usuario sigue cada work item (WI): una carpeta en `_work` con el estado en el frontmatter de su README.md y las tareas en `## Pendientes`.\n- Estado, tipo, ambientes, notas (resumen de una línea), rama y pendientes se leen y cambian SOLO con las herramientas del MCP `workboard`: workboard_session, workboard_get_wi, workboard_set_estado, workboard_add_task, workboard_complete_task, workboard_add_note y workboard_marcar_ejecutado. No edites el frontmatter del README a mano.\n- Al empezar, llamá a workboard_session: devuelve los WI de esta sesión, sus carpetas y sus pendientes.\n- Estados: pendiente, plan, en-curso, diag, codeado, qa, prod, descartado, desconocido. Tipos: bug, us, task, fix (us = user story, fix = arreglo sin work item). Ambientes: dev, qa, prod.\n- Fecha pactada (AAAA-MM-DD) y horas pactadas también van con workboard_set_estado, pero solo si el usuario te las da: no las estimes por tu cuenta. workboard_get_wi muestra prioridad, fecha pactada, período (del 20 al 19) y horas pactadas, propias o de Azure.\n- Si encontrás algo que queda por hacer, cargalo como pendiente. Al cerrar un paso, actualizá el estado y el resumen.\n- Solo podés escribir en los WI de esta sesión.\n\n### Archivos de cada WI\n- Los scripts y documentos de un WI van en SU carpeta (la ruta está en el contexto de la sesión). Si la sesión es de un grupo (carpeta `grp-…`), lo que es de un solo WI va en la subcarpeta de ese WI y lo compartido en la carpeta del grupo. Con varios WI sin grupo, cada archivo va a la carpeta del WI al que corresponde.\n- Workboard agrupa los archivos por el tipo que lleva el nombre: MIGRATION_ / SEED_ / ROLLBACK_ (migraciones), FIX_ (fixes), DIAG_ / VERIF_ (diagnósticos), PLAN_ / HANDOFF_ / QA_ y .md (documentación); el código (.py, .ps1…) va a scripts. Usá esos prefijos, por ejemplo `DIAG_WI<número>_<qué mira>.sql`, salvo que el proyecto defina otra convención.\n- Workboard registra qué scripts se corrieron y en qué ambiente. Lo marca el usuario: si te dice que corrió un script, registralo con workboard_marcar_ejecutado. Nunca lo marques por tu cuenta.\n- No muevas, renombres ni borres carpetas de `_work`: agrupar y eliminar se hace desde Workboard.\n\n### Tools\n- El usuario promueve como tools los scripts útiles de sesiones anteriores. Antes de escribir un script para algo repetitivo, mirá workboard_list_tools y, si hay uno, correlo con workboard_run_tool.\n"
+    }
+   },
+   {
+    "tool": "workboard_set_estado",
+    "args": {
+     "wi": "222222",
+     "estado": "prod",
+     "notas": "pasó a prod"
+    },
+    "ok": {
+     "carpeta": "wi222222-333333-pagos",
+     "ruta": "<ROOT>\\wi222222-333333-pagos",
+     "wis": [
+      "222222",
+      "333333"
+     ],
+     "titulo": "Pagos duplicados",
+     "estado": "prod",
+     "tipo": "bug",
+     "ambientes": [
+      "dev",
+      "qa"
+     ],
+     "rama": "",
+     "notas": "pasó a prod",
+     "pendientes_abiertos": 0,
+     "readme": "<ROOT>\\wi222222-333333-pagos\\README.md",
+     "prioridad": 1,
+     "fecha_pactada": "2026-11-30 (Azure)",
+     "periodo": "2026-11 (del 20 de ese mes al 19 del siguiente)",
+     "horas_pactadas": "10 (Azure)"
+    }
+   },
+   {
+    "tool": "workboard_set_estado",
+    "args": {
+     "wi": "222222"
+    },
+    "error": "ToolError",
+    "message": "No pasaste ningún campo para cambiar"
+   },
+   {
+    "tool": "workboard_set_estado",
+    "args": {
+     "wi": "222222",
+     "estado": "inventado"
+    },
+    "error": "ToolError",
+    "message": "estado inválido: 'inventado'. Válidos: pendiente, plan, en-curso, diag, codeado, qa, prod, descartado, desconocido"
+   },
+   {
+    "tool": "workboard_add_task",
+    "args": {
+     "wi": "wi777777-sin-readme",
+     "texto": "  crear   README "
+    },
+    "ok": {
+     "carpeta": "wi777777-sin-readme",
+     "pendientes": [
+      {
+       "indice": 0,
+       "texto": "crear README",
+       "hecha": false
+      }
+     ]
+    }
+   }
+  ],
+  "readmes_changed": {
+   "wi222222-333333-pagos/README.md": "---\nestado: prod\ntipo: bug\nambientes: [dev, qa]\nnotas: pasó a prod\n---\n\n# Pagos duplicados\n\n## Pendientes\n\n- [x] Verificar en QA\n",
+   "wi777777-sin-readme/README.md": "# wi777777-sin-readme\n\n## Pendientes\n\n- [ ] crear README\n"
+  },
+  "events": [
+   {
+    "session": null,
+    "tipo": "set_estado",
+    "wi": "wi222222-333333-pagos",
+    "detalle": "estado: qa → prod, notas: — → pasó a prod"
+   },
+   {
+    "session": null,
+    "tipo": "add_task",
+    "wi": "wi777777-sin-readme",
+    "detalle": "crear README"
+   }
+  ],
+  "runs": {},
+  "notes": {}
+ },
+ "session": {
+  "instructions": "Estado de los work items (WI) de la carpeta _work: una subcarpeta por WI (o un grupo `grp-…` con una subcarpeta por WI) con el estado en el frontmatter del README.md y las tareas en '## Pendientes'.\n\n## Cómo trabajar con Workboard\n- Workboard es la app donde el usuario sigue cada work item (WI): una carpeta en `_work` con el estado en el frontmatter de su README.md y las tareas en `## Pendientes`.\n- Estado, tipo, ambientes, notas (resumen de una línea), rama y pendientes se leen y cambian SOLO con las herramientas del MCP `workboard`: workboard_session, workboard_get_wi, workboard_set_estado, workboard_add_task, workboard_complete_task, workboard_add_note y workboard_marcar_ejecutado. No edites el frontmatter del README a mano.\n- Al empezar, llamá a workboard_session: devuelve los WI de esta sesión, sus carpetas y sus pendientes.\n- Estados: pendiente, plan, en-curso, diag, codeado, qa, prod, descartado, desconocido. Tipos: bug, us, task, fix (us = user story, fix = arreglo sin work item). Ambientes: dev, qa, prod.\n- Fecha pactada (AAAA-MM-DD) y horas pactadas también van con workboard_set_estado, pero solo si el usuario te las da: no las estimes por tu cuenta. workboard_get_wi muestra prioridad, fecha pactada, período (del 20 al 19) y horas pactadas, propias o de Azure.\n- Si encontrás algo que queda por hacer, cargalo como pendiente. Al cerrar un paso, actualizá el estado y el resumen.\n- Solo podés escribir en los WI de esta sesión.\n\n### Archivos de cada WI\n- Los scripts y documentos de un WI van en SU carpeta (la ruta está en el contexto de la sesión). Si la sesión es de un grupo (carpeta `grp-…`), lo que es de un solo WI va en la subcarpeta de ese WI y lo compartido en la carpeta del grupo. Con varios WI sin grupo, cada archivo va a la carpeta del WI al que corresponde.\n- Workboard agrupa los archivos por el tipo que lleva el nombre: MIGRATION_ / SEED_ / ROLLBACK_ (migraciones), FIX_ (fixes), DIAG_ / VERIF_ (diagnósticos), PLAN_ / HANDOFF_ / QA_ y .md (documentación); el código (.py, .ps1…) va a scripts. Usá esos prefijos, por ejemplo `DIAG_WI<número>_<qué mira>.sql`, salvo que el proyecto defina otra convención.\n- Workboard registra qué scripts se corrieron y en qué ambiente. Lo marca el usuario: si te dice que corrió un script, registralo con workboard_marcar_ejecutado. Nunca lo marques por tu cuenta.\n- No muevas, renombres ni borres carpetas de `_work`: agrupar y eliminar se hace desde Workboard.\n\n### Tools\n- El usuario promueve como tools los scripts útiles de sesiones anteriores. Antes de escribir un script para algo repetitivo, mirá workboard_list_tools y, si hay uno, correlo con workboard_run_tool.\n\n# Sesión de Workboard: Sesión de prueba\n\nEsta sesión la lanzó Workboard para trabajar en estos work items (WI) de `<ROOT>`:\n\n## wi111111-login-con-sso (#111111)\n- Título: Login con SSO\n- Carpeta: <ROOT>\\wi111111-login-con-sso\n- Estado: en-curso · Ambientes: dev · Rama: feature/111111-sso\n- Resumen: falta: revisar el callback\n- Pendientes abiertos:\n  - [ ] Configurar el proveedor\n  - [ ] Probar   con   espacios\n\n## grp-checkout (grupo de 2 WI)\n- Carpeta del grupo (archivos compartidos): <ROOT>\\grp-checkout\n- README del grupo: <ROOT>\\grp-checkout\\README.md\n- Resumen: grupo del checkout\n- Pendientes abiertos:\n  - [ ] Coordinar deploy\n\n### grp-checkout/wi444444-carrito (#444444)\n- Título: Carrito\n- Carpeta: <ROOT>\\grp-checkout\\wi444444-carrito\n- Estado: diag · Ambientes: — · Rama: —\n\n### grp-checkout/wi555555-envio (#555555)\n- Título: Envío\n- Carpeta: <ROOT>\\grp-checkout\\wi555555-envio\n- Estado: pendiente · Ambientes: — · Rama: —\n\n",
+  "calls": [
+   {
+    "tool": "workboard_session",
+    "args": {},
+    "ok": {
+     "modo": "sesión",
+     "raiz": "<ROOT>",
+     "wis": [
+      {
+       "carpeta": "grp-checkout",
+       "ruta": "<ROOT>\\grp-checkout",
+       "wis": [],
+       "titulo": "Checkout",
+       "estado": "en-curso",
+       "tipo": "",
+       "ambientes": [],
+       "rama": "",
+       "notas": "grupo del checkout",
+       "pendientes_abiertos": 1,
+       "readme": "<ROOT>\\grp-checkout\\README.md",
+       "grupo_de": [
+        "grp-checkout/wi444444-carrito",
+        "grp-checkout/wi555555-envio"
+       ]
+      },
+      {
+       "carpeta": "grp-checkout/wi444444-carrito",
+       "ruta": "<ROOT>\\grp-checkout\\wi444444-carrito",
+       "wis": [
+        "444444"
+       ],
+       "titulo": "Carrito",
+       "estado": "diag",
+       "tipo": "task",
+       "ambientes": [],
+       "rama": "",
+       "notas": "",
+       "pendientes_abiertos": 0,
+       "readme": "<ROOT>\\grp-checkout\\wi444444-carrito\\README.md",
+       "grupo": "grp-checkout"
+      },
+      {
+       "carpeta": "grp-checkout/wi555555-envio",
+       "ruta": "<ROOT>\\grp-checkout\\wi555555-envio",
+       "wis": [
+        "555555"
+       ],
+       "titulo": "Envío",
+       "estado": "pendiente",
+       "tipo": "",
+       "ambientes": [],
+       "rama": "",
+       "notas": "",
+       "pendientes_abiertos": 0,
+       "readme": "<ROOT>\\grp-checkout\\wi555555-envio\\README.md",
+       "grupo": "grp-checkout"
+      },
+      {
+       "carpeta": "wi111111-login-con-sso",
+       "ruta": "<ROOT>\\wi111111-login-con-sso",
+       "wis": [
+        "111111"
+       ],
+       "titulo": "Login con SSO",
+       "estado": "en-curso",
+       "tipo": "us",
+       "ambientes": [
+        "dev"
+       ],
+       "rama": "feature/111111-sso",
+       "notas": "falta: revisar el callback",
+       "pendientes_abiertos": 2,
+       "readme": "<ROOT>\\wi111111-login-con-sso\\README.md",
+       "prioridad": 2,
+       "fecha_pactada": "2026-11-25",
+       "periodo": "2026-11 (del 20 de ese mes al 19 del siguiente)",
+       "horas_pactadas": "12.5"
+      }
+     ],
+     "instrucciones": "## Cómo trabajar con Workboard\n- Workboard es la app donde el usuario sigue cada work item (WI): una carpeta en `_work` con el estado en el frontmatter de su README.md y las tareas en `## Pendientes`.\n- Estado, tipo, ambientes, notas (resumen de una línea), rama y pendientes se leen y cambian SOLO con las herramientas del MCP `workboard`: workboard_session, workboard_get_wi, workboard_set_estado, workboard_add_task, workboard_complete_task, workboard_add_note y workboard_marcar_ejecutado. No edites el frontmatter del README a mano.\n- Al empezar, llamá a workboard_session: devuelve los WI de esta sesión, sus carpetas y sus pendientes.\n- Estados: pendiente, plan, en-curso, diag, codeado, qa, prod, descartado, desconocido. Tipos: bug, us, task, fix (us = user story, fix = arreglo sin work item). Ambientes: dev, qa, prod.\n- Fecha pactada (AAAA-MM-DD) y horas pactadas también van con workboard_set_estado, pero solo si el usuario te las da: no las estimes por tu cuenta. workboard_get_wi muestra prioridad, fecha pactada, período (del 20 al 19) y horas pactadas, propias o de Azure.\n- Si encontrás algo que queda por hacer, cargalo como pendiente. Al cerrar un paso, actualizá el estado y el resumen.\n- Solo podés escribir en los WI de esta sesión.\n\n### Archivos de cada WI\n- Los scripts y documentos de un WI van en SU carpeta (la ruta está en el contexto de la sesión). Si la sesión es de un grupo (carpeta `grp-…`), lo que es de un solo WI va en la subcarpeta de ese WI y lo compartido en la carpeta del grupo. Con varios WI sin grupo, cada archivo va a la carpeta del WI al que corresponde.\n- Workboard agrupa los archivos por el tipo que lleva el nombre: MIGRATION_ / SEED_ / ROLLBACK_ (migraciones), FIX_ (fixes), DIAG_ / VERIF_ (diagnósticos), PLAN_ / HANDOFF_ / QA_ y .md (documentación); el código (.py, .ps1…) va a scripts. Usá esos prefijos, por ejemplo `DIAG_WI<número>_<qué mira>.sql`, salvo que el proyecto defina otra convención.\n- Workboard registra qué scripts se corrieron y en qué ambiente. Lo marca el usuario: si te dice que corrió un script, registralo con workboard_marcar_ejecutado. Nunca lo marques por tu cuenta.\n- No muevas, renombres ni borres carpetas de `_work`: agrupar y eliminar se hace desde Workboard.\n\n### Tools\n- El usuario promueve como tools los scripts útiles de sesiones anteriores. Antes de escribir un script para algo repetitivo, mirá workboard_list_tools y, si hay uno, correlo con workboard_run_tool.\n"
+    }
+   },
+   {
+    "tool": "workboard_set_estado",
+    "args": {
+     "wi": "wi111111-login-con-sso",
+     "estado": "codeado",
+     "ambientes": [
+      "qa",
+      "dev"
+     ],
+     "horas": "8,5"
+    },
+    "ok": {
+     "carpeta": "wi111111-login-con-sso",
+     "ruta": "<ROOT>\\wi111111-login-con-sso",
+     "wis": [
+      "111111"
+     ],
+     "titulo": "Login con SSO",
+     "estado": "codeado",
+     "tipo": "us",
+     "ambientes": [
+      "dev",
+      "qa"
+     ],
+     "rama": "feature/111111-sso",
+     "notas": "falta: revisar el callback",
+     "pendientes_abiertos": 2,
+     "readme": "<ROOT>\\wi111111-login-con-sso\\README.md",
+     "prioridad": 2,
+     "fecha_pactada": "2026-11-25",
+     "periodo": "2026-11 (del 20 de ese mes al 19 del siguiente)",
+     "horas_pactadas": "8.5"
+    }
+   },
+   {
+    "tool": "workboard_set_estado",
+    "args": {
+     "wi": "222222",
+     "estado": "qa"
+    },
+    "error": "ToolError",
+    "message": "wi222222-333333-pagos no es de esta sesión. WI de la sesión: grp-checkout, wi111111-login-con-sso"
+   },
+   {
+    "tool": "workboard_set_estado",
+    "args": {
+     "wi": "444444",
+     "estado": "codeado"
+    },
+    "error": "ToolError",
+    "message": "444444 está en varias carpetas: arreglo-sin-wi, grp-checkout/wi444444-carrito. Pasá el nombre de la carpeta"
+   },
+   {
+    "tool": "workboard_set_estado",
+    "args": {
+     "wi": "grp-checkout",
+     "pactada": "2026-12-01"
+    },
+    "ok": {
+     "carpeta": "grp-checkout",
+     "ruta": "<ROOT>\\grp-checkout",
+     "wis": [],
+     "titulo": "Checkout",
+     "estado": "en-curso",
+     "tipo": "",
+     "ambientes": [],
+     "rama": "",
+     "notas": "grupo del checkout",
+     "pendientes_abiertos": 1,
+     "readme": "<ROOT>\\grp-checkout\\README.md",
+     "fecha_pactada": "2026-12-01",
+     "periodo": "2026-11 (del 20 de ese mes al 19 del siguiente)",
+     "grupo_de": [
+      "grp-checkout/wi444444-carrito",
+      "grp-checkout/wi555555-envio"
+     ]
+    }
+   },
+   {
+    "tool": "workboard_add_task",
+    "args": {
+     "wi": "wi111111-login-con-sso",
+     "texto": "Documentar"
+    },
+    "ok": {
+     "carpeta": "wi111111-login-con-sso",
+     "pendientes": [
+      {
+       "indice": 0,
+       "texto": "Configurar el proveedor",
+       "hecha": false
+      },
+      {
+       "indice": 1,
+       "texto": "Crear la tabla de sesiones",
+       "hecha": true
+      },
+      {
+       "indice": 2,
+       "texto": "Probar   con   espacios",
+       "hecha": false
+      },
+      {
+       "indice": 3,
+       "texto": "Documentar",
+       "hecha": false
+      }
+     ]
+    }
+   },
+   {
+    "tool": "workboard_add_task",
+    "args": {
+     "wi": "wi111111-login-con-sso",
+     "texto": " "
+    },
+    "error": "ToolError",
+    "message": "La tarea está vacía"
+   },
+   {
+    "tool": "workboard_complete_task",
+    "args": {
+     "wi": "wi111111-login-con-sso",
+     "tarea": "0"
+    },
+    "ok": {
+     "carpeta": "wi111111-login-con-sso",
+     "pendientes": [
+      {
+       "indice": 0,
+       "texto": "Configurar el proveedor",
+       "hecha": true
+      },
+      {
+       "indice": 1,
+       "texto": "Crear la tabla de sesiones",
+       "hecha": true
+      },
+      {
+       "indice": 2,
+       "texto": "Probar   con   espacios",
+       "hecha": false
+      },
+      {
+       "indice": 3,
+       "texto": "Documentar",
+       "hecha": false
+      }
+     ]
+    }
+   },
+   {
+    "tool": "workboard_complete_task",
+    "args": {
+     "wi": "wi111111-login-con-sso",
+     "tarea": "Documentar"
+    },
+    "ok": {
+     "carpeta": "wi111111-login-con-sso",
+     "pendientes": [
+      {
+       "indice": 0,
+       "texto": "Configurar el proveedor",
+       "hecha": true
+      },
+      {
+       "indice": 1,
+       "texto": "Crear la tabla de sesiones",
+       "hecha": true
+      },
+      {
+       "indice": 2,
+       "texto": "Probar   con   espacios",
+       "hecha": false
+      },
+      {
+       "indice": 3,
+       "texto": "Documentar",
+       "hecha": true
+      }
+     ]
+    }
+   },
+   {
+    "tool": "workboard_complete_task",
+    "args": {
+     "wi": "wi111111-login-con-sso",
+     "tarea": "tabla",
+     "hecha": false
+    },
+    "ok": {
+     "carpeta": "wi111111-login-con-sso",
+     "pendientes": [
+      {
+       "indice": 0,
+       "texto": "Configurar el proveedor",
+       "hecha": true
+      },
+      {
+       "indice": 1,
+       "texto": "Crear la tabla de sesiones",
+       "hecha": false
+      },
+      {
+       "indice": 2,
+       "texto": "Probar   con   espacios",
+       "hecha": false
+      },
+      {
+       "indice": 3,
+       "texto": "Documentar",
+       "hecha": true
+      }
+     ]
+    }
+   },
+   {
+    "tool": "workboard_complete_task",
+    "args": {
+     "wi": "wi111111-login-con-sso",
+     "tarea": "r"
+    },
+    "error": "ToolError",
+    "message": "Más de una tarea coincide con 'r'. Pendientes: ['Configurar el proveedor', 'Crear la tabla de sesiones', 'Probar   con   espacios', 'Documentar']"
+   },
+   {
+    "tool": "workboard_complete_task",
+    "args": {
+     "wi": "wi111111-login-con-sso",
+     "tarea": "no existe"
+    },
+    "error": "ToolError",
+    "message": "Ninguna tarea coincide con 'no existe'. Pendientes: ['Configurar el proveedor', 'Crear la tabla de sesiones', 'Probar   con   espacios', 'Documentar']"
+   },
+   {
+    "tool": "workboard_complete_task",
+    "args": {
+     "wi": "wi111111-login-con-sso",
+     "tarea": "99"
+    },
+    "error": "ToolError",
+    "message": "Ninguna tarea coincide con '99'. Pendientes: ['Configurar el proveedor', 'Crear la tabla de sesiones', 'Probar   con   espacios', 'Documentar']"
+   },
+   {
+    "tool": "workboard_marcar_ejecutado",
+    "args": {
+     "wi": "111111-login",
+     "archivo": "MIGRATION_WI111111_sesiones.sql",
+     "ambiente": "QA"
+    },
+    "error": "ToolError",
+    "message": "No encontré el WI '111111-login'. Buscalo con workboard_list_wis"
+   },
+   {
+    "tool": "workboard_marcar_ejecutado",
+    "args": {
+     "wi": "wi111111-login-con-sso",
+     "archivo": "docs\\PLAN_sso.md",
+     "ambiente": "dev"
+    },
+    "ok": {
+     "archivo": "wi111111-login-con-sso/docs/PLAN_sso.md",
+     "ejecutado": [
+      "dev"
+     ]
+    }
+   },
+   {
+    "tool": "workboard_marcar_ejecutado",
+    "args": {
+     "wi": "wi111111-login-con-sso",
+     "archivo": "migration_wi111111_sesiones.sql",
+     "ambiente": "prod"
+    },
+    "ok": {
+     "archivo": "wi111111-login-con-sso/MIGRATION_WI111111_sesiones.sql",
+     "ejecutado": [
+      "prod"
+     ]
+    }
+   },
+   {
+    "tool": "workboard_marcar_ejecutado",
+    "args": {
+     "wi": "wi111111-login-con-sso",
+     "archivo": "MIGRATION_WI111111_sesiones.sql",
+     "ambiente": "qa",
+     "ejecutado": false
+    },
+    "ok": {
+     "archivo": "wi111111-login-con-sso/MIGRATION_WI111111_sesiones.sql",
+     "ejecutado": [
+      "prod"
+     ]
+    }
+   },
+   {
+    "tool": "workboard_marcar_ejecutado",
+    "args": {
+     "wi": "wi111111-login-con-sso",
+     "archivo": "x.sql",
+     "ambiente": "uat"
+    },
+    "error": "ToolError",
+    "message": "Ningún archivo de wi111111-login-con-sso coincide con 'x.sql'"
+   },
+   {
+    "tool": "workboard_marcar_ejecutado",
+    "args": {
+     "wi": "wi111111-login-con-sso",
+     "archivo": ".sql",
+     "ambiente": "dev"
+    },
+    "error": "ToolError",
+    "message": "Ningún archivo de wi111111-login-con-sso coincide con '.sql'"
+   },
+   {
+    "tool": "workboard_marcar_ejecutado",
+    "args": {
+     "wi": "wi111111-login-con-sso",
+     "archivo": "consulta.sql",
+     "ambiente": "uat"
+    },
+    "error": "ToolError",
+    "message": "ambiente inválido: 'uat'. Válidos: dev, qa, prod"
+   },
+   {
+    "tool": "workboard_get_wi",
+    "args": {
+     "wi": "wi111111-login-con-sso"
+    },
+    "ok": {
+     "carpeta": "wi111111-login-con-sso",
+     "ruta": "<ROOT>\\wi111111-login-con-sso",
+     "wis": [
+      "111111"
+     ],
+     "titulo": "Login con SSO",
+     "estado": "codeado",
+     "tipo": "us",
+     "ambientes": [
+      "dev",
+      "qa"
+     ],
+     "rama": "feature/111111-sso",
+     "notas": "falta: revisar el callback",
+     "pendientes_abiertos": 2,
+     "readme": "<ROOT>\\wi111111-login-con-sso\\README.md",
+     "prioridad": 2,
+     "fecha_pactada": "2026-11-25",
+     "periodo": "2026-11 (del 20 de ese mes al 19 del siguiente)",
+     "horas_pactadas": "8.5",
+     "frontmatter": {
+      "estado": "codeado",
+      "tipo": "us",
+      "ambientes": [
+       "dev",
+       "qa"
+      ],
+      "notas": "falta: revisar el callback",
+      "rama": "feature/111111-sso",
+      "pactada": "2026-11-25",
+      "horas": "8.5"
+     },
+     "pendientes": [
+      {
+       "indice": 0,
+       "texto": "Configurar el proveedor",
+       "hecha": true
+      },
+      {
+       "indice": 1,
+       "texto": "Crear la tabla de sesiones",
+       "hecha": false
+      },
+      {
+       "indice": 2,
+       "texto": "Probar   con   espacios",
+       "hecha": false
+      },
+      {
+       "indice": 3,
+       "texto": "Documentar",
+       "hecha": true
+      }
+     ],
+     "archivos": [
+      {
+       "ruta": "wi111111-login-con-sso/DIAG_WI111111_usuarios.sql",
+       "categoria": "diag",
+       "ejecutado": {}
+      },
+      {
+       "ruta": "wi111111-login-con-sso/MIGRATION_WI111111_sesiones.sql",
+       "categoria": "migracion",
+       "ejecutado": {
+        "prod": "<TODAY> <HH:MM>"
+       }
+      },
+      {
+       "ruta": "wi111111-login-con-sso/README.md",
+       "categoria": "doc"
+      },
+      {
+       "ruta": "wi111111-login-con-sso/ROLLBACK_WI111111_sesiones.sql",
+       "categoria": "migracion",
+       "ejecutado": {}
+      },
+      {
+       "ruta": "wi111111-login-con-sso/captura.png",
+       "categoria": "otro"
+      },
+      {
+       "ruta": "wi111111-login-con-sso/consulta.sql",
+       "categoria": "sql",
+       "ejecutado": {}
+      },
+      {
+       "ruta": "wi111111-login-con-sso/datos.bin",
+       "categoria": "otro"
+      },
+      {
+       "ruta": "wi111111-login-con-sso/docs/PLAN_sso.md",
+       "categoria": "doc"
+      },
+      {
+       "ruta": "wi111111-login-con-sso/docs/flujo.drawio",
+       "categoria": "doc"
+      },
+      {
+       "ruta": "wi111111-login-con-sso/gen_diag.py",
+       "categoria": "script",
+       "ejecutado": {}
+      }
+     ],
+     "deploy": "1. Correr la migración.\n### Detalle\nSigue dentro del deploy."
+    }
+   },
+   {
+    "tool": "workboard_add_note",
+    "args": {
+     "wi": "grp-checkout/wi444444-carrito",
+     "titulo": "Hallazgo: el carrito",
+     "texto": "Detalle\n\ncon líneas"
+    },
+    "ok": {
+     "nota": "hallazgo-el-carrito.md",
+     "carpeta": "<CONFIG>\\notas",
+     "wis": [
+      "444444"
+     ]
+    }
+   },
+   {
+    "tool": "workboard_add_note",
+    "args": {
+     "wi": "grp-checkout/wi444444-carrito",
+     "titulo": "Hallazgo: el carrito",
+     "texto": ""
+    },
+    "ok": {
+     "nota": "hallazgo-el-carrito-2.md",
+     "carpeta": "<CONFIG>\\notas",
+     "wis": [
+      "444444"
+     ]
+    }
+   },
+   {
+    "tool": "workboard_add_note",
+    "args": {
+     "wi": "444444",
+     "titulo": "ambiguo",
+     "texto": "x"
+    },
+    "error": "ToolError",
+    "message": "444444 está en varias carpetas: arreglo-sin-wi, grp-checkout/wi444444-carrito. Pasá el nombre de la carpeta"
+   },
+   {
+    "tool": "workboard_list_tools",
+    "args": {},
+    "ok": {
+     "tools": []
+    }
+   },
+   {
+    "tool": "workboard_run_tool",
+    "args": {
+     "nombre": "no-existe",
+     "wi": "wi111111-login-con-sso"
+    },
+    "error": "ToolError",
+    "message": "No existe la tool «no-existe». Las disponibles salen de workboard_list_tools."
+   },
+   {
+    "tool": "workboard_run_tool",
+    "args": {
+     "nombre": "no-existe"
+    },
+    "error": "TypeError",
+    "message": "'set' object is not subscriptable"
+   }
+  ],
+  "readmes_changed": {
+   "grp-checkout/README.md": "---\nestado: en-curso\nnotas: grupo del checkout\npactada: 2026-12-01\n---\n# Checkout\n\n## Pendientes\n\n- [ ] Coordinar deploy\n",
+   "wi111111-login-con-sso/README.md": "---\nestado: codeado\ntipo: us\nambientes: [dev, qa]\nnotas: \"falta: revisar el callback\"\nrama: feature/111111-sso\npactada: 2026-11-25\nhoras: 8.5\n---\n# Login con SSO\n\nTexto libre.\n\n## Pendientes\n\n- [x] Configurar el proveedor\n  - [ ] sub-ítem: no es tarea\n- [ ] Crear la tabla de sesiones\nTexto suelto dentro de la sección.\n- [ ]   Probar   con   espacios  \n- [x] Documentar\n\n## Deploy\n\n1. Correr la migración.\n### Detalle\nSigue dentro del deploy.\n\n## Notas\n\n- [ ] fuera de Pendientes: no es tarea\n"
+  },
+  "events": [
+   {
+    "session": "11111111-2222-3333-4444-555555555555",
+    "tipo": "set_estado",
+    "wi": "wi111111-login-con-sso",
+    "detalle": "estado: en-curso → codeado, ambientes: ['dev'] → ['dev', 'qa'], horas: 12,5 → 8.5"
+   },
+   {
+    "session": "11111111-2222-3333-4444-555555555555",
+    "tipo": "set_estado",
+    "wi": "grp-checkout",
+    "detalle": "pactada: — → 2026-12-01"
+   },
+   {
+    "session": "11111111-2222-3333-4444-555555555555",
+    "tipo": "add_task",
+    "wi": "wi111111-login-con-sso",
+    "detalle": "Documentar"
+   },
+   {
+    "session": "11111111-2222-3333-4444-555555555555",
+    "tipo": "complete_task",
+    "wi": "wi111111-login-con-sso",
+    "detalle": "Configurar el proveedor"
+   },
+   {
+    "session": "11111111-2222-3333-4444-555555555555",
+    "tipo": "complete_task",
+    "wi": "wi111111-login-con-sso",
+    "detalle": "Documentar"
+   },
+   {
+    "session": "11111111-2222-3333-4444-555555555555",
+    "tipo": "reopen_task",
+    "wi": "wi111111-login-con-sso",
+    "detalle": "Crear la tabla de sesiones"
+   },
+   {
+    "session": "11111111-2222-3333-4444-555555555555",
+    "tipo": "run",
+    "wi": "wi111111-login-con-sso",
+    "detalle": "wi111111-login-con-sso/docs/PLAN_sso.md · dev"
+   },
+   {
+    "session": "11111111-2222-3333-4444-555555555555",
+    "tipo": "run",
+    "wi": "wi111111-login-con-sso",
+    "detalle": "wi111111-login-con-sso/MIGRATION_WI111111_sesiones.sql · prod"
+   },
+   {
+    "session": "11111111-2222-3333-4444-555555555555",
+    "tipo": "unrun",
+    "wi": "wi111111-login-con-sso",
+    "detalle": "wi111111-login-con-sso/MIGRATION_WI111111_sesiones.sql · qa"
+   },
+   {
+    "session": "11111111-2222-3333-4444-555555555555",
+    "tipo": "add_note",
+    "wi": "grp-checkout/wi444444-carrito",
+    "detalle": "hallazgo-el-carrito.md"
+   },
+   {
+    "session": "11111111-2222-3333-4444-555555555555",
+    "tipo": "add_note",
+    "wi": "grp-checkout/wi444444-carrito",
+    "detalle": "hallazgo-el-carrito-2.md"
+   }
+  ],
+  "runs": {
+   "<ROOT>": {
+    "wi111111-login-con-sso/docs/PLAN_sso.md": [
+     "dev"
+    ],
+    "wi111111-login-con-sso/MIGRATION_WI111111_sesiones.sql": [
+     "prod"
+    ]
+   }
+  },
+  "notes": {
+   "hallazgo-el-carrito-2.md": "---\nwis: [444444]\nautor: claude\ncreada: <TODAY>\n---\n# Hallazgo: el carrito\n\n",
+   "hallazgo-el-carrito.md": "---\nwis: [444444]\nautor: claude\ncreada: <TODAY>\n---\n# Hallazgo: el carrito\n\nDetalle\n\ncon líneas\n"
+  }
+ }
+}

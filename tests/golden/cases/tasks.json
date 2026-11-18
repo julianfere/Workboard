@@ -1,0 +1,1695 @@
+{
+ "bodies": {
+  "sin_seccion": "# T\n\nTexto.\n\n\n",
+  "vacia": "# T\n\n## Pendientes\n\n## Otra\n",
+  "completa": "# T\n\n## Pendientes\n\n- [ ] uno\n  - [ ] sub\n- [x] dos\ntexto\n- [X] tres\n-  [ ] mal formada\n- [ ]cuatro\n\n### Sub heading\n- [ ] cinco (bajo ###: sigue en la sección)\n\n## Siguiente\n- [ ] fuera\n",
+  "mayusculas": "## PENDIENTES   \n- [ ] a\n# Fin\n- [ ] fuera\n",
+  "sin_newline_final": "## Pendientes\n- [ ] a",
+  "crlf": "# T\r\n\r\n## Pendientes\r\n- [ ] a\r\n- [x] b\r\n",
+  "dos_secciones": "## Pendientes\n- [ ] a\n## Pendientes\n- [ ] b\n",
+  "heading_pegado": "##Pendientes\n- [ ] a\n"
+ },
+ "cases": [
+  {
+   "body": "sin_seccion",
+   "op": "parse",
+   "ok": []
+  },
+  {
+   "body": "sin_seccion",
+   "op": "add",
+   "args": [
+    "nueva"
+   ],
+   "ok": "# T\n\nTexto.\n\n## Pendientes\n\n- [ ] nueva\n"
+  },
+  {
+   "body": "sin_seccion",
+   "op": "close",
+   "ok": "# T\n\nTexto.\n\n\n"
+  },
+  {
+   "body": "sin_seccion",
+   "op": "clear_done",
+   "ok": [
+    "# T\n\nTexto.\n\n\n",
+    []
+   ]
+  },
+  {
+   "body": "sin_seccion",
+   "op": "set",
+   "args": [
+    -1,
+    true
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "sin_seccion",
+   "op": "set",
+   "args": [
+    -1,
+    false
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "sin_seccion",
+   "op": "remove",
+   "args": [
+    -1
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "sin_seccion",
+   "op": "edit",
+   "args": [
+    -1,
+    "editada"
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "sin_seccion",
+   "op": "set",
+   "args": [
+    0,
+    true
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "sin_seccion",
+   "op": "set",
+   "args": [
+    0,
+    false
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "sin_seccion",
+   "op": "remove",
+   "args": [
+    0
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "sin_seccion",
+   "op": "edit",
+   "args": [
+    0,
+    "editada"
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "vacia",
+   "op": "parse",
+   "ok": []
+  },
+  {
+   "body": "vacia",
+   "op": "add",
+   "args": [
+    "nueva"
+   ],
+   "ok": "# T\n\n## Pendientes\n- [ ] nueva\n\n## Otra\n"
+  },
+  {
+   "body": "vacia",
+   "op": "close",
+   "ok": "# T\n\n## Pendientes\n\n## Otra\n"
+  },
+  {
+   "body": "vacia",
+   "op": "clear_done",
+   "ok": [
+    "# T\n\n## Pendientes\n\n## Otra\n",
+    []
+   ]
+  },
+  {
+   "body": "vacia",
+   "op": "set",
+   "args": [
+    -1,
+    true
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "vacia",
+   "op": "set",
+   "args": [
+    -1,
+    false
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "vacia",
+   "op": "remove",
+   "args": [
+    -1
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "vacia",
+   "op": "edit",
+   "args": [
+    -1,
+    "editada"
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "vacia",
+   "op": "set",
+   "args": [
+    0,
+    true
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "vacia",
+   "op": "set",
+   "args": [
+    0,
+    false
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "vacia",
+   "op": "remove",
+   "args": [
+    0
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "vacia",
+   "op": "edit",
+   "args": [
+    0,
+    "editada"
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "completa",
+   "op": "parse",
+   "ok": [
+    {
+     "text": "uno",
+     "done": false
+    },
+    {
+     "text": "dos",
+     "done": true
+    },
+    {
+     "text": "tres",
+     "done": true
+    },
+    {
+     "text": "cinco (bajo ###: sigue en la sección)",
+     "done": false
+    }
+   ]
+  },
+  {
+   "body": "completa",
+   "op": "add",
+   "args": [
+    "nueva"
+   ],
+   "ok": "# T\n\n## Pendientes\n\n- [ ] uno\n  - [ ] sub\n- [x] dos\ntexto\n- [X] tres\n-  [ ] mal formada\n- [ ]cuatro\n\n### Sub heading\n- [ ] cinco (bajo ###: sigue en la sección)\n- [ ] nueva\n\n## Siguiente\n- [ ] fuera\n"
+  },
+  {
+   "body": "completa",
+   "op": "close",
+   "ok": "# T\n\n## Pendientes\n\n- [x] uno\n  - [ ] sub\n- [x] dos\ntexto\n- [X] tres\n-  [ ] mal formada\n- [ ]cuatro\n\n### Sub heading\n- [x] cinco (bajo ###: sigue en la sección)\n\n## Siguiente\n- [ ] fuera\n"
+  },
+  {
+   "body": "completa",
+   "op": "clear_done",
+   "ok": [
+    "# T\n\n## Pendientes\n\n- [ ] uno\n  - [ ] sub\ntexto\n-  [ ] mal formada\n- [ ]cuatro\n\n### Sub heading\n- [ ] cinco (bajo ###: sigue en la sección)\n\n## Siguiente\n- [ ] fuera\n",
+    [
+     "dos",
+     "tres"
+    ]
+   ]
+  },
+  {
+   "body": "completa",
+   "op": "set",
+   "args": [
+    -1,
+    true
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "completa",
+   "op": "set",
+   "args": [
+    -1,
+    false
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "completa",
+   "op": "remove",
+   "args": [
+    -1
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "completa",
+   "op": "edit",
+   "args": [
+    -1,
+    "editada"
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "completa",
+   "op": "set",
+   "args": [
+    0,
+    true
+   ],
+   "ok": "# T\n\n## Pendientes\n\n- [x] uno\n  - [ ] sub\n- [x] dos\ntexto\n- [X] tres\n-  [ ] mal formada\n- [ ]cuatro\n\n### Sub heading\n- [ ] cinco (bajo ###: sigue en la sección)\n\n## Siguiente\n- [ ] fuera\n"
+  },
+  {
+   "body": "completa",
+   "op": "set",
+   "args": [
+    0,
+    false
+   ],
+   "ok": "# T\n\n## Pendientes\n\n- [ ] uno\n  - [ ] sub\n- [x] dos\ntexto\n- [X] tres\n-  [ ] mal formada\n- [ ]cuatro\n\n### Sub heading\n- [ ] cinco (bajo ###: sigue en la sección)\n\n## Siguiente\n- [ ] fuera\n"
+  },
+  {
+   "body": "completa",
+   "op": "remove",
+   "args": [
+    0
+   ],
+   "ok": "# T\n\n## Pendientes\n\n  - [ ] sub\n- [x] dos\ntexto\n- [X] tres\n-  [ ] mal formada\n- [ ]cuatro\n\n### Sub heading\n- [ ] cinco (bajo ###: sigue en la sección)\n\n## Siguiente\n- [ ] fuera\n"
+  },
+  {
+   "body": "completa",
+   "op": "edit",
+   "args": [
+    0,
+    "editada"
+   ],
+   "ok": "# T\n\n## Pendientes\n\n- [ ] editada\n  - [ ] sub\n- [x] dos\ntexto\n- [X] tres\n-  [ ] mal formada\n- [ ]cuatro\n\n### Sub heading\n- [ ] cinco (bajo ###: sigue en la sección)\n\n## Siguiente\n- [ ] fuera\n"
+  },
+  {
+   "body": "completa",
+   "op": "set",
+   "args": [
+    1,
+    true
+   ],
+   "ok": "# T\n\n## Pendientes\n\n- [ ] uno\n  - [ ] sub\n- [x] dos\ntexto\n- [X] tres\n-  [ ] mal formada\n- [ ]cuatro\n\n### Sub heading\n- [ ] cinco (bajo ###: sigue en la sección)\n\n## Siguiente\n- [ ] fuera\n"
+  },
+  {
+   "body": "completa",
+   "op": "set",
+   "args": [
+    1,
+    false
+   ],
+   "ok": "# T\n\n## Pendientes\n\n- [ ] uno\n  - [ ] sub\n- [ ] dos\ntexto\n- [X] tres\n-  [ ] mal formada\n- [ ]cuatro\n\n### Sub heading\n- [ ] cinco (bajo ###: sigue en la sección)\n\n## Siguiente\n- [ ] fuera\n"
+  },
+  {
+   "body": "completa",
+   "op": "remove",
+   "args": [
+    1
+   ],
+   "ok": "# T\n\n## Pendientes\n\n- [ ] uno\n  - [ ] sub\ntexto\n- [X] tres\n-  [ ] mal formada\n- [ ]cuatro\n\n### Sub heading\n- [ ] cinco (bajo ###: sigue en la sección)\n\n## Siguiente\n- [ ] fuera\n"
+  },
+  {
+   "body": "completa",
+   "op": "edit",
+   "args": [
+    1,
+    "editada"
+   ],
+   "ok": "# T\n\n## Pendientes\n\n- [ ] uno\n  - [ ] sub\n- [x] editada\ntexto\n- [X] tres\n-  [ ] mal formada\n- [ ]cuatro\n\n### Sub heading\n- [ ] cinco (bajo ###: sigue en la sección)\n\n## Siguiente\n- [ ] fuera\n"
+  },
+  {
+   "body": "completa",
+   "op": "set",
+   "args": [
+    2,
+    true
+   ],
+   "ok": "# T\n\n## Pendientes\n\n- [ ] uno\n  - [ ] sub\n- [x] dos\ntexto\n- [x] tres\n-  [ ] mal formada\n- [ ]cuatro\n\n### Sub heading\n- [ ] cinco (bajo ###: sigue en la sección)\n\n## Siguiente\n- [ ] fuera\n"
+  },
+  {
+   "body": "completa",
+   "op": "set",
+   "args": [
+    2,
+    false
+   ],
+   "ok": "# T\n\n## Pendientes\n\n- [ ] uno\n  - [ ] sub\n- [x] dos\ntexto\n- [ ] tres\n-  [ ] mal formada\n- [ ]cuatro\n\n### Sub heading\n- [ ] cinco (bajo ###: sigue en la sección)\n\n## Siguiente\n- [ ] fuera\n"
+  },
+  {
+   "body": "completa",
+   "op": "remove",
+   "args": [
+    2
+   ],
+   "ok": "# T\n\n## Pendientes\n\n- [ ] uno\n  - [ ] sub\n- [x] dos\ntexto\n-  [ ] mal formada\n- [ ]cuatro\n\n### Sub heading\n- [ ] cinco (bajo ###: sigue en la sección)\n\n## Siguiente\n- [ ] fuera\n"
+  },
+  {
+   "body": "completa",
+   "op": "edit",
+   "args": [
+    2,
+    "editada"
+   ],
+   "ok": "# T\n\n## Pendientes\n\n- [ ] uno\n  - [ ] sub\n- [x] dos\ntexto\n- [X] editada\n-  [ ] mal formada\n- [ ]cuatro\n\n### Sub heading\n- [ ] cinco (bajo ###: sigue en la sección)\n\n## Siguiente\n- [ ] fuera\n"
+  },
+  {
+   "body": "completa",
+   "op": "set",
+   "args": [
+    3,
+    true
+   ],
+   "ok": "# T\n\n## Pendientes\n\n- [ ] uno\n  - [ ] sub\n- [x] dos\ntexto\n- [X] tres\n-  [ ] mal formada\n- [ ]cuatro\n\n### Sub heading\n- [x] cinco (bajo ###: sigue en la sección)\n\n## Siguiente\n- [ ] fuera\n"
+  },
+  {
+   "body": "completa",
+   "op": "set",
+   "args": [
+    3,
+    false
+   ],
+   "ok": "# T\n\n## Pendientes\n\n- [ ] uno\n  - [ ] sub\n- [x] dos\ntexto\n- [X] tres\n-  [ ] mal formada\n- [ ]cuatro\n\n### Sub heading\n- [ ] cinco (bajo ###: sigue en la sección)\n\n## Siguiente\n- [ ] fuera\n"
+  },
+  {
+   "body": "completa",
+   "op": "remove",
+   "args": [
+    3
+   ],
+   "ok": "# T\n\n## Pendientes\n\n- [ ] uno\n  - [ ] sub\n- [x] dos\ntexto\n- [X] tres\n-  [ ] mal formada\n- [ ]cuatro\n\n### Sub heading\n\n## Siguiente\n- [ ] fuera\n"
+  },
+  {
+   "body": "completa",
+   "op": "edit",
+   "args": [
+    3,
+    "editada"
+   ],
+   "ok": "# T\n\n## Pendientes\n\n- [ ] uno\n  - [ ] sub\n- [x] dos\ntexto\n- [X] tres\n-  [ ] mal formada\n- [ ]cuatro\n\n### Sub heading\n- [ ] editada\n\n## Siguiente\n- [ ] fuera\n"
+  },
+  {
+   "body": "completa",
+   "op": "set",
+   "args": [
+    4,
+    true
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "completa",
+   "op": "set",
+   "args": [
+    4,
+    false
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "completa",
+   "op": "remove",
+   "args": [
+    4
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "completa",
+   "op": "edit",
+   "args": [
+    4,
+    "editada"
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "completa",
+   "op": "set",
+   "args": [
+    0,
+    true
+   ],
+   "expect": "uno",
+   "ok": "# T\n\n## Pendientes\n\n- [x] uno\n  - [ ] sub\n- [x] dos\ntexto\n- [X] tres\n-  [ ] mal formada\n- [ ]cuatro\n\n### Sub heading\n- [ ] cinco (bajo ###: sigue en la sección)\n\n## Siguiente\n- [ ] fuera\n"
+  },
+  {
+   "body": "completa",
+   "op": "remove",
+   "args": [
+    0
+   ],
+   "expect": "uno",
+   "ok": "# T\n\n## Pendientes\n\n  - [ ] sub\n- [x] dos\ntexto\n- [X] tres\n-  [ ] mal formada\n- [ ]cuatro\n\n### Sub heading\n- [ ] cinco (bajo ###: sigue en la sección)\n\n## Siguiente\n- [ ] fuera\n"
+  },
+  {
+   "body": "completa",
+   "op": "edit",
+   "args": [
+    0,
+    "e"
+   ],
+   "expect": "uno",
+   "ok": "# T\n\n## Pendientes\n\n- [ ] e\n  - [ ] sub\n- [x] dos\ntexto\n- [X] tres\n-  [ ] mal formada\n- [ ]cuatro\n\n### Sub heading\n- [ ] cinco (bajo ###: sigue en la sección)\n\n## Siguiente\n- [ ] fuera\n"
+  },
+  {
+   "body": "completa",
+   "op": "set",
+   "args": [
+    0,
+    true
+   ],
+   "expect": " uno ",
+   "ok": "# T\n\n## Pendientes\n\n- [x] uno\n  - [ ] sub\n- [x] dos\ntexto\n- [X] tres\n-  [ ] mal formada\n- [ ]cuatro\n\n### Sub heading\n- [ ] cinco (bajo ###: sigue en la sección)\n\n## Siguiente\n- [ ] fuera\n"
+  },
+  {
+   "body": "completa",
+   "op": "remove",
+   "args": [
+    0
+   ],
+   "expect": " uno ",
+   "ok": "# T\n\n## Pendientes\n\n  - [ ] sub\n- [x] dos\ntexto\n- [X] tres\n-  [ ] mal formada\n- [ ]cuatro\n\n### Sub heading\n- [ ] cinco (bajo ###: sigue en la sección)\n\n## Siguiente\n- [ ] fuera\n"
+  },
+  {
+   "body": "completa",
+   "op": "edit",
+   "args": [
+    0,
+    "e"
+   ],
+   "expect": " uno ",
+   "ok": "# T\n\n## Pendientes\n\n- [ ] e\n  - [ ] sub\n- [x] dos\ntexto\n- [X] tres\n-  [ ] mal formada\n- [ ]cuatro\n\n### Sub heading\n- [ ] cinco (bajo ###: sigue en la sección)\n\n## Siguiente\n- [ ] fuera\n"
+  },
+  {
+   "body": "completa",
+   "op": "set",
+   "args": [
+    0,
+    true
+   ],
+   "expect": "otra",
+   "error": "ValueError",
+   "message": "La lista de pendientes cambió en disco; recargá y reintentá"
+  },
+  {
+   "body": "completa",
+   "op": "remove",
+   "args": [
+    0
+   ],
+   "expect": "otra",
+   "error": "ValueError",
+   "message": "La lista de pendientes cambió en disco; recargá y reintentá"
+  },
+  {
+   "body": "completa",
+   "op": "edit",
+   "args": [
+    0,
+    "e"
+   ],
+   "expect": "otra",
+   "error": "ValueError",
+   "message": "La lista de pendientes cambió en disco; recargá y reintentá"
+  },
+  {
+   "body": "mayusculas",
+   "op": "parse",
+   "ok": [
+    {
+     "text": "a",
+     "done": false
+    }
+   ]
+  },
+  {
+   "body": "mayusculas",
+   "op": "add",
+   "args": [
+    "nueva"
+   ],
+   "ok": "## PENDIENTES   \n- [ ] a\n- [ ] nueva\n# Fin\n- [ ] fuera\n"
+  },
+  {
+   "body": "mayusculas",
+   "op": "close",
+   "ok": "## PENDIENTES   \n- [x] a\n# Fin\n- [ ] fuera\n"
+  },
+  {
+   "body": "mayusculas",
+   "op": "clear_done",
+   "ok": [
+    "## PENDIENTES   \n- [ ] a\n# Fin\n- [ ] fuera\n",
+    []
+   ]
+  },
+  {
+   "body": "mayusculas",
+   "op": "set",
+   "args": [
+    -1,
+    true
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "mayusculas",
+   "op": "set",
+   "args": [
+    -1,
+    false
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "mayusculas",
+   "op": "remove",
+   "args": [
+    -1
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "mayusculas",
+   "op": "edit",
+   "args": [
+    -1,
+    "editada"
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "mayusculas",
+   "op": "set",
+   "args": [
+    0,
+    true
+   ],
+   "ok": "## PENDIENTES   \n- [x] a\n# Fin\n- [ ] fuera\n"
+  },
+  {
+   "body": "mayusculas",
+   "op": "set",
+   "args": [
+    0,
+    false
+   ],
+   "ok": "## PENDIENTES   \n- [ ] a\n# Fin\n- [ ] fuera\n"
+  },
+  {
+   "body": "mayusculas",
+   "op": "remove",
+   "args": [
+    0
+   ],
+   "ok": "## PENDIENTES   \n# Fin\n- [ ] fuera\n"
+  },
+  {
+   "body": "mayusculas",
+   "op": "edit",
+   "args": [
+    0,
+    "editada"
+   ],
+   "ok": "## PENDIENTES   \n- [ ] editada\n# Fin\n- [ ] fuera\n"
+  },
+  {
+   "body": "mayusculas",
+   "op": "set",
+   "args": [
+    1,
+    true
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "mayusculas",
+   "op": "set",
+   "args": [
+    1,
+    false
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "mayusculas",
+   "op": "remove",
+   "args": [
+    1
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "mayusculas",
+   "op": "edit",
+   "args": [
+    1,
+    "editada"
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "mayusculas",
+   "op": "set",
+   "args": [
+    0,
+    true
+   ],
+   "expect": "a",
+   "ok": "## PENDIENTES   \n- [x] a\n# Fin\n- [ ] fuera\n"
+  },
+  {
+   "body": "mayusculas",
+   "op": "remove",
+   "args": [
+    0
+   ],
+   "expect": "a",
+   "ok": "## PENDIENTES   \n# Fin\n- [ ] fuera\n"
+  },
+  {
+   "body": "mayusculas",
+   "op": "edit",
+   "args": [
+    0,
+    "e"
+   ],
+   "expect": "a",
+   "ok": "## PENDIENTES   \n- [ ] e\n# Fin\n- [ ] fuera\n"
+  },
+  {
+   "body": "mayusculas",
+   "op": "set",
+   "args": [
+    0,
+    true
+   ],
+   "expect": " a ",
+   "ok": "## PENDIENTES   \n- [x] a\n# Fin\n- [ ] fuera\n"
+  },
+  {
+   "body": "mayusculas",
+   "op": "remove",
+   "args": [
+    0
+   ],
+   "expect": " a ",
+   "ok": "## PENDIENTES   \n# Fin\n- [ ] fuera\n"
+  },
+  {
+   "body": "mayusculas",
+   "op": "edit",
+   "args": [
+    0,
+    "e"
+   ],
+   "expect": " a ",
+   "ok": "## PENDIENTES   \n- [ ] e\n# Fin\n- [ ] fuera\n"
+  },
+  {
+   "body": "mayusculas",
+   "op": "set",
+   "args": [
+    0,
+    true
+   ],
+   "expect": "otra",
+   "error": "ValueError",
+   "message": "La lista de pendientes cambió en disco; recargá y reintentá"
+  },
+  {
+   "body": "mayusculas",
+   "op": "remove",
+   "args": [
+    0
+   ],
+   "expect": "otra",
+   "error": "ValueError",
+   "message": "La lista de pendientes cambió en disco; recargá y reintentá"
+  },
+  {
+   "body": "mayusculas",
+   "op": "edit",
+   "args": [
+    0,
+    "e"
+   ],
+   "expect": "otra",
+   "error": "ValueError",
+   "message": "La lista de pendientes cambió en disco; recargá y reintentá"
+  },
+  {
+   "body": "sin_newline_final",
+   "op": "parse",
+   "ok": [
+    {
+     "text": "a",
+     "done": false
+    }
+   ]
+  },
+  {
+   "body": "sin_newline_final",
+   "op": "add",
+   "args": [
+    "nueva"
+   ],
+   "ok": "## Pendientes\n- [ ] a\n- [ ] nueva\n"
+  },
+  {
+   "body": "sin_newline_final",
+   "op": "close",
+   "ok": "## Pendientes\n- [x] a\n"
+  },
+  {
+   "body": "sin_newline_final",
+   "op": "clear_done",
+   "ok": [
+    "## Pendientes\n- [ ] a\n",
+    []
+   ]
+  },
+  {
+   "body": "sin_newline_final",
+   "op": "set",
+   "args": [
+    -1,
+    true
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "sin_newline_final",
+   "op": "set",
+   "args": [
+    -1,
+    false
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "sin_newline_final",
+   "op": "remove",
+   "args": [
+    -1
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "sin_newline_final",
+   "op": "edit",
+   "args": [
+    -1,
+    "editada"
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "sin_newline_final",
+   "op": "set",
+   "args": [
+    0,
+    true
+   ],
+   "ok": "## Pendientes\n- [x] a\n"
+  },
+  {
+   "body": "sin_newline_final",
+   "op": "set",
+   "args": [
+    0,
+    false
+   ],
+   "ok": "## Pendientes\n- [ ] a\n"
+  },
+  {
+   "body": "sin_newline_final",
+   "op": "remove",
+   "args": [
+    0
+   ],
+   "ok": "## Pendientes\n"
+  },
+  {
+   "body": "sin_newline_final",
+   "op": "edit",
+   "args": [
+    0,
+    "editada"
+   ],
+   "ok": "## Pendientes\n- [ ] editada\n"
+  },
+  {
+   "body": "sin_newline_final",
+   "op": "set",
+   "args": [
+    1,
+    true
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "sin_newline_final",
+   "op": "set",
+   "args": [
+    1,
+    false
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "sin_newline_final",
+   "op": "remove",
+   "args": [
+    1
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "sin_newline_final",
+   "op": "edit",
+   "args": [
+    1,
+    "editada"
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "sin_newline_final",
+   "op": "set",
+   "args": [
+    0,
+    true
+   ],
+   "expect": "a",
+   "ok": "## Pendientes\n- [x] a\n"
+  },
+  {
+   "body": "sin_newline_final",
+   "op": "remove",
+   "args": [
+    0
+   ],
+   "expect": "a",
+   "ok": "## Pendientes\n"
+  },
+  {
+   "body": "sin_newline_final",
+   "op": "edit",
+   "args": [
+    0,
+    "e"
+   ],
+   "expect": "a",
+   "ok": "## Pendientes\n- [ ] e\n"
+  },
+  {
+   "body": "sin_newline_final",
+   "op": "set",
+   "args": [
+    0,
+    true
+   ],
+   "expect": " a ",
+   "ok": "## Pendientes\n- [x] a\n"
+  },
+  {
+   "body": "sin_newline_final",
+   "op": "remove",
+   "args": [
+    0
+   ],
+   "expect": " a ",
+   "ok": "## Pendientes\n"
+  },
+  {
+   "body": "sin_newline_final",
+   "op": "edit",
+   "args": [
+    0,
+    "e"
+   ],
+   "expect": " a ",
+   "ok": "## Pendientes\n- [ ] e\n"
+  },
+  {
+   "body": "sin_newline_final",
+   "op": "set",
+   "args": [
+    0,
+    true
+   ],
+   "expect": "otra",
+   "error": "ValueError",
+   "message": "La lista de pendientes cambió en disco; recargá y reintentá"
+  },
+  {
+   "body": "sin_newline_final",
+   "op": "remove",
+   "args": [
+    0
+   ],
+   "expect": "otra",
+   "error": "ValueError",
+   "message": "La lista de pendientes cambió en disco; recargá y reintentá"
+  },
+  {
+   "body": "sin_newline_final",
+   "op": "edit",
+   "args": [
+    0,
+    "e"
+   ],
+   "expect": "otra",
+   "error": "ValueError",
+   "message": "La lista de pendientes cambió en disco; recargá y reintentá"
+  },
+  {
+   "body": "crlf",
+   "op": "parse",
+   "ok": [
+    {
+     "text": "a",
+     "done": false
+    },
+    {
+     "text": "b",
+     "done": true
+    }
+   ]
+  },
+  {
+   "body": "crlf",
+   "op": "add",
+   "args": [
+    "nueva"
+   ],
+   "ok": "# T\n\n## Pendientes\n- [ ] a\n- [x] b\n- [ ] nueva\n"
+  },
+  {
+   "body": "crlf",
+   "op": "close",
+   "ok": "# T\n\n## Pendientes\n- [x] a\n- [x] b\n"
+  },
+  {
+   "body": "crlf",
+   "op": "clear_done",
+   "ok": [
+    "# T\n\n## Pendientes\n- [ ] a\n",
+    [
+     "b"
+    ]
+   ]
+  },
+  {
+   "body": "crlf",
+   "op": "set",
+   "args": [
+    -1,
+    true
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "crlf",
+   "op": "set",
+   "args": [
+    -1,
+    false
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "crlf",
+   "op": "remove",
+   "args": [
+    -1
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "crlf",
+   "op": "edit",
+   "args": [
+    -1,
+    "editada"
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "crlf",
+   "op": "set",
+   "args": [
+    0,
+    true
+   ],
+   "ok": "# T\n\n## Pendientes\n- [x] a\n- [x] b\n"
+  },
+  {
+   "body": "crlf",
+   "op": "set",
+   "args": [
+    0,
+    false
+   ],
+   "ok": "# T\n\n## Pendientes\n- [ ] a\n- [x] b\n"
+  },
+  {
+   "body": "crlf",
+   "op": "remove",
+   "args": [
+    0
+   ],
+   "ok": "# T\n\n## Pendientes\n- [x] b\n"
+  },
+  {
+   "body": "crlf",
+   "op": "edit",
+   "args": [
+    0,
+    "editada"
+   ],
+   "ok": "# T\n\n## Pendientes\n- [ ] editada\n- [x] b\n"
+  },
+  {
+   "body": "crlf",
+   "op": "set",
+   "args": [
+    1,
+    true
+   ],
+   "ok": "# T\n\n## Pendientes\n- [ ] a\n- [x] b\n"
+  },
+  {
+   "body": "crlf",
+   "op": "set",
+   "args": [
+    1,
+    false
+   ],
+   "ok": "# T\n\n## Pendientes\n- [ ] a\n- [ ] b\n"
+  },
+  {
+   "body": "crlf",
+   "op": "remove",
+   "args": [
+    1
+   ],
+   "ok": "# T\n\n## Pendientes\n- [ ] a\n"
+  },
+  {
+   "body": "crlf",
+   "op": "edit",
+   "args": [
+    1,
+    "editada"
+   ],
+   "ok": "# T\n\n## Pendientes\n- [ ] a\n- [x] editada\n"
+  },
+  {
+   "body": "crlf",
+   "op": "set",
+   "args": [
+    2,
+    true
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "crlf",
+   "op": "set",
+   "args": [
+    2,
+    false
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "crlf",
+   "op": "remove",
+   "args": [
+    2
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "crlf",
+   "op": "edit",
+   "args": [
+    2,
+    "editada"
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "crlf",
+   "op": "set",
+   "args": [
+    0,
+    true
+   ],
+   "expect": "a",
+   "ok": "# T\n\n## Pendientes\n- [x] a\n- [x] b\n"
+  },
+  {
+   "body": "crlf",
+   "op": "remove",
+   "args": [
+    0
+   ],
+   "expect": "a",
+   "ok": "# T\n\n## Pendientes\n- [x] b\n"
+  },
+  {
+   "body": "crlf",
+   "op": "edit",
+   "args": [
+    0,
+    "e"
+   ],
+   "expect": "a",
+   "ok": "# T\n\n## Pendientes\n- [ ] e\n- [x] b\n"
+  },
+  {
+   "body": "crlf",
+   "op": "set",
+   "args": [
+    0,
+    true
+   ],
+   "expect": " a ",
+   "ok": "# T\n\n## Pendientes\n- [x] a\n- [x] b\n"
+  },
+  {
+   "body": "crlf",
+   "op": "remove",
+   "args": [
+    0
+   ],
+   "expect": " a ",
+   "ok": "# T\n\n## Pendientes\n- [x] b\n"
+  },
+  {
+   "body": "crlf",
+   "op": "edit",
+   "args": [
+    0,
+    "e"
+   ],
+   "expect": " a ",
+   "ok": "# T\n\n## Pendientes\n- [ ] e\n- [x] b\n"
+  },
+  {
+   "body": "crlf",
+   "op": "set",
+   "args": [
+    0,
+    true
+   ],
+   "expect": "otra",
+   "error": "ValueError",
+   "message": "La lista de pendientes cambió en disco; recargá y reintentá"
+  },
+  {
+   "body": "crlf",
+   "op": "remove",
+   "args": [
+    0
+   ],
+   "expect": "otra",
+   "error": "ValueError",
+   "message": "La lista de pendientes cambió en disco; recargá y reintentá"
+  },
+  {
+   "body": "crlf",
+   "op": "edit",
+   "args": [
+    0,
+    "e"
+   ],
+   "expect": "otra",
+   "error": "ValueError",
+   "message": "La lista de pendientes cambió en disco; recargá y reintentá"
+  },
+  {
+   "body": "dos_secciones",
+   "op": "parse",
+   "ok": [
+    {
+     "text": "a",
+     "done": false
+    }
+   ]
+  },
+  {
+   "body": "dos_secciones",
+   "op": "add",
+   "args": [
+    "nueva"
+   ],
+   "ok": "## Pendientes\n- [ ] a\n- [ ] nueva\n## Pendientes\n- [ ] b\n"
+  },
+  {
+   "body": "dos_secciones",
+   "op": "close",
+   "ok": "## Pendientes\n- [x] a\n## Pendientes\n- [ ] b\n"
+  },
+  {
+   "body": "dos_secciones",
+   "op": "clear_done",
+   "ok": [
+    "## Pendientes\n- [ ] a\n## Pendientes\n- [ ] b\n",
+    []
+   ]
+  },
+  {
+   "body": "dos_secciones",
+   "op": "set",
+   "args": [
+    -1,
+    true
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "dos_secciones",
+   "op": "set",
+   "args": [
+    -1,
+    false
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "dos_secciones",
+   "op": "remove",
+   "args": [
+    -1
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "dos_secciones",
+   "op": "edit",
+   "args": [
+    -1,
+    "editada"
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "dos_secciones",
+   "op": "set",
+   "args": [
+    0,
+    true
+   ],
+   "ok": "## Pendientes\n- [x] a\n## Pendientes\n- [ ] b\n"
+  },
+  {
+   "body": "dos_secciones",
+   "op": "set",
+   "args": [
+    0,
+    false
+   ],
+   "ok": "## Pendientes\n- [ ] a\n## Pendientes\n- [ ] b\n"
+  },
+  {
+   "body": "dos_secciones",
+   "op": "remove",
+   "args": [
+    0
+   ],
+   "ok": "## Pendientes\n## Pendientes\n- [ ] b\n"
+  },
+  {
+   "body": "dos_secciones",
+   "op": "edit",
+   "args": [
+    0,
+    "editada"
+   ],
+   "ok": "## Pendientes\n- [ ] editada\n## Pendientes\n- [ ] b\n"
+  },
+  {
+   "body": "dos_secciones",
+   "op": "set",
+   "args": [
+    1,
+    true
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "dos_secciones",
+   "op": "set",
+   "args": [
+    1,
+    false
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "dos_secciones",
+   "op": "remove",
+   "args": [
+    1
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "dos_secciones",
+   "op": "edit",
+   "args": [
+    1,
+    "editada"
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "dos_secciones",
+   "op": "set",
+   "args": [
+    0,
+    true
+   ],
+   "expect": "a",
+   "ok": "## Pendientes\n- [x] a\n## Pendientes\n- [ ] b\n"
+  },
+  {
+   "body": "dos_secciones",
+   "op": "remove",
+   "args": [
+    0
+   ],
+   "expect": "a",
+   "ok": "## Pendientes\n## Pendientes\n- [ ] b\n"
+  },
+  {
+   "body": "dos_secciones",
+   "op": "edit",
+   "args": [
+    0,
+    "e"
+   ],
+   "expect": "a",
+   "ok": "## Pendientes\n- [ ] e\n## Pendientes\n- [ ] b\n"
+  },
+  {
+   "body": "dos_secciones",
+   "op": "set",
+   "args": [
+    0,
+    true
+   ],
+   "expect": " a ",
+   "ok": "## Pendientes\n- [x] a\n## Pendientes\n- [ ] b\n"
+  },
+  {
+   "body": "dos_secciones",
+   "op": "remove",
+   "args": [
+    0
+   ],
+   "expect": " a ",
+   "ok": "## Pendientes\n## Pendientes\n- [ ] b\n"
+  },
+  {
+   "body": "dos_secciones",
+   "op": "edit",
+   "args": [
+    0,
+    "e"
+   ],
+   "expect": " a ",
+   "ok": "## Pendientes\n- [ ] e\n## Pendientes\n- [ ] b\n"
+  },
+  {
+   "body": "dos_secciones",
+   "op": "set",
+   "args": [
+    0,
+    true
+   ],
+   "expect": "otra",
+   "error": "ValueError",
+   "message": "La lista de pendientes cambió en disco; recargá y reintentá"
+  },
+  {
+   "body": "dos_secciones",
+   "op": "remove",
+   "args": [
+    0
+   ],
+   "expect": "otra",
+   "error": "ValueError",
+   "message": "La lista de pendientes cambió en disco; recargá y reintentá"
+  },
+  {
+   "body": "dos_secciones",
+   "op": "edit",
+   "args": [
+    0,
+    "e"
+   ],
+   "expect": "otra",
+   "error": "ValueError",
+   "message": "La lista de pendientes cambió en disco; recargá y reintentá"
+  },
+  {
+   "body": "heading_pegado",
+   "op": "parse",
+   "ok": []
+  },
+  {
+   "body": "heading_pegado",
+   "op": "add",
+   "args": [
+    "nueva"
+   ],
+   "ok": "##Pendientes\n- [ ] a\n\n## Pendientes\n\n- [ ] nueva\n"
+  },
+  {
+   "body": "heading_pegado",
+   "op": "close",
+   "ok": "##Pendientes\n- [ ] a\n"
+  },
+  {
+   "body": "heading_pegado",
+   "op": "clear_done",
+   "ok": [
+    "##Pendientes\n- [ ] a\n",
+    []
+   ]
+  },
+  {
+   "body": "heading_pegado",
+   "op": "set",
+   "args": [
+    -1,
+    true
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "heading_pegado",
+   "op": "set",
+   "args": [
+    -1,
+    false
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "heading_pegado",
+   "op": "remove",
+   "args": [
+    -1
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "heading_pegado",
+   "op": "edit",
+   "args": [
+    -1,
+    "editada"
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "heading_pegado",
+   "op": "set",
+   "args": [
+    0,
+    true
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "heading_pegado",
+   "op": "set",
+   "args": [
+    0,
+    false
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "heading_pegado",
+   "op": "remove",
+   "args": [
+    0
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  },
+  {
+   "body": "heading_pegado",
+   "op": "edit",
+   "args": [
+    0,
+    "editada"
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea"
+  }
+ ],
+ "clean": [
+  {
+   "text": "  hola   mundo ",
+   "ok": "hola mundo"
+  },
+  {
+   "text": "",
+   "error": "ValueError",
+   "message": "La tarea está vacía"
+  },
+  {
+   "text": "   ",
+   "error": "ValueError",
+   "message": "La tarea está vacía"
+  },
+  {
+   "text": null,
+   "error": "ValueError",
+   "message": "La tarea está vacía"
+  },
+  {
+   "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "ok": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  {
+   "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "error": "ValueError",
+   "message": "La tarea supera 300 caracteres"
+  },
+  {
+   "text": "tab\tnl\nx",
+   "ok": "tab nl x"
+  },
+  {
+   "text": 123,
+   "ok": "123"
+  }
+ ]
+}

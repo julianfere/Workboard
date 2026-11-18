@@ -1,0 +1,592 @@
+{
+ "files": [
+  {
+   "name": "MIGRATION_x.sql",
+   "kind": "MIGRATION",
+   "cat": "migracion"
+  },
+  {
+   "name": "migration_x.sql",
+   "kind": "MIGRATION",
+   "cat": "migracion"
+  },
+  {
+   "name": "Wi1_MIGRATION.sql",
+   "kind": "MIGRATION",
+   "cat": "migracion"
+  },
+  {
+   "name": "XMIGRATIONX.sql",
+   "kind": null,
+   "cat": "sql"
+  },
+  {
+   "name": "MIGRATIONS.sql",
+   "kind": null,
+   "cat": "sql"
+  },
+  {
+   "name": "ROLLBACK_x.sql",
+   "kind": "ROLLBACK",
+   "cat": "migracion"
+  },
+  {
+   "name": "SEED.sql",
+   "kind": "SEED",
+   "cat": "migracion"
+  },
+  {
+   "name": "FIX_a.sql",
+   "kind": "FIX",
+   "cat": "fix"
+  },
+  {
+   "name": "PREFIX_a.sql",
+   "kind": null,
+   "cat": "sql"
+  },
+  {
+   "name": "DIAG_a.sql",
+   "kind": "DIAG",
+   "cat": "diag"
+  },
+  {
+   "name": "VERIF_a.sql",
+   "kind": "VERIF",
+   "cat": "diag"
+  },
+  {
+   "name": "PLAN_a.md",
+   "kind": "PLAN",
+   "cat": "doc"
+  },
+  {
+   "name": "HANDOFF.md",
+   "kind": "HANDOFF",
+   "cat": "doc"
+  },
+  {
+   "name": "QA_notas.txt",
+   "kind": "QA",
+   "cat": "doc"
+  },
+  {
+   "name": "gen_DIAG.py",
+   "kind": "DIAG",
+   "cat": "script"
+  },
+  {
+   "name": "x.PS1",
+   "kind": null,
+   "cat": "script"
+  },
+  {
+   "name": "a.sql",
+   "kind": null,
+   "cat": "sql"
+  },
+  {
+   "name": "a.md",
+   "kind": null,
+   "cat": "doc"
+  },
+  {
+   "name": "a.drawio",
+   "kind": null,
+   "cat": "doc"
+  },
+  {
+   "name": "a.pdf",
+   "kind": null,
+   "cat": "doc"
+  },
+  {
+   "name": "a.png",
+   "kind": null,
+   "cat": "otro"
+  },
+  {
+   "name": "a.bin",
+   "kind": null,
+   "cat": "otro"
+  },
+  {
+   "name": "sin_extension",
+   "kind": null,
+   "cat": "otro"
+  },
+  {
+   "name": "FIX-DIAG.sql",
+   "kind": "FIX",
+   "cat": "fix"
+  },
+  {
+   "name": "DIAG_FIX.sql",
+   "kind": "FIX",
+   "cat": "fix"
+  },
+  {
+   "name": "README.md",
+   "kind": null,
+   "cat": "doc"
+  },
+  {
+   "name": "a.linq",
+   "kind": null,
+   "cat": "script"
+  },
+  {
+   "name": "a.mermaid",
+   "kind": null,
+   "cat": "doc"
+  },
+  {
+   "name": "a.SQL",
+   "kind": null,
+   "cat": "sql"
+  }
+ ],
+ "periods": [
+  {
+   "date": "2026-01-01",
+   "period": "2025-12"
+  },
+  {
+   "date": "2026-01-19",
+   "period": "2025-12"
+  },
+  {
+   "date": "2026-01-20",
+   "period": "2026-01"
+  },
+  {
+   "date": "2026-12-19",
+   "period": "2026-11"
+  },
+  {
+   "date": "2026-12-20",
+   "period": "2026-12"
+  },
+  {
+   "date": "2026-12-31",
+   "period": "2026-12"
+  },
+  {
+   "date": "2024-02-29",
+   "period": "2024-02"
+  },
+  {
+   "date": "2026-03-20",
+   "period": "2026-03"
+  }
+ ],
+ "horas": [
+  {
+   "value": "8",
+   "result": 8.0
+  },
+  {
+   "value": "8,5",
+   "result": 8.5
+  },
+  {
+   "value": " 8.25 ",
+   "result": 8.25
+  },
+  {
+   "value": 7,
+   "result": 7.0
+  },
+  {
+   "value": 0,
+   "result": 0.0
+  },
+  {
+   "value": "-0.5",
+   "result": null
+  },
+  {
+   "value": "10000",
+   "result": 10000.0
+  },
+  {
+   "value": "10000.1",
+   "result": null
+  },
+  {
+   "value": "",
+   "result": null
+  },
+  {
+   "value": null,
+   "result": null
+  },
+  {
+   "value": "x",
+   "result": null
+  },
+  {
+   "value": "1e2",
+   "result": 100.0
+  },
+  {
+   "value": "inf",
+   "result": null
+  },
+  {
+   "value": "nan",
+   "result": null
+  }
+ ],
+ "slugify": [
+  {
+   "text": "Login con SSO",
+   "slug": "login-con-sso"
+  },
+  {
+   "text": "Ñandú: acción rápida!!",
+   "slug": "nandu-accion-rapida"
+  },
+  {
+   "text": "   ",
+   "slug": "wi"
+  },
+  {
+   "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "slug": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  {
+   "text": "x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-",
+   "slug": "x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x"
+  },
+  {
+   "text": "ÀÉÎÕÜ ç",
+   "slug": "aeiou-c"
+  },
+  {
+   "text": "日本語",
+   "slug": "wi"
+  },
+  {
+   "text": "--a--b--",
+   "slug": "a-b"
+  },
+  {
+   "text": "abc def ghi",
+   "max_len": 5,
+   "slug": "abc-d"
+  }
+ ],
+ "wi_re": [
+  {
+   "folder": "wi123456-algo",
+   "wis": [
+    "123456"
+   ]
+  },
+  {
+   "folder": "WI123456-algo",
+   "wis": [
+    "123456"
+   ]
+  },
+  {
+   "folder": "123456-algo",
+   "wis": [
+    "123456"
+   ]
+  },
+  {
+   "folder": "wi123456",
+   "wis": [
+    "123456"
+   ]
+  },
+  {
+   "folder": "wi123456-654321-dos",
+   "wis": [
+    "123456",
+    "654321"
+   ]
+  },
+  {
+   "folder": "wi123456-65432-x",
+   "wis": [
+    "123456"
+   ]
+  },
+  {
+   "folder": "wi1234567-x",
+   "wis": []
+  },
+  {
+   "folder": "wi12345-x",
+   "wis": []
+  },
+  {
+   "folder": "wi123456algo",
+   "wis": []
+  },
+  {
+   "folder": "algo-123456",
+   "wis": []
+  },
+  {
+   "folder": "wi123456-654321",
+   "wis": [
+    "123456",
+    "654321"
+   ]
+  },
+  {
+   "folder": "wi123456--x",
+   "wis": [
+    "123456"
+   ]
+  }
+ ],
+ "ado_tipo": [
+  {
+   "type": "Bug",
+   "tipo": "bug"
+  },
+  {
+   "type": "User Story",
+   "tipo": "us"
+  },
+  {
+   "type": " product backlog item ",
+   "tipo": "us"
+  },
+  {
+   "type": "Feature",
+   "tipo": "us"
+  },
+  {
+   "type": "Task",
+   "tipo": "task"
+  },
+  {
+   "type": "Epic",
+   "tipo": "us"
+  },
+  {
+   "type": "",
+   "tipo": ""
+  },
+  {
+   "type": null,
+   "tipo": ""
+  }
+ ],
+ "html_to_text": [
+  {
+   "html": "",
+   "text": ""
+  },
+  {
+   "html": "<p>Hola</p><p>mundo</p>",
+   "text": "Hola\nmundo"
+  },
+  {
+   "html": "<ul><li>uno</li><li>dos</li></ul>",
+   "text": "- uno\n- dos"
+  },
+  {
+   "html": "a<br>b<br/>c<BR />d",
+   "text": "a\nb\nc\nd"
+  },
+  {
+   "html": "<h2>Título</h2><div>x&nbsp;y &amp; z &lt;tag&gt;</div>",
+   "text": "### Título\nx y & z <tag>"
+  },
+  {
+   "html": "<script>alert(1)</script>ok<style>.a{}</style>",
+   "text": "ok"
+  },
+  {
+   "html": "<p>a</p>\n\n\n\n<p>b</p>",
+   "text": "a\n\nb"
+  },
+  {
+   "html": "<ol><li>a</li>\n\n<li>b</li></ol>",
+   "text": "- a\n- b"
+  },
+  {
+   "html": "<table><tr><td>a</td></tr></table>",
+   "text": "a"
+  }
+ ],
+ "extract_section": [
+  {
+   "body": "## Deploy\nuno\n### Sub\ndos\n## Otra\ntres",
+   "keywords": [
+    "deploy"
+   ],
+   "section": "uno\n### Sub\ndos"
+  },
+  {
+   "body": "### Cómo correr\nx\n#### y\nz\n### Fin",
+   "keywords": [
+    "cómo correr"
+   ],
+   "section": "x\n#### y\nz"
+  },
+  {
+   "body": "## Notas\nx\n## Despliegue en PROD\npasos\n# Fin\nno",
+   "keywords": [
+    "despleg"
+   ],
+   "section": ""
+  },
+  {
+   "body": "# Deploy\nnivel 1 no cuenta",
+   "keywords": [
+    "deploy"
+   ],
+   "section": ""
+  },
+  {
+   "body": "##### Deploy\nnivel 5 no cuenta",
+   "keywords": [
+    "deploy"
+   ],
+   "section": ""
+  },
+  {
+   "body": "## Promoción\n\n  \n",
+   "keywords": [
+    "promoci"
+   ],
+   "section": ""
+  },
+  {
+   "body": "sin headings",
+   "keywords": [
+    "deploy"
+   ],
+   "section": ""
+  }
+ ],
+ "plan_gaps": [
+  {
+   "body": "",
+   "gaps": [
+    "plan",
+    "pendientes"
+   ]
+  },
+  {
+   "body": "## Plan\n\n*(lo completa la sesión de planificación)*\n\n## Pendientes\n- [ ] a\n",
+   "gaps": [
+    "plan"
+   ]
+  },
+  {
+   "body": "## Plan\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n",
+   "gaps": [
+    "plan",
+    "pendientes"
+   ]
+  },
+  {
+   "body": "## Plan\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n## Pendientes\n- [x] a\n",
+   "gaps": [
+    "pendientes"
+   ]
+  },
+  {
+   "body": "## plan de trabajo\nyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\n## Pendientes\n- [ ] a\n",
+   "gaps": []
+  },
+  {
+   "body": "## Planificación\nyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\n",
+   "gaps": [
+    "plan",
+    "pendientes"
+   ]
+  },
+  {
+   "body": "## Plan\nzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz\n### detalle\nzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz\n# Fin\n",
+   "gaps": [
+    "pendientes"
+   ]
+  }
+ ],
+ "constants": {
+  "STATES": [
+   "pendiente",
+   "plan",
+   "en-curso",
+   "diag",
+   "codeado",
+   "qa",
+   "prod",
+   "descartado",
+   "desconocido"
+  ],
+  "CLOSED_STATES": [
+   "descartado",
+   "prod"
+  ],
+  "ENVS": [
+   "dev",
+   "qa",
+   "prod"
+  ],
+  "TYPES": [
+   "bug",
+   "us",
+   "task",
+   "fix"
+  ],
+  "KINDS": [
+   "ROLLBACK",
+   "MIGRATION",
+   "FIX",
+   "SEED",
+   "DIAG",
+   "VERIF",
+   "PLAN",
+   "HANDOFF",
+   "QA"
+  ],
+  "CATEGORIES": [
+   "migracion",
+   "fix",
+   "diag",
+   "sql",
+   "script",
+   "doc",
+   "otro"
+  ],
+  "RUNNABLE_CATS": [
+   "diag",
+   "fix",
+   "migracion",
+   "script",
+   "sql"
+  ],
+  "PERIOD_DAY": 20,
+  "MAX_TASK_LEN": 300,
+  "MAX_HORAS": 10000,
+  "BACKUP_KEEP": 20,
+  "GROUP_PREFIX": "grp-",
+  "DELETED_DIR": "_deleted",
+  "PLAN_PLACEHOLDER": "*(lo completa la sesión de planificación)*",
+  "PLAN_MIN_CHARS": 40,
+  "EDITABLE": [
+   "estado",
+   "tipo",
+   "ambientes",
+   "wi",
+   "pactada",
+   "periodo",
+   "horas",
+   "notas",
+   "rama",
+   "titulo",
+   "release_manual"
+  ]
+ }
+}

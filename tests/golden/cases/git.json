@@ -1,0 +1,2379 @@
+{
+ "detect_repos": [
+  {
+   "name": "app",
+   "path": "<ROOT>\\proyecto\\app",
+   "envs": {
+    "DEV": "origin/development",
+    "PROD": "origin/main"
+   }
+  }
+ ],
+ "default_envs": {
+  "DEV": "origin/development",
+  "PROD": "origin/main"
+ },
+ "overview": {
+  "repos": [
+   {
+    "name": "app",
+    "path": "<ROOT>\\proyecto\\app",
+    "envs": {
+     "DEV": "origin/development",
+     "QA": "origin/qa",
+     "PROD": "origin/main"
+    },
+    "missingEnvs": [],
+    "current": "Feature/111111-login",
+    "dirty": [
+     "pendiente.txt"
+    ],
+    "dirtyCount": 1
+   }
+  ],
+  "byWi": {
+   "111111": [
+    {
+     "repo": "app",
+     "name": "Feature/111111-login",
+     "locations": [
+      "local",
+      "origin"
+     ],
+     "tip": {
+      "sha": "b9884ee8c4aacf16123470b9c23344103ac283aa",
+      "ts": 1790374400,
+      "author": "Ana",
+      "subject": "111111 login: tests (sin pushear)",
+      "loc": "local"
+     },
+     "envs": {
+      "DEV": {
+       "ahead": 1,
+       "state": "mentioned"
+      },
+      "QA": {
+       "ahead": 3,
+       "state": "pending"
+      },
+      "PROD": {
+       "ahead": 3,
+       "state": "pending"
+      }
+     },
+     "own": 3,
+     "files": 3,
+     "mergedInto": "DEV",
+     "wis": [
+      "111111"
+     ],
+     "current": true
+    }
+   ],
+   "999999": [
+    {
+     "repo": "app",
+     "name": "Feature/999999-ff",
+     "locations": [
+      "local",
+      "origin"
+     ],
+     "tip": {
+      "sha": "88da9af2454c5dd34db391c51f980b22e4cc1c21",
+      "ts": 1790320400,
+      "author": "Ana",
+      "subject": "999999 ff",
+      "loc": "local"
+     },
+     "envs": {
+      "DEV": {
+       "ahead": 0,
+       "state": "merged"
+      },
+      "QA": {
+       "ahead": null,
+       "state": "pending"
+      },
+      "PROD": {
+       "ahead": null,
+       "state": "pending"
+      }
+     },
+     "own": 0,
+     "files": 0,
+     "mergedInto": "DEV",
+     "wis": [
+      "999999"
+     ],
+     "current": false
+    }
+   ],
+   "777777": [
+    {
+     "repo": "app",
+     "name": "Feature/777777-busqueda",
+     "locations": [
+      "local",
+      "origin"
+     ],
+     "tip": {
+      "sha": "de6a76f9e3969f52b20802a3d5d29c62e012bd27",
+      "ts": 1790298800,
+      "author": "Dani",
+      "subject": "888888 arreglo ajeno",
+      "loc": "local"
+     },
+     "envs": {
+      "DEV": {
+       "ahead": 2,
+       "state": "pending"
+      },
+      "QA": {
+       "ahead": 2,
+       "state": "pending"
+      },
+      "PROD": {
+       "ahead": 2,
+       "state": "pending"
+      }
+     },
+     "own": 2,
+     "files": 2,
+     "mergedInto": null,
+     "wis": [
+      "777777"
+     ],
+     "current": false
+    }
+   ],
+   "666666": [
+    {
+     "repo": "app",
+     "name": "Feature/666666-reportes",
+     "locations": [
+      "local",
+      "origin"
+     ],
+     "tip": {
+      "sha": "d80b86c486ba37636b0c36a769318288d6a4a6ef",
+      "ts": 1790244800,
+      "author": "Ana",
+      "subject": "666666 reportes: filtros",
+      "loc": "local"
+     },
+     "envs": {
+      "DEV": {
+       "ahead": 0,
+       "state": "merged"
+      },
+      "QA": {
+       "ahead": 2,
+       "state": "content"
+      },
+      "PROD": {
+       "ahead": 2,
+       "state": "pending"
+      }
+     },
+     "own": 2,
+     "files": 1,
+     "mergedInto": "DEV",
+     "wis": [
+      "666666"
+     ],
+     "current": false
+    }
+   ],
+   "444444": [
+    {
+     "repo": "app",
+     "name": "Feature/444444-carrito",
+     "locations": [
+      "local",
+      "origin"
+     ],
+     "tip": {
+      "sha": "58d3cba01a942e47d3b75e9be7a37bd2839d391d",
+      "ts": 1790205200,
+      "author": "Ana",
+      "subject": "444444 carrito: vista",
+      "loc": "local"
+     },
+     "envs": {
+      "DEV": {
+       "ahead": 0,
+       "state": "merged"
+      },
+      "QA": {
+       "ahead": 2,
+       "state": "pending"
+      },
+      "PROD": {
+       "ahead": 2,
+       "state": "pending"
+      }
+     },
+     "own": 2,
+     "files": 3,
+     "mergedInto": "DEV",
+     "wis": [
+      "444444"
+     ],
+     "current": false
+    }
+   ],
+   "222222": [
+    {
+     "repo": "app",
+     "name": "Feature/222222-pagos",
+     "locations": [
+      "local",
+      "origin"
+     ],
+     "tip": {
+      "sha": "7238ab41ec5941434fe327b4f356ee50935b46c4",
+      "ts": 1790122400,
+      "author": "Ana",
+      "subject": "222222 pagos: no duplicar",
+      "loc": "local"
+     },
+     "envs": {
+      "DEV": {
+       "ahead": 0,
+       "state": "merged"
+      },
+      "QA": {
+       "ahead": 0,
+       "state": "equivalent"
+      },
+      "PROD": {
+       "ahead": 1,
+       "state": "pending"
+      }
+     },
+     "own": 1,
+     "files": 1,
+     "mergedInto": "DEV",
+     "wis": [
+      "222222"
+     ],
+     "current": false
+    }
+   ],
+   "555555": [
+    {
+     "repo": "app",
+     "name": "Bug/555555-envio",
+     "locations": [
+      "local",
+      "origin"
+     ],
+     "tip": {
+      "sha": "3b14243db43cd94b102aa3a37c986ad5600ab14f",
+      "ts": 1790093600,
+      "author": "Beto",
+      "subject": "555555 envio: costo",
+      "loc": "local"
+     },
+     "envs": {
+      "DEV": {
+       "ahead": 1,
+       "state": "pending"
+      },
+      "QA": {
+       "ahead": 3,
+       "state": "pending"
+      },
+      "PROD": {
+       "ahead": 3,
+       "state": "pending"
+      }
+     },
+     "own": 3,
+     "files": 3,
+     "mergedInto": null,
+     "wis": [
+      "555555"
+     ],
+     "current": false
+    }
+   ]
+  },
+  "mentions": {
+   "999999": {
+    "app": {
+     "DEV": {
+      "sha": "88da9af24",
+      "ts": 1790320400,
+      "subject": "999999 ff"
+     }
+    }
+   },
+   "666666": {
+    "app": {
+     "DEV": {
+      "sha": "235f74491",
+      "ts": 1790262800,
+      "subject": "Merged PR 900006: 666666 reportes"
+     },
+     "QA": {
+      "sha": "f53cba8b9",
+      "ts": 1790273600,
+      "subject": "666666 reportes (squash)"
+     }
+    }
+   },
+   "444444": {
+    "app": {
+     "DEV": {
+      "sha": "dc3115f60",
+      "ts": 1790223200,
+      "subject": "Merged PR 900004: 444444 carrito"
+     }
+    }
+   },
+   "333333": {
+    "app": {
+     "DEV": {
+      "sha": "9a5dbe2c2",
+      "ts": 1790158400,
+      "subject": "333333 ajuste de config"
+     }
+    }
+   },
+   "222222": {
+    "app": {
+     "DEV": {
+      "sha": "b5e89ec95",
+      "ts": 1790140400,
+      "subject": "Merged PR 900002: 222222 pagos"
+     },
+     "QA": {
+      "sha": "a8fbc1365",
+      "ts": 1790147600,
+      "subject": "222222 pagos: no duplicar"
+     }
+    }
+   },
+   "111111": {
+    "app": {
+     "DEV": {
+      "sha": "b1cb36b12",
+      "ts": 1790111600,
+      "subject": "Merged PR 900001: 111111 login"
+     }
+    }
+   }
+  }
+ },
+ "overview_one": {
+  "repos": [
+   {
+    "name": "app",
+    "path": "<ROOT>\\proyecto\\app",
+    "envs": {
+     "DEV": "origin/development",
+     "QA": "origin/qa",
+     "PROD": "origin/main"
+    },
+    "missingEnvs": [],
+    "current": "Feature/111111-login",
+    "dirty": [
+     "pendiente.txt"
+    ],
+    "dirtyCount": 1
+   }
+  ],
+  "byWi": {
+   "555555": [
+    {
+     "repo": "app",
+     "name": "Bug/555555-envio",
+     "locations": [
+      "local",
+      "origin"
+     ],
+     "tip": {
+      "sha": "3b14243db43cd94b102aa3a37c986ad5600ab14f",
+      "ts": 1790093600,
+      "author": "Beto",
+      "subject": "555555 envio: costo",
+      "loc": "local"
+     },
+     "envs": {
+      "DEV": {
+       "ahead": 1,
+       "state": "pending"
+      },
+      "QA": {
+       "ahead": 3,
+       "state": "pending"
+      },
+      "PROD": {
+       "ahead": 3,
+       "state": "pending"
+      }
+     },
+     "own": 3,
+     "files": 3,
+     "mergedInto": null,
+     "wis": [
+      "555555"
+     ],
+     "current": false
+    }
+   ]
+  },
+  "mentions": {}
+ },
+ "overview_missing_env": {
+  "repos": [
+   {
+    "name": "app",
+    "path": "<ROOT>\\proyecto\\app",
+    "envs": {
+     "DEV": "origin/development",
+     "QA": "origin/no-existe",
+     "PROD": "origin/main"
+    },
+    "missingEnvs": [
+     "QA"
+    ],
+    "current": "Feature/111111-login",
+    "dirty": [
+     "pendiente.txt"
+    ],
+    "dirtyCount": 1
+   }
+  ],
+  "byWi": {
+   "111111": [
+    {
+     "repo": "app",
+     "name": "Feature/111111-login",
+     "locations": [
+      "local",
+      "origin"
+     ],
+     "tip": {
+      "sha": "b9884ee8c4aacf16123470b9c23344103ac283aa",
+      "ts": 1790374400,
+      "author": "Ana",
+      "subject": "111111 login: tests (sin pushear)",
+      "loc": "local"
+     },
+     "envs": {
+      "DEV": {
+       "ahead": 1,
+       "state": "mentioned"
+      },
+      "PROD": {
+       "ahead": 3,
+       "state": "pending"
+      }
+     },
+     "own": 3,
+     "files": 3,
+     "mergedInto": "DEV",
+     "wis": [
+      "111111"
+     ],
+     "current": true
+    }
+   ]
+  },
+  "mentions": {
+   "111111": {
+    "app": {
+     "DEV": {
+      "sha": "b1cb36b12",
+      "ts": 1790111600,
+      "subject": "Merged PR 900001: 111111 login"
+     }
+    }
+   }
+  }
+ },
+ "overview_not_repo": {
+  "repos": [
+   {
+    "name": "docs",
+    "error": "No es un repo git: <ROOT>\\proyecto\\docs"
+   }
+  ],
+  "byWi": {},
+  "mentions": {}
+ },
+ "promotion_qa": {
+  "target": "QA",
+  "wis": [
+   "111111",
+   "222222",
+   "333333",
+   "444444",
+   "555555",
+   "666666",
+   "777777",
+   "999999"
+  ],
+  "repos": [
+   {
+    "name": "app",
+    "path": "<ROOT>\\proyecto\\app",
+    "targetRef": "origin/qa",
+    "remote": "origin",
+    "targetBranch": "qa",
+    "webUrl": null,
+    "branches": [
+     {
+      "name": "Bug/555555-envio",
+      "wis": [
+       "555555"
+      ],
+      "locations": [
+       "local",
+       "origin"
+      ],
+      "commits": [
+       {
+        "sha": "8e409ed7be45b3804dc61e1cc628f2c8d978ea32",
+        "short": "8e409ed",
+        "ts": 1790061200,
+        "author": "Ana",
+        "parents": [
+         "3314ae49bb3de3015032c31d0880cf5a347c370e"
+        ],
+        "subject": "111111 login: formulario",
+        "branch": "Bug/555555-envio",
+        "wis": [
+         "555555"
+        ],
+        "merge": false,
+        "flags": [],
+        "on": true
+       },
+       {
+        "sha": "7d2ddbed096bf74076dcfa39377ad47433ac07dc",
+        "short": "7d2ddbe",
+        "ts": 1790072000,
+        "author": "Ana",
+        "parents": [
+         "8e409ed7be45b3804dc61e1cc628f2c8d978ea32"
+        ],
+        "subject": "111111 login: api",
+        "branch": "Bug/555555-envio",
+        "wis": [
+         "555555"
+        ],
+        "merge": false,
+        "flags": [],
+        "on": true
+       },
+       {
+        "sha": "3b14243db43cd94b102aa3a37c986ad5600ab14f",
+        "short": "3b14243",
+        "ts": 1790093600,
+        "author": "Beto",
+        "parents": [
+         "7d2ddbed096bf74076dcfa39377ad47433ac07dc"
+        ],
+        "subject": "555555 envio: costo",
+        "branch": "Bug/555555-envio",
+        "wis": [
+         "555555"
+        ],
+        "merge": false,
+        "flags": [],
+        "on": true
+       }
+      ],
+      "notes": [],
+      "warnings": [],
+      "alreadyCp": 0
+     },
+     {
+      "name": "Feature/111111-login",
+      "wis": [
+       "111111"
+      ],
+      "locations": [
+       "local",
+       "origin"
+      ],
+      "commits": [
+       {
+        "sha": "b9884ee8c4aacf16123470b9c23344103ac283aa",
+        "short": "b9884ee",
+        "ts": 1790374400,
+        "author": "Ana",
+        "parents": [
+         "7d2ddbed096bf74076dcfa39377ad47433ac07dc"
+        ],
+        "subject": "111111 login: tests (sin pushear)",
+        "branch": "Feature/111111-login",
+        "wis": [
+         "111111"
+        ],
+        "merge": false,
+        "flags": [],
+        "on": true
+       }
+      ],
+      "notes": [],
+      "warnings": [
+       "La rama local tiene commits sin pushear: se incluyen (están en tu repo) pero no en el remoto."
+      ],
+      "alreadyCp": 0
+     },
+     {
+      "name": "Feature/222222-pagos",
+      "wis": [
+       "222222"
+      ],
+      "locations": [
+       "local",
+       "origin"
+      ],
+      "commits": [],
+      "notes": [
+       "Nada que promover: el trabajo ya está en QA."
+      ],
+      "warnings": [],
+      "alreadyCp": 0
+     },
+     {
+      "name": "Feature/444444-carrito",
+      "wis": [
+       "444444"
+      ],
+      "locations": [
+       "local",
+       "origin"
+      ],
+      "commits": [
+       {
+        "sha": "8d4391989be0f6df5e07da0c73a23c7e21e6c2fa",
+        "short": "8d43919",
+        "ts": 1790172800,
+        "author": "Ana",
+        "parents": [
+         "9a5dbe2c23f67cfe8677feccfc4cef3bd34ebf47"
+        ],
+        "subject": "444444 carrito: modelo",
+        "branch": "Feature/444444-carrito",
+        "wis": [
+         "444444"
+        ],
+        "merge": false,
+        "flags": [],
+        "on": true
+       },
+       {
+        "sha": "5849023f997fc2c907dcee9df56b08006878103b",
+        "short": "5849023",
+        "ts": 1790198000,
+        "author": "Ana",
+        "parents": [
+         "8d4391989be0f6df5e07da0c73a23c7e21e6c2fa",
+         "1811422281af1783c45bec3444eb4c620fde8086"
+        ],
+        "subject": "Merge branch 'development' into Feature/444444-carrito",
+        "branch": "Feature/444444-carrito",
+        "wis": [
+         "444444"
+        ],
+        "merge": true,
+        "flags": [
+         {
+          "kind": "merge",
+          "text": "merge desde DEV hacia la rama: trae código de DEV que puede no estar en QA"
+         }
+        ],
+        "on": false
+       },
+       {
+        "sha": "58d3cba01a942e47d3b75e9be7a37bd2839d391d",
+        "short": "58d3cba",
+        "ts": 1790205200,
+        "author": "Ana",
+        "parents": [
+         "5849023f997fc2c907dcee9df56b08006878103b"
+        ],
+        "subject": "444444 carrito: vista",
+        "branch": "Feature/444444-carrito",
+        "wis": [
+         "444444"
+        ],
+        "merge": false,
+        "flags": [],
+        "on": true
+       }
+      ],
+      "notes": [],
+      "warnings": [
+       "La rama tiene 1 merge(s) desde otro entorno: si los commits de después usan ese código y no está en QA, el cherry-pick puede no compilar."
+      ],
+      "alreadyCp": 0
+     },
+     {
+      "name": "Feature/666666-reportes",
+      "wis": [
+       "666666"
+      ],
+      "locations": [
+       "local",
+       "origin"
+      ],
+      "commits": [
+       {
+        "sha": "ba99a6b1cafee02cf32a7c0db18f6d120ddeda23",
+        "short": "ba99a6b",
+        "ts": 1790234000,
+        "author": "Ana",
+        "parents": [
+         "dc3115f60a7824f176daef6995ffa3c0f285ca36"
+        ],
+        "subject": "666666 reportes: base",
+        "branch": "Feature/666666-reportes",
+        "wis": [
+         "666666"
+        ],
+        "merge": false,
+        "flags": [
+         {
+          "kind": "likely",
+          "text": "contenido ya igual en QA"
+         }
+        ],
+        "on": false
+       },
+       {
+        "sha": "d80b86c486ba37636b0c36a769318288d6a4a6ef",
+        "short": "d80b86c",
+        "ts": 1790244800,
+        "author": "Ana",
+        "parents": [
+         "ba99a6b1cafee02cf32a7c0db18f6d120ddeda23"
+        ],
+        "subject": "666666 reportes: filtros",
+        "branch": "Feature/666666-reportes",
+        "wis": [
+         "666666"
+        ],
+        "merge": false,
+        "flags": [
+         {
+          "kind": "likely",
+          "text": "contenido ya igual en QA"
+         }
+        ],
+        "on": false
+       }
+      ],
+      "notes": [],
+      "warnings": [
+       "Los archivos que tocó la rama ya están iguales en QA (¿squash o merge manual?): los commits quedan destildados."
+      ],
+      "alreadyCp": 0
+     },
+     {
+      "name": "Feature/777777-busqueda",
+      "wis": [
+       "777777"
+      ],
+      "locations": [
+       "local",
+       "origin"
+      ],
+      "commits": [
+       {
+        "sha": "d3c23cfedff06efd811bd23a1c885a0494ac2810",
+        "short": "d3c23cf",
+        "ts": 1790288000,
+        "author": "Ana",
+        "parents": [
+         "235f74491d0cec3d5baf31e5c0e61b0c4160370c"
+        ],
+        "subject": "777777 busqueda: indice",
+        "branch": "Feature/777777-busqueda",
+        "wis": [
+         "777777"
+        ],
+        "merge": false,
+        "flags": [],
+        "on": true
+       },
+       {
+        "sha": "de6a76f9e3969f52b20802a3d5d29c62e012bd27",
+        "short": "de6a76f",
+        "ts": 1790298800,
+        "author": "Dani",
+        "parents": [
+         "d3c23cfedff06efd811bd23a1c885a0494ac2810"
+        ],
+        "subject": "888888 arreglo ajeno",
+        "branch": "Feature/777777-busqueda",
+        "wis": [
+         "777777"
+        ],
+        "merge": false,
+        "flags": [
+         {
+          "kind": "otherwi",
+          "text": "menciona otro WI (#888888)"
+         }
+        ],
+        "on": false
+       }
+      ],
+      "notes": [],
+      "warnings": [],
+      "alreadyCp": 0
+     },
+     {
+      "name": "Feature/999999-ff",
+      "wis": [
+       "999999"
+      ],
+      "locations": [
+       "local",
+       "origin"
+      ],
+      "commits": [],
+      "notes": [
+       "La rama no tiene commits propios fuera de la línea principal (se mergeó por fast-forward o está vacía)."
+      ],
+      "warnings": [],
+      "alreadyCp": 0
+     },
+     {
+      "name": "origin/development (commits que mencionan el WI)",
+      "wis": [
+       "111111",
+       "222222",
+       "333333",
+       "444444",
+       "666666",
+       "999999"
+      ],
+      "locations": [],
+      "commits": [
+       {
+        "sha": "9a5dbe2c23f67cfe8677feccfc4cef3bd34ebf47",
+        "short": "9a5dbe2",
+        "ts": 1790158400,
+        "author": "Caro",
+        "parents": [
+         "b5e89ec957deaec76f908b6cdfa195fdc3ebab0c"
+        ],
+        "subject": "333333 ajuste de config",
+        "branch": "origin/development (commits que mencionan el WI)",
+        "wis": [
+         "333333"
+        ],
+        "merge": false,
+        "flags": [],
+        "on": true
+       },
+       {
+        "sha": "1811422281af1783c45bec3444eb4c620fde8086",
+        "short": "1811422",
+        "ts": 1790187200,
+        "author": "Caro",
+        "parents": [
+         "9a5dbe2c23f67cfe8677feccfc4cef3bd34ebf47"
+        ],
+        "subject": "otro trabajo en development",
+        "branch": "origin/development (commits que mencionan el WI)",
+        "wis": [
+         "444444"
+        ],
+        "merge": false,
+        "flags": [],
+        "on": true
+       },
+       {
+        "sha": "88da9af2454c5dd34db391c51f980b22e4cc1c21",
+        "short": "88da9af",
+        "ts": 1790320400,
+        "author": "Ana",
+        "parents": [
+         "235f74491d0cec3d5baf31e5c0e61b0c4160370c"
+        ],
+        "subject": "999999 ff",
+        "branch": "origin/development (commits que mencionan el WI)",
+        "wis": [
+         "999999"
+        ],
+        "merge": false,
+        "flags": [],
+        "on": true
+       }
+      ],
+      "notes": [],
+      "warnings": [],
+      "alreadyCp": 0,
+      "fromEnv": "DEV"
+     }
+    ],
+    "commits": [
+     {
+      "sha": "8e409ed7be45b3804dc61e1cc628f2c8d978ea32",
+      "short": "8e409ed",
+      "ts": 1790061200,
+      "author": "Ana",
+      "parents": [
+       "3314ae49bb3de3015032c31d0880cf5a347c370e"
+      ],
+      "subject": "111111 login: formulario",
+      "branch": "Bug/555555-envio",
+      "wis": [
+       "555555"
+      ],
+      "merge": false,
+      "flags": [],
+      "on": true
+     },
+     {
+      "sha": "7d2ddbed096bf74076dcfa39377ad47433ac07dc",
+      "short": "7d2ddbe",
+      "ts": 1790072000,
+      "author": "Ana",
+      "parents": [
+       "8e409ed7be45b3804dc61e1cc628f2c8d978ea32"
+      ],
+      "subject": "111111 login: api",
+      "branch": "Bug/555555-envio",
+      "wis": [
+       "555555"
+      ],
+      "merge": false,
+      "flags": [],
+      "on": true
+     },
+     {
+      "sha": "3b14243db43cd94b102aa3a37c986ad5600ab14f",
+      "short": "3b14243",
+      "ts": 1790093600,
+      "author": "Beto",
+      "parents": [
+       "7d2ddbed096bf74076dcfa39377ad47433ac07dc"
+      ],
+      "subject": "555555 envio: costo",
+      "branch": "Bug/555555-envio",
+      "wis": [
+       "555555"
+      ],
+      "merge": false,
+      "flags": [],
+      "on": true
+     },
+     {
+      "sha": "8d4391989be0f6df5e07da0c73a23c7e21e6c2fa",
+      "short": "8d43919",
+      "ts": 1790172800,
+      "author": "Ana",
+      "parents": [
+       "9a5dbe2c23f67cfe8677feccfc4cef3bd34ebf47"
+      ],
+      "subject": "444444 carrito: modelo",
+      "branch": "Feature/444444-carrito",
+      "wis": [
+       "444444"
+      ],
+      "merge": false,
+      "flags": [],
+      "on": true
+     },
+     {
+      "sha": "5849023f997fc2c907dcee9df56b08006878103b",
+      "short": "5849023",
+      "ts": 1790198000,
+      "author": "Ana",
+      "parents": [
+       "8d4391989be0f6df5e07da0c73a23c7e21e6c2fa",
+       "1811422281af1783c45bec3444eb4c620fde8086"
+      ],
+      "subject": "Merge branch 'development' into Feature/444444-carrito",
+      "branch": "Feature/444444-carrito",
+      "wis": [
+       "444444"
+      ],
+      "merge": true,
+      "flags": [
+       {
+        "kind": "merge",
+        "text": "merge desde DEV hacia la rama: trae código de DEV que puede no estar en QA"
+       }
+      ],
+      "on": false
+     },
+     {
+      "sha": "58d3cba01a942e47d3b75e9be7a37bd2839d391d",
+      "short": "58d3cba",
+      "ts": 1790205200,
+      "author": "Ana",
+      "parents": [
+       "5849023f997fc2c907dcee9df56b08006878103b"
+      ],
+      "subject": "444444 carrito: vista",
+      "branch": "Feature/444444-carrito",
+      "wis": [
+       "444444"
+      ],
+      "merge": false,
+      "flags": [],
+      "on": true
+     },
+     {
+      "sha": "ba99a6b1cafee02cf32a7c0db18f6d120ddeda23",
+      "short": "ba99a6b",
+      "ts": 1790234000,
+      "author": "Ana",
+      "parents": [
+       "dc3115f60a7824f176daef6995ffa3c0f285ca36"
+      ],
+      "subject": "666666 reportes: base",
+      "branch": "Feature/666666-reportes",
+      "wis": [
+       "666666"
+      ],
+      "merge": false,
+      "flags": [
+       {
+        "kind": "likely",
+        "text": "contenido ya igual en QA"
+       }
+      ],
+      "on": false
+     },
+     {
+      "sha": "d80b86c486ba37636b0c36a769318288d6a4a6ef",
+      "short": "d80b86c",
+      "ts": 1790244800,
+      "author": "Ana",
+      "parents": [
+       "ba99a6b1cafee02cf32a7c0db18f6d120ddeda23"
+      ],
+      "subject": "666666 reportes: filtros",
+      "branch": "Feature/666666-reportes",
+      "wis": [
+       "666666"
+      ],
+      "merge": false,
+      "flags": [
+       {
+        "kind": "likely",
+        "text": "contenido ya igual en QA"
+       }
+      ],
+      "on": false
+     },
+     {
+      "sha": "d3c23cfedff06efd811bd23a1c885a0494ac2810",
+      "short": "d3c23cf",
+      "ts": 1790288000,
+      "author": "Ana",
+      "parents": [
+       "235f74491d0cec3d5baf31e5c0e61b0c4160370c"
+      ],
+      "subject": "777777 busqueda: indice",
+      "branch": "Feature/777777-busqueda",
+      "wis": [
+       "777777"
+      ],
+      "merge": false,
+      "flags": [],
+      "on": true
+     },
+     {
+      "sha": "de6a76f9e3969f52b20802a3d5d29c62e012bd27",
+      "short": "de6a76f",
+      "ts": 1790298800,
+      "author": "Dani",
+      "parents": [
+       "d3c23cfedff06efd811bd23a1c885a0494ac2810"
+      ],
+      "subject": "888888 arreglo ajeno",
+      "branch": "Feature/777777-busqueda",
+      "wis": [
+       "777777"
+      ],
+      "merge": false,
+      "flags": [
+       {
+        "kind": "otherwi",
+        "text": "menciona otro WI (#888888)"
+       }
+      ],
+      "on": false
+     },
+     {
+      "sha": "b9884ee8c4aacf16123470b9c23344103ac283aa",
+      "short": "b9884ee",
+      "ts": 1790374400,
+      "author": "Ana",
+      "parents": [
+       "7d2ddbed096bf74076dcfa39377ad47433ac07dc"
+      ],
+      "subject": "111111 login: tests (sin pushear)",
+      "branch": "Feature/111111-login",
+      "wis": [
+       "111111"
+      ],
+      "merge": false,
+      "flags": [],
+      "on": true
+     },
+     {
+      "sha": "9a5dbe2c23f67cfe8677feccfc4cef3bd34ebf47",
+      "short": "9a5dbe2",
+      "ts": 1790158400,
+      "author": "Caro",
+      "parents": [
+       "b5e89ec957deaec76f908b6cdfa195fdc3ebab0c"
+      ],
+      "subject": "333333 ajuste de config",
+      "branch": "origin/development (commits que mencionan el WI)",
+      "wis": [
+       "333333"
+      ],
+      "merge": false,
+      "flags": [],
+      "on": true
+     },
+     {
+      "sha": "1811422281af1783c45bec3444eb4c620fde8086",
+      "short": "1811422",
+      "ts": 1790187200,
+      "author": "Caro",
+      "parents": [
+       "9a5dbe2c23f67cfe8677feccfc4cef3bd34ebf47"
+      ],
+      "subject": "otro trabajo en development",
+      "branch": "origin/development (commits que mencionan el WI)",
+      "wis": [
+       "444444"
+      ],
+      "merge": false,
+      "flags": [],
+      "on": true
+     },
+     {
+      "sha": "88da9af2454c5dd34db391c51f980b22e4cc1c21",
+      "short": "88da9af",
+      "ts": 1790320400,
+      "author": "Ana",
+      "parents": [
+       "235f74491d0cec3d5baf31e5c0e61b0c4160370c"
+      ],
+      "subject": "999999 ff",
+      "branch": "origin/development (commits que mencionan el WI)",
+      "wis": [
+       "999999"
+      ],
+      "merge": false,
+      "flags": [],
+      "on": true
+     }
+    ],
+    "sourceEnv": "DEV"
+   }
+  ]
+ },
+ "promotion_prod": {
+  "target": "PROD",
+  "wis": [
+   "111111",
+   "222222",
+   "333333",
+   "444444",
+   "555555",
+   "666666",
+   "777777",
+   "999999"
+  ],
+  "repos": [
+   {
+    "name": "app",
+    "path": "<ROOT>\\proyecto\\app",
+    "targetRef": "origin/main",
+    "remote": "origin",
+    "targetBranch": "main",
+    "webUrl": null,
+    "branches": [
+     {
+      "name": "Bug/555555-envio",
+      "wis": [
+       "555555"
+      ],
+      "locations": [
+       "local",
+       "origin"
+      ],
+      "commits": [
+       {
+        "sha": "8e409ed7be45b3804dc61e1cc628f2c8d978ea32",
+        "short": "8e409ed",
+        "ts": 1790061200,
+        "author": "Ana",
+        "parents": [
+         "3314ae49bb3de3015032c31d0880cf5a347c370e"
+        ],
+        "subject": "111111 login: formulario",
+        "branch": "Bug/555555-envio",
+        "wis": [
+         "555555"
+        ],
+        "merge": false,
+        "flags": [],
+        "on": true
+       },
+       {
+        "sha": "7d2ddbed096bf74076dcfa39377ad47433ac07dc",
+        "short": "7d2ddbe",
+        "ts": 1790072000,
+        "author": "Ana",
+        "parents": [
+         "8e409ed7be45b3804dc61e1cc628f2c8d978ea32"
+        ],
+        "subject": "111111 login: api",
+        "branch": "Bug/555555-envio",
+        "wis": [
+         "555555"
+        ],
+        "merge": false,
+        "flags": [],
+        "on": true
+       },
+       {
+        "sha": "3b14243db43cd94b102aa3a37c986ad5600ab14f",
+        "short": "3b14243",
+        "ts": 1790093600,
+        "author": "Beto",
+        "parents": [
+         "7d2ddbed096bf74076dcfa39377ad47433ac07dc"
+        ],
+        "subject": "555555 envio: costo",
+        "branch": "Bug/555555-envio",
+        "wis": [
+         "555555"
+        ],
+        "merge": false,
+        "flags": [],
+        "on": true
+       }
+      ],
+      "notes": [],
+      "warnings": [],
+      "alreadyCp": 0
+     },
+     {
+      "name": "Feature/111111-login",
+      "wis": [
+       "111111"
+      ],
+      "locations": [
+       "local",
+       "origin"
+      ],
+      "commits": [
+       {
+        "sha": "b9884ee8c4aacf16123470b9c23344103ac283aa",
+        "short": "b9884ee",
+        "ts": 1790374400,
+        "author": "Ana",
+        "parents": [
+         "7d2ddbed096bf74076dcfa39377ad47433ac07dc"
+        ],
+        "subject": "111111 login: tests (sin pushear)",
+        "branch": "Feature/111111-login",
+        "wis": [
+         "111111"
+        ],
+        "merge": false,
+        "flags": [],
+        "on": true
+       }
+      ],
+      "notes": [],
+      "warnings": [
+       "La rama local tiene commits sin pushear: se incluyen (están en tu repo) pero no en el remoto."
+      ],
+      "alreadyCp": 0
+     },
+     {
+      "name": "Feature/222222-pagos",
+      "wis": [
+       "222222"
+      ],
+      "locations": [
+       "local",
+       "origin"
+      ],
+      "commits": [
+       {
+        "sha": "7238ab41ec5941434fe327b4f356ee50935b46c4",
+        "short": "7238ab4",
+        "ts": 1790122400,
+        "author": "Ana",
+        "parents": [
+         "b1cb36b12a55a2f2dbe08d435f606921d5fa8cf9"
+        ],
+        "subject": "222222 pagos: no duplicar",
+        "branch": "Feature/222222-pagos",
+        "wis": [
+         "222222"
+        ],
+        "merge": false,
+        "flags": [],
+        "on": true
+       }
+      ],
+      "notes": [],
+      "warnings": [],
+      "alreadyCp": 0
+     },
+     {
+      "name": "Feature/444444-carrito",
+      "wis": [
+       "444444"
+      ],
+      "locations": [
+       "local",
+       "origin"
+      ],
+      "commits": [
+       {
+        "sha": "8d4391989be0f6df5e07da0c73a23c7e21e6c2fa",
+        "short": "8d43919",
+        "ts": 1790172800,
+        "author": "Ana",
+        "parents": [
+         "9a5dbe2c23f67cfe8677feccfc4cef3bd34ebf47"
+        ],
+        "subject": "444444 carrito: modelo",
+        "branch": "Feature/444444-carrito",
+        "wis": [
+         "444444"
+        ],
+        "merge": false,
+        "flags": [],
+        "on": true
+       },
+       {
+        "sha": "5849023f997fc2c907dcee9df56b08006878103b",
+        "short": "5849023",
+        "ts": 1790198000,
+        "author": "Ana",
+        "parents": [
+         "8d4391989be0f6df5e07da0c73a23c7e21e6c2fa",
+         "1811422281af1783c45bec3444eb4c620fde8086"
+        ],
+        "subject": "Merge branch 'development' into Feature/444444-carrito",
+        "branch": "Feature/444444-carrito",
+        "wis": [
+         "444444"
+        ],
+        "merge": true,
+        "flags": [
+         {
+          "kind": "merge",
+          "text": "merge desde DEV hacia la rama: trae código de DEV que puede no estar en PROD"
+         }
+        ],
+        "on": false
+       },
+       {
+        "sha": "58d3cba01a942e47d3b75e9be7a37bd2839d391d",
+        "short": "58d3cba",
+        "ts": 1790205200,
+        "author": "Ana",
+        "parents": [
+         "5849023f997fc2c907dcee9df56b08006878103b"
+        ],
+        "subject": "444444 carrito: vista",
+        "branch": "Feature/444444-carrito",
+        "wis": [
+         "444444"
+        ],
+        "merge": false,
+        "flags": [],
+        "on": true
+       }
+      ],
+      "notes": [],
+      "warnings": [
+       "La rama tiene 1 merge(s) desde otro entorno: si los commits de después usan ese código y no está en PROD, el cherry-pick puede no compilar."
+      ],
+      "alreadyCp": 0
+     },
+     {
+      "name": "Feature/666666-reportes",
+      "wis": [
+       "666666"
+      ],
+      "locations": [
+       "local",
+       "origin"
+      ],
+      "commits": [
+       {
+        "sha": "ba99a6b1cafee02cf32a7c0db18f6d120ddeda23",
+        "short": "ba99a6b",
+        "ts": 1790234000,
+        "author": "Ana",
+        "parents": [
+         "dc3115f60a7824f176daef6995ffa3c0f285ca36"
+        ],
+        "subject": "666666 reportes: base",
+        "branch": "Feature/666666-reportes",
+        "wis": [
+         "666666"
+        ],
+        "merge": false,
+        "flags": [],
+        "on": true
+       },
+       {
+        "sha": "d80b86c486ba37636b0c36a769318288d6a4a6ef",
+        "short": "d80b86c",
+        "ts": 1790244800,
+        "author": "Ana",
+        "parents": [
+         "ba99a6b1cafee02cf32a7c0db18f6d120ddeda23"
+        ],
+        "subject": "666666 reportes: filtros",
+        "branch": "Feature/666666-reportes",
+        "wis": [
+         "666666"
+        ],
+        "merge": false,
+        "flags": [],
+        "on": true
+       }
+      ],
+      "notes": [],
+      "warnings": [],
+      "alreadyCp": 0
+     },
+     {
+      "name": "Feature/777777-busqueda",
+      "wis": [
+       "777777"
+      ],
+      "locations": [
+       "local",
+       "origin"
+      ],
+      "commits": [
+       {
+        "sha": "d3c23cfedff06efd811bd23a1c885a0494ac2810",
+        "short": "d3c23cf",
+        "ts": 1790288000,
+        "author": "Ana",
+        "parents": [
+         "235f74491d0cec3d5baf31e5c0e61b0c4160370c"
+        ],
+        "subject": "777777 busqueda: indice",
+        "branch": "Feature/777777-busqueda",
+        "wis": [
+         "777777"
+        ],
+        "merge": false,
+        "flags": [],
+        "on": true
+       },
+       {
+        "sha": "de6a76f9e3969f52b20802a3d5d29c62e012bd27",
+        "short": "de6a76f",
+        "ts": 1790298800,
+        "author": "Dani",
+        "parents": [
+         "d3c23cfedff06efd811bd23a1c885a0494ac2810"
+        ],
+        "subject": "888888 arreglo ajeno",
+        "branch": "Feature/777777-busqueda",
+        "wis": [
+         "777777"
+        ],
+        "merge": false,
+        "flags": [
+         {
+          "kind": "otherwi",
+          "text": "menciona otro WI (#888888)"
+         }
+        ],
+        "on": false
+       }
+      ],
+      "notes": [],
+      "warnings": [],
+      "alreadyCp": 0
+     },
+     {
+      "name": "Feature/999999-ff",
+      "wis": [
+       "999999"
+      ],
+      "locations": [
+       "local",
+       "origin"
+      ],
+      "commits": [],
+      "notes": [
+       "La rama no tiene commits propios fuera de la línea principal (se mergeó por fast-forward o está vacía)."
+      ],
+      "warnings": [],
+      "alreadyCp": 0
+     },
+     {
+      "name": "origin/qa (commits que mencionan el WI)",
+      "wis": [
+       "222222",
+       "666666"
+      ],
+      "locations": [],
+      "commits": [
+       {
+        "sha": "f53cba8b9f9fc604b6db575a755159cb162b6fc6",
+        "short": "f53cba8",
+        "ts": 1790273600,
+        "author": "Ana",
+        "parents": [
+         "a8fbc136593e7a1cd0c485e7ecda69104932edd0"
+        ],
+        "subject": "666666 reportes (squash)",
+        "branch": "origin/qa (commits que mencionan el WI)",
+        "wis": [
+         "666666"
+        ],
+        "merge": false,
+        "flags": [],
+        "on": true
+       }
+      ],
+      "notes": [],
+      "warnings": [],
+      "alreadyCp": 0,
+      "fromEnv": "QA"
+     }
+    ],
+    "commits": [
+     {
+      "sha": "8e409ed7be45b3804dc61e1cc628f2c8d978ea32",
+      "short": "8e409ed",
+      "ts": 1790061200,
+      "author": "Ana",
+      "parents": [
+       "3314ae49bb3de3015032c31d0880cf5a347c370e"
+      ],
+      "subject": "111111 login: formulario",
+      "branch": "Bug/555555-envio",
+      "wis": [
+       "555555"
+      ],
+      "merge": false,
+      "flags": [],
+      "on": true
+     },
+     {
+      "sha": "7d2ddbed096bf74076dcfa39377ad47433ac07dc",
+      "short": "7d2ddbe",
+      "ts": 1790072000,
+      "author": "Ana",
+      "parents": [
+       "8e409ed7be45b3804dc61e1cc628f2c8d978ea32"
+      ],
+      "subject": "111111 login: api",
+      "branch": "Bug/555555-envio",
+      "wis": [
+       "555555"
+      ],
+      "merge": false,
+      "flags": [],
+      "on": true
+     },
+     {
+      "sha": "3b14243db43cd94b102aa3a37c986ad5600ab14f",
+      "short": "3b14243",
+      "ts": 1790093600,
+      "author": "Beto",
+      "parents": [
+       "7d2ddbed096bf74076dcfa39377ad47433ac07dc"
+      ],
+      "subject": "555555 envio: costo",
+      "branch": "Bug/555555-envio",
+      "wis": [
+       "555555"
+      ],
+      "merge": false,
+      "flags": [],
+      "on": true
+     },
+     {
+      "sha": "7238ab41ec5941434fe327b4f356ee50935b46c4",
+      "short": "7238ab4",
+      "ts": 1790122400,
+      "author": "Ana",
+      "parents": [
+       "b1cb36b12a55a2f2dbe08d435f606921d5fa8cf9"
+      ],
+      "subject": "222222 pagos: no duplicar",
+      "branch": "Feature/222222-pagos",
+      "wis": [
+       "222222"
+      ],
+      "merge": false,
+      "flags": [],
+      "on": true
+     },
+     {
+      "sha": "8d4391989be0f6df5e07da0c73a23c7e21e6c2fa",
+      "short": "8d43919",
+      "ts": 1790172800,
+      "author": "Ana",
+      "parents": [
+       "9a5dbe2c23f67cfe8677feccfc4cef3bd34ebf47"
+      ],
+      "subject": "444444 carrito: modelo",
+      "branch": "Feature/444444-carrito",
+      "wis": [
+       "444444"
+      ],
+      "merge": false,
+      "flags": [],
+      "on": true
+     },
+     {
+      "sha": "5849023f997fc2c907dcee9df56b08006878103b",
+      "short": "5849023",
+      "ts": 1790198000,
+      "author": "Ana",
+      "parents": [
+       "8d4391989be0f6df5e07da0c73a23c7e21e6c2fa",
+       "1811422281af1783c45bec3444eb4c620fde8086"
+      ],
+      "subject": "Merge branch 'development' into Feature/444444-carrito",
+      "branch": "Feature/444444-carrito",
+      "wis": [
+       "444444"
+      ],
+      "merge": true,
+      "flags": [
+       {
+        "kind": "merge",
+        "text": "merge desde DEV hacia la rama: trae código de DEV que puede no estar en PROD"
+       }
+      ],
+      "on": false
+     },
+     {
+      "sha": "58d3cba01a942e47d3b75e9be7a37bd2839d391d",
+      "short": "58d3cba",
+      "ts": 1790205200,
+      "author": "Ana",
+      "parents": [
+       "5849023f997fc2c907dcee9df56b08006878103b"
+      ],
+      "subject": "444444 carrito: vista",
+      "branch": "Feature/444444-carrito",
+      "wis": [
+       "444444"
+      ],
+      "merge": false,
+      "flags": [],
+      "on": true
+     },
+     {
+      "sha": "ba99a6b1cafee02cf32a7c0db18f6d120ddeda23",
+      "short": "ba99a6b",
+      "ts": 1790234000,
+      "author": "Ana",
+      "parents": [
+       "dc3115f60a7824f176daef6995ffa3c0f285ca36"
+      ],
+      "subject": "666666 reportes: base",
+      "branch": "Feature/666666-reportes",
+      "wis": [
+       "666666"
+      ],
+      "merge": false,
+      "flags": [],
+      "on": true
+     },
+     {
+      "sha": "d80b86c486ba37636b0c36a769318288d6a4a6ef",
+      "short": "d80b86c",
+      "ts": 1790244800,
+      "author": "Ana",
+      "parents": [
+       "ba99a6b1cafee02cf32a7c0db18f6d120ddeda23"
+      ],
+      "subject": "666666 reportes: filtros",
+      "branch": "Feature/666666-reportes",
+      "wis": [
+       "666666"
+      ],
+      "merge": false,
+      "flags": [],
+      "on": true
+     },
+     {
+      "sha": "d3c23cfedff06efd811bd23a1c885a0494ac2810",
+      "short": "d3c23cf",
+      "ts": 1790288000,
+      "author": "Ana",
+      "parents": [
+       "235f74491d0cec3d5baf31e5c0e61b0c4160370c"
+      ],
+      "subject": "777777 busqueda: indice",
+      "branch": "Feature/777777-busqueda",
+      "wis": [
+       "777777"
+      ],
+      "merge": false,
+      "flags": [],
+      "on": true
+     },
+     {
+      "sha": "de6a76f9e3969f52b20802a3d5d29c62e012bd27",
+      "short": "de6a76f",
+      "ts": 1790298800,
+      "author": "Dani",
+      "parents": [
+       "d3c23cfedff06efd811bd23a1c885a0494ac2810"
+      ],
+      "subject": "888888 arreglo ajeno",
+      "branch": "Feature/777777-busqueda",
+      "wis": [
+       "777777"
+      ],
+      "merge": false,
+      "flags": [
+       {
+        "kind": "otherwi",
+        "text": "menciona otro WI (#888888)"
+       }
+      ],
+      "on": false
+     },
+     {
+      "sha": "b9884ee8c4aacf16123470b9c23344103ac283aa",
+      "short": "b9884ee",
+      "ts": 1790374400,
+      "author": "Ana",
+      "parents": [
+       "7d2ddbed096bf74076dcfa39377ad47433ac07dc"
+      ],
+      "subject": "111111 login: tests (sin pushear)",
+      "branch": "Feature/111111-login",
+      "wis": [
+       "111111"
+      ],
+      "merge": false,
+      "flags": [],
+      "on": true
+     },
+     {
+      "sha": "f53cba8b9f9fc604b6db575a755159cb162b6fc6",
+      "short": "f53cba8",
+      "ts": 1790273600,
+      "author": "Ana",
+      "parents": [
+       "a8fbc136593e7a1cd0c485e7ecda69104932edd0"
+      ],
+      "subject": "666666 reportes (squash)",
+      "branch": "origin/qa (commits que mencionan el WI)",
+      "wis": [
+       "666666"
+      ],
+      "merge": false,
+      "flags": [],
+      "on": true
+     }
+    ],
+    "sourceEnv": "QA"
+   }
+  ]
+ },
+ "promotion_qa_one": {
+  "target": "QA",
+  "wis": [
+   "444444"
+  ],
+  "repos": [
+   {
+    "name": "app",
+    "path": "<ROOT>\\proyecto\\app",
+    "targetRef": "origin/qa",
+    "remote": "origin",
+    "targetBranch": "qa",
+    "webUrl": null,
+    "branches": [
+     {
+      "name": "Feature/444444-carrito",
+      "wis": [
+       "444444"
+      ],
+      "locations": [
+       "local",
+       "origin"
+      ],
+      "commits": [
+       {
+        "sha": "8d4391989be0f6df5e07da0c73a23c7e21e6c2fa",
+        "short": "8d43919",
+        "ts": 1790172800,
+        "author": "Ana",
+        "parents": [
+         "9a5dbe2c23f67cfe8677feccfc4cef3bd34ebf47"
+        ],
+        "subject": "444444 carrito: modelo",
+        "branch": "Feature/444444-carrito",
+        "wis": [
+         "444444"
+        ],
+        "merge": false,
+        "flags": [],
+        "on": true
+       },
+       {
+        "sha": "5849023f997fc2c907dcee9df56b08006878103b",
+        "short": "5849023",
+        "ts": 1790198000,
+        "author": "Ana",
+        "parents": [
+         "8d4391989be0f6df5e07da0c73a23c7e21e6c2fa",
+         "1811422281af1783c45bec3444eb4c620fde8086"
+        ],
+        "subject": "Merge branch 'development' into Feature/444444-carrito",
+        "branch": "Feature/444444-carrito",
+        "wis": [
+         "444444"
+        ],
+        "merge": true,
+        "flags": [
+         {
+          "kind": "merge",
+          "text": "merge desde DEV hacia la rama: trae código de DEV que puede no estar en QA"
+         }
+        ],
+        "on": false
+       },
+       {
+        "sha": "58d3cba01a942e47d3b75e9be7a37bd2839d391d",
+        "short": "58d3cba",
+        "ts": 1790205200,
+        "author": "Ana",
+        "parents": [
+         "5849023f997fc2c907dcee9df56b08006878103b"
+        ],
+        "subject": "444444 carrito: vista",
+        "branch": "Feature/444444-carrito",
+        "wis": [
+         "444444"
+        ],
+        "merge": false,
+        "flags": [],
+        "on": true
+       }
+      ],
+      "notes": [],
+      "warnings": [
+       "La rama tiene 1 merge(s) desde otro entorno: si los commits de después usan ese código y no está en QA, el cherry-pick puede no compilar."
+      ],
+      "alreadyCp": 0
+     },
+     {
+      "name": "origin/development (commits que mencionan el WI)",
+      "wis": [
+       "444444"
+      ],
+      "locations": [],
+      "commits": [
+       {
+        "sha": "1811422281af1783c45bec3444eb4c620fde8086",
+        "short": "1811422",
+        "ts": 1790187200,
+        "author": "Caro",
+        "parents": [
+         "9a5dbe2c23f67cfe8677feccfc4cef3bd34ebf47"
+        ],
+        "subject": "otro trabajo en development",
+        "branch": "origin/development (commits que mencionan el WI)",
+        "wis": [
+         "444444"
+        ],
+        "merge": false,
+        "flags": [],
+        "on": true
+       }
+      ],
+      "notes": [],
+      "warnings": [],
+      "alreadyCp": 0,
+      "fromEnv": "DEV"
+     }
+    ],
+    "commits": [
+     {
+      "sha": "8d4391989be0f6df5e07da0c73a23c7e21e6c2fa",
+      "short": "8d43919",
+      "ts": 1790172800,
+      "author": "Ana",
+      "parents": [
+       "9a5dbe2c23f67cfe8677feccfc4cef3bd34ebf47"
+      ],
+      "subject": "444444 carrito: modelo",
+      "branch": "Feature/444444-carrito",
+      "wis": [
+       "444444"
+      ],
+      "merge": false,
+      "flags": [],
+      "on": true
+     },
+     {
+      "sha": "5849023f997fc2c907dcee9df56b08006878103b",
+      "short": "5849023",
+      "ts": 1790198000,
+      "author": "Ana",
+      "parents": [
+       "8d4391989be0f6df5e07da0c73a23c7e21e6c2fa",
+       "1811422281af1783c45bec3444eb4c620fde8086"
+      ],
+      "subject": "Merge branch 'development' into Feature/444444-carrito",
+      "branch": "Feature/444444-carrito",
+      "wis": [
+       "444444"
+      ],
+      "merge": true,
+      "flags": [
+       {
+        "kind": "merge",
+        "text": "merge desde DEV hacia la rama: trae código de DEV que puede no estar en QA"
+       }
+      ],
+      "on": false
+     },
+     {
+      "sha": "58d3cba01a942e47d3b75e9be7a37bd2839d391d",
+      "short": "58d3cba",
+      "ts": 1790205200,
+      "author": "Ana",
+      "parents": [
+       "5849023f997fc2c907dcee9df56b08006878103b"
+      ],
+      "subject": "444444 carrito: vista",
+      "branch": "Feature/444444-carrito",
+      "wis": [
+       "444444"
+      ],
+      "merge": false,
+      "flags": [],
+      "on": true
+     },
+     {
+      "sha": "1811422281af1783c45bec3444eb4c620fde8086",
+      "short": "1811422",
+      "ts": 1790187200,
+      "author": "Caro",
+      "parents": [
+       "9a5dbe2c23f67cfe8677feccfc4cef3bd34ebf47"
+      ],
+      "subject": "otro trabajo en development",
+      "branch": "origin/development (commits que mencionan el WI)",
+      "wis": [
+       "444444"
+      ],
+      "merge": false,
+      "flags": [],
+      "on": true
+     }
+    ],
+    "sourceEnv": "DEV"
+   }
+  ]
+ },
+ "promotion_qa_stacked": {
+  "target": "QA",
+  "wis": [
+   "555555"
+  ],
+  "repos": [
+   {
+    "name": "app",
+    "path": "<ROOT>\\proyecto\\app",
+    "targetRef": "origin/qa",
+    "remote": "origin",
+    "targetBranch": "qa",
+    "webUrl": null,
+    "branches": [
+     {
+      "name": "Bug/555555-envio",
+      "wis": [
+       "555555"
+      ],
+      "locations": [
+       "local",
+       "origin"
+      ],
+      "commits": [
+       {
+        "sha": "8e409ed7be45b3804dc61e1cc628f2c8d978ea32",
+        "short": "8e409ed",
+        "ts": 1790061200,
+        "author": "Ana",
+        "parents": [
+         "3314ae49bb3de3015032c31d0880cf5a347c370e"
+        ],
+        "subject": "111111 login: formulario",
+        "branch": "Bug/555555-envio",
+        "wis": [
+         "555555"
+        ],
+        "merge": false,
+        "flags": [
+         {
+          "kind": "otherwi",
+          "text": "menciona otro WI (#111111)"
+         },
+         {
+          "kind": "shared",
+          "text": "también está en la rama Feature/111111-login (¿apilada sobre otra feature?)"
+         }
+        ],
+        "on": false
+       },
+       {
+        "sha": "7d2ddbed096bf74076dcfa39377ad47433ac07dc",
+        "short": "7d2ddbe",
+        "ts": 1790072000,
+        "author": "Ana",
+        "parents": [
+         "8e409ed7be45b3804dc61e1cc628f2c8d978ea32"
+        ],
+        "subject": "111111 login: api",
+        "branch": "Bug/555555-envio",
+        "wis": [
+         "555555"
+        ],
+        "merge": false,
+        "flags": [
+         {
+          "kind": "otherwi",
+          "text": "menciona otro WI (#111111)"
+         },
+         {
+          "kind": "shared",
+          "text": "también está en la rama Feature/111111-login (¿apilada sobre otra feature?)"
+         }
+        ],
+        "on": false
+       },
+       {
+        "sha": "3b14243db43cd94b102aa3a37c986ad5600ab14f",
+        "short": "3b14243",
+        "ts": 1790093600,
+        "author": "Beto",
+        "parents": [
+         "7d2ddbed096bf74076dcfa39377ad47433ac07dc"
+        ],
+        "subject": "555555 envio: costo",
+        "branch": "Bug/555555-envio",
+        "wis": [
+         "555555"
+        ],
+        "merge": false,
+        "flags": [],
+        "on": true
+       }
+      ],
+      "notes": [],
+      "warnings": [],
+      "alreadyCp": 0
+     }
+    ],
+    "commits": [
+     {
+      "sha": "8e409ed7be45b3804dc61e1cc628f2c8d978ea32",
+      "short": "8e409ed",
+      "ts": 1790061200,
+      "author": "Ana",
+      "parents": [
+       "3314ae49bb3de3015032c31d0880cf5a347c370e"
+      ],
+      "subject": "111111 login: formulario",
+      "branch": "Bug/555555-envio",
+      "wis": [
+       "555555"
+      ],
+      "merge": false,
+      "flags": [
+       {
+        "kind": "otherwi",
+        "text": "menciona otro WI (#111111)"
+       },
+       {
+        "kind": "shared",
+        "text": "también está en la rama Feature/111111-login (¿apilada sobre otra feature?)"
+       }
+      ],
+      "on": false
+     },
+     {
+      "sha": "7d2ddbed096bf74076dcfa39377ad47433ac07dc",
+      "short": "7d2ddbe",
+      "ts": 1790072000,
+      "author": "Ana",
+      "parents": [
+       "8e409ed7be45b3804dc61e1cc628f2c8d978ea32"
+      ],
+      "subject": "111111 login: api",
+      "branch": "Bug/555555-envio",
+      "wis": [
+       "555555"
+      ],
+      "merge": false,
+      "flags": [
+       {
+        "kind": "otherwi",
+        "text": "menciona otro WI (#111111)"
+       },
+       {
+        "kind": "shared",
+        "text": "también está en la rama Feature/111111-login (¿apilada sobre otra feature?)"
+       }
+      ],
+      "on": false
+     },
+     {
+      "sha": "3b14243db43cd94b102aa3a37c986ad5600ab14f",
+      "short": "3b14243",
+      "ts": 1790093600,
+      "author": "Beto",
+      "parents": [
+       "7d2ddbed096bf74076dcfa39377ad47433ac07dc"
+      ],
+      "subject": "555555 envio: costo",
+      "branch": "Bug/555555-envio",
+      "wis": [
+       "555555"
+      ],
+      "merge": false,
+      "flags": [],
+      "on": true
+     }
+    ],
+    "sourceEnv": "DEV"
+   }
+  ]
+ },
+ "promotion_qa_mention_only": {
+  "target": "QA",
+  "wis": [
+   "333333"
+  ],
+  "repos": [
+   {
+    "name": "app",
+    "path": "<ROOT>\\proyecto\\app",
+    "targetRef": "origin/qa",
+    "remote": "origin",
+    "targetBranch": "qa",
+    "webUrl": null,
+    "branches": [
+     {
+      "name": "origin/development (commits que mencionan el WI)",
+      "wis": [
+       "333333"
+      ],
+      "locations": [],
+      "commits": [
+       {
+        "sha": "9a5dbe2c23f67cfe8677feccfc4cef3bd34ebf47",
+        "short": "9a5dbe2",
+        "ts": 1790158400,
+        "author": "Caro",
+        "parents": [
+         "b5e89ec957deaec76f908b6cdfa195fdc3ebab0c"
+        ],
+        "subject": "333333 ajuste de config",
+        "branch": "origin/development (commits que mencionan el WI)",
+        "wis": [
+         "333333"
+        ],
+        "merge": false,
+        "flags": [],
+        "on": true
+       }
+      ],
+      "notes": [],
+      "warnings": [],
+      "alreadyCp": 0,
+      "fromEnv": "DEV"
+     }
+    ],
+    "commits": [
+     {
+      "sha": "9a5dbe2c23f67cfe8677feccfc4cef3bd34ebf47",
+      "short": "9a5dbe2",
+      "ts": 1790158400,
+      "author": "Caro",
+      "parents": [
+       "b5e89ec957deaec76f908b6cdfa195fdc3ebab0c"
+      ],
+      "subject": "333333 ajuste de config",
+      "branch": "origin/development (commits que mencionan el WI)",
+      "wis": [
+       "333333"
+      ],
+      "merge": false,
+      "flags": [],
+      "on": true
+     }
+    ],
+    "sourceEnv": "DEV"
+   }
+  ]
+ },
+ "promotion_missing_target": {
+  "target": "QA",
+  "wis": [
+   "111111"
+  ],
+  "repos": [
+   {
+    "name": "app",
+    "error": "No existe la rama origin/no-existe (¿falta fetch?)"
+   }
+  ]
+ },
+ "branch_diff": {
+  "ok": {
+   "base": "3314ae49bb3de3015032c31d0880cf5a347c370e",
+   "tip": "b9884ee8c4aacf16123470b9c23344103ac283aa",
+   "commits": 3,
+   "stat": "src/login.txt      | 1 +\n src/login_api.txt  | 1 +\n src/login_test.txt | 1 +\n 3 files changed, 3 insertions(+)",
+   "diff": "diff --git a/src/login.txt b/src/login.txt\nnew file mode 100644\nindex 0000000..335f1dd\n--- /dev/null\n+++ b/src/login.txt\n@@ -0,0 +1 @@\n+form\ndiff --git a/src/login_api.txt b/src/login_api.txt\nnew file mode 100644\nindex 0000000..eedd89b\n--- /dev/null\n+++ b/src/login_api.txt\n@@ -0,0 +1 @@\n+api\ndiff --git a/src/login_test.txt b/src/login_test.txt\nnew file mode 100644\nindex 0000000..9daeafb\n--- /dev/null\n+++ b/src/login_test.txt\n@@ -0,0 +1 @@\n+test\n",
+   "cut": false
+  }
+ },
+ "branch_diff_ff": {
+  "ok": null
+ },
+ "overview_warm_equals_cold": true,
+ "helpers": {
+  "wi_nums": [
+   {
+    "text": "111111 login",
+    "wis": [
+     "111111"
+    ]
+   },
+   {
+    "text": "Merged PR 900001: 111111 login",
+    "wis": [
+     "111111"
+    ]
+   },
+   {
+    "text": "PR #123456 y 654321",
+    "wis": [
+     "654321"
+    ]
+   },
+   {
+    "text": "pull request 222222",
+    "wis": []
+   },
+   {
+    "text": "1234567 no es",
+    "wis": []
+   },
+   {
+    "text": "12345 tampoco",
+    "wis": []
+   },
+   {
+    "text": "a111111b",
+    "wis": [
+     "111111"
+    ]
+   },
+   {
+    "text": "wi-111111/222222",
+    "wis": [
+     "111111",
+     "222222"
+    ]
+   },
+   {
+    "text": "",
+    "wis": []
+   },
+   {
+    "text": null,
+    "wis": []
+   },
+   {
+    "text": "fix (cherry picked from commit 7238ab4) 333333",
+    "wis": [
+     "333333"
+    ]
+   }
+  ],
+  "cp_trailer": [
+   {
+    "text": "x\n\n(cherry picked from commit 7238ab4c0ffee0000000000000000000000000000)",
+    "shas": []
+   },
+   {
+    "text": "(cherry picked from commit abc12)",
+    "shas": []
+   },
+   {
+    "text": "(cherry picked from commit ABCDEF1)",
+    "shas": []
+   },
+   {
+    "text": "(cherry picked from commit abcdef1)",
+    "shas": [
+     "abcdef1"
+    ]
+   }
+  ],
+  "remote_web_url": [
+   {
+    "url": "https://dev.azure.com/org/proj/_git/app",
+    "web": "https://dev.azure.com/org/proj/_git/app"
+   },
+   {
+    "url": "https://user@dev.azure.com/org/proj/_git/app.git",
+    "web": "https://dev.azure.com/org/proj/_git/app"
+   },
+   {
+    "url": "https://org.visualstudio.com/proj/_git/app",
+    "web": "https://org.visualstudio.com/proj/_git/app"
+   },
+   {
+    "url": "git@ssh.dev.azure.com:v3/org/proj/app",
+    "web": null
+   },
+   {
+    "url": "https://github.com/acme/app.git",
+    "web": null
+   },
+   {
+    "url": "http://server/_git/app",
+    "web": null
+   },
+   {
+    "url": null,
+    "remote": "noexiste",
+    "web": null
+   }
+  ]
+ }
+}

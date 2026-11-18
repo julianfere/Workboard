@@ -1,0 +1,23 @@
+# Bugs de la v1 registrados en los golden
+
+Los golden capturan la v1 **tal cual**, bugs incluidos. Cada bug de esta lista tiene una decisión: el
+port lo replica (paridad) o lo corrige; si lo corrige, el test de Rust marca ese caso como divergencia
+esperada y lo explica.
+
+## 1. Un merge *desde* development se expande como si fuera un merge de PR
+
+- **Dónde**: `gitpanel._mentioned_commits`.
+- **Qué pasa**: el mensaje `Merge branch 'development' into Feature/444444-carrito` menciona el WI por el
+  nombre de la rama. La función lo trata como un merge de PR y lo expande a los commits que trajo
+  (`M^1..M`), que son commits de `development` que entraron a la rama, no trabajo del WI.
+- **Efecto**: la promoción a QA de 444444 propone, **tildado**, `1811422 otro trabajo en development` (de
+  otra persona y sin WI). Ver `git.json` → `promotion_qa_one` y `promotion_qa`.
+- **Decisión**: pendiente.
+
+## 2. `workboard_run_tool` sin `wi` falla dentro de una sesión
+
+- **Dónde**: `mcp_server.workboard_run_tool`.
+- **Qué pasa**: `_session_wis()` devuelve un `set` y el código hace `wis[0]`.
+- **Efecto**: `'set' object is not subscriptable` en vez de correr la tool en la carpeta del primer WI de
+  la sesión. Ver `mcp.json` → `session`, última llamada.
+- **Decisión**: pendiente.

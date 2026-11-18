@@ -1,0 +1,668 @@
+{
+ "list_items": [
+  {
+   "name": "arreglo-sin-wi",
+   "kind": "wi",
+   "group": "",
+   "members": [],
+   "wis": [
+    "444444",
+    "555555"
+   ],
+   "title": "Arreglo sin work item",
+   "tipo": "fix",
+   "meta": {
+    "tipo": "fix",
+    "wi": [
+     "444444",
+     "555555"
+    ],
+    "estado": "codeado"
+   },
+   "hasReadme": true,
+   "deploy": "",
+   "tasks": [],
+   "planGaps": [],
+   "size": 105,
+   "files": [
+    {
+     "path": "arreglo-sin-wi/README.md",
+     "name": "README.md",
+     "size": 79,
+     "kind": null,
+     "cat": "doc",
+     "text": true,
+     "media": null
+    },
+    {
+     "path": "arreglo-sin-wi/SEED_datos.sql",
+     "name": "SEED_datos.sql",
+     "size": 26,
+     "kind": "SEED",
+     "cat": "migracion",
+     "text": true,
+     "media": null
+    }
+   ],
+   "kinds": [
+    "SEED"
+   ],
+   "dupes": [
+    "grp-checkout/wi444444-carrito",
+    "grp-checkout/wi555555-envio"
+   ]
+  },
+  {
+   "name": "grp-checkout",
+   "kind": "group",
+   "group": "",
+   "members": [
+    "grp-checkout/wi444444-carrito",
+    "grp-checkout/wi555555-envio"
+   ],
+   "wis": [],
+   "title": "Checkout",
+   "tipo": "",
+   "meta": {
+    "estado": "en-curso",
+    "notas": "grupo del checkout"
+   },
+   "hasReadme": true,
+   "deploy": "",
+   "tasks": [
+    {
+     "text": "Coordinar deploy",
+     "done": false
+    }
+   ],
+   "planGaps": [],
+   "size": 142,
+   "files": [
+    {
+     "path": "grp-checkout/_privado/x.txt",
+     "name": "x.txt",
+     "size": 31,
+     "kind": null,
+     "cat": "doc",
+     "text": true,
+     "media": null
+    },
+    {
+     "path": "grp-checkout/README.md",
+     "name": "README.md",
+     "size": 101,
+     "kind": null,
+     "cat": "doc",
+     "text": true,
+     "media": null
+    },
+    {
+     "path": "grp-checkout/VERIF_checkout.sql",
+     "name": "VERIF_checkout.sql",
+     "size": 10,
+     "kind": "VERIF",
+     "cat": "diag",
+     "text": true,
+     "media": null
+    }
+   ],
+   "kinds": [
+    "VERIF"
+   ],
+   "dupes": []
+  },
+  {
+   "name": "grp-checkout/wi444444-carrito",
+   "kind": "wi",
+   "group": "grp-checkout",
+   "members": [],
+   "wis": [
+    "444444"
+   ],
+   "title": "Carrito",
+   "tipo": "task",
+   "meta": {
+    "estado": "diag",
+    "tipo": "task"
+   },
+   "hasReadme": true,
+   "deploy": "",
+   "tasks": [],
+   "planGaps": [],
+   "size": 58,
+   "files": [
+    {
+     "path": "grp-checkout/wi444444-carrito/README.md",
+     "name": "README.md",
+     "size": 42,
+     "kind": null,
+     "cat": "doc",
+     "text": true,
+     "media": null
+    },
+    {
+     "path": "grp-checkout/wi444444-carrito/script.ps1",
+     "name": "script.ps1",
+     "size": 16,
+     "kind": null,
+     "cat": "script",
+     "text": true,
+     "media": null
+    }
+   ],
+   "kinds": [],
+   "dupes": [
+    "arreglo-sin-wi"
+   ]
+  },
+  {
+   "name": "grp-checkout/wi555555-envio",
+   "kind": "wi",
+   "group": "grp-checkout",
+   "members": [],
+   "wis": [
+    "555555"
+   ],
+   "title": "Envío",
+   "tipo": "",
+   "meta": {
+    "estado": "pendiente",
+    "tipo": "raro"
+   },
+   "hasReadme": true,
+   "deploy": "",
+   "tasks": [],
+   "planGaps": [],
+   "size": 46,
+   "files": [
+    {
+     "path": "grp-checkout/wi555555-envio/README.md",
+     "name": "README.md",
+     "size": 46,
+     "kind": null,
+     "cat": "doc",
+     "text": true,
+     "media": null
+    }
+   ],
+   "kinds": [],
+   "dupes": [
+    "arreglo-sin-wi"
+   ]
+  },
+  {
+   "name": "wi111111-copia-vieja",
+   "kind": "wi",
+   "group": "",
+   "members": [],
+   "wis": [
+    "111111"
+   ],
+   "title": "Copia vieja de sesión",
+   "tipo": "",
+   "meta": {
+    "estado": "descartado"
+   },
+   "hasReadme": true,
+   "deploy": "",
+   "tasks": [],
+   "planGaps": [],
+   "size": 52,
+   "files": [
+    {
+     "path": "wi111111-copia-vieja/README.md",
+     "name": "README.md",
+     "size": 52,
+     "kind": null,
+     "cat": "doc",
+     "text": true,
+     "media": null
+    }
+   ],
+   "kinds": [],
+   "dupes": [
+    "wi111111-login-con-sso"
+   ]
+  },
+  {
+   "name": "wi111111-login-con-sso",
+   "kind": "wi",
+   "group": "",
+   "members": [],
+   "wis": [
+    "111111"
+   ],
+   "title": "Login con SSO",
+   "tipo": "us",
+   "meta": {
+    "estado": "en-curso",
+    "tipo": "us",
+    "ambientes": [
+     "dev"
+    ],
+    "notas": "falta: revisar el callback",
+    "rama": "feature/111111-sso",
+    "pactada": "2026-11-25",
+    "horas": "12,5"
+   },
+   "hasReadme": true,
+   "deploy": "1. Correr la migración.\n### Detalle\nSigue dentro del deploy.",
+   "tasks": [
+    {
+     "text": "Configurar el proveedor",
+     "done": false
+    },
+    {
+     "text": "Crear la tabla de sesiones",
+     "done": true
+    },
+    {
+     "text": "Probar   con   espacios",
+     "done": false
+    }
+   ],
+   "planGaps": [],
+   "size": 636,
+   "files": [
+    {
+     "path": "wi111111-login-con-sso/captura.png",
+     "name": "captura.png",
+     "size": 16,
+     "kind": null,
+     "cat": "otro",
+     "text": false,
+     "media": "image/png"
+    },
+    {
+     "path": "wi111111-login-con-sso/consulta.sql",
+     "name": "consulta.sql",
+     "size": 10,
+     "kind": null,
+     "cat": "sql",
+     "text": true,
+     "media": null
+    },
+    {
+     "path": "wi111111-login-con-sso/datos.bin",
+     "name": "datos.bin",
+     "size": 3,
+     "kind": null,
+     "cat": "otro",
+     "text": false,
+     "media": null
+    },
+    {
+     "path": "wi111111-login-con-sso/DIAG_WI111111_usuarios.sql",
+     "name": "DIAG_WI111111_usuarios.sql",
+     "size": 10,
+     "kind": "DIAG",
+     "cat": "diag",
+     "text": true,
+     "media": null
+    },
+    {
+     "path": "wi111111-login-con-sso/docs/flujo.drawio",
+     "name": "flujo.drawio",
+     "size": 10,
+     "kind": null,
+     "cat": "doc",
+     "text": true,
+     "media": null
+    },
+    {
+     "path": "wi111111-login-con-sso/docs/PLAN_sso.md",
+     "name": "PLAN_sso.md",
+     "size": 7,
+     "kind": "PLAN",
+     "cat": "doc",
+     "text": true,
+     "media": null
+    },
+    {
+     "path": "wi111111-login-con-sso/gen_diag.py",
+     "name": "gen_diag.py",
+     "size": 24,
+     "kind": "DIAG",
+     "cat": "script",
+     "text": true,
+     "media": null
+    },
+    {
+     "path": "wi111111-login-con-sso/MIGRATION_WI111111_sesiones.sql",
+     "name": "MIGRATION_WI111111_sesiones.sql",
+     "size": 32,
+     "kind": "MIGRATION",
+     "cat": "migracion",
+     "text": true,
+     "media": null
+    },
+    {
+     "path": "wi111111-login-con-sso/README.md",
+     "name": "README.md",
+     "size": 503,
+     "kind": null,
+     "cat": "doc",
+     "text": true,
+     "media": null
+    },
+    {
+     "path": "wi111111-login-con-sso/ROLLBACK_WI111111_sesiones.sql",
+     "name": "ROLLBACK_WI111111_sesiones.sql",
+     "size": 21,
+     "kind": "ROLLBACK",
+     "cat": "migracion",
+     "text": true,
+     "media": null
+    }
+   ],
+   "kinds": [
+    "DIAG",
+    "MIGRATION",
+    "PLAN",
+    "ROLLBACK"
+   ],
+   "dupes": [
+    "wi111111-copia-vieja"
+   ]
+  },
+  {
+   "name": "wi222222-333333-pagos",
+   "kind": "wi",
+   "group": "",
+   "members": [],
+   "wis": [
+    "222222",
+    "333333"
+   ],
+   "title": "Pagos duplicados",
+   "tipo": "bug",
+   "meta": {
+    "estado": "qa",
+    "tipo": "bug",
+    "ambientes": [
+     "dev",
+     "qa"
+    ]
+   },
+   "hasReadme": true,
+   "deploy": "",
+   "tasks": [
+    {
+     "text": "Verificar en QA",
+     "done": false
+    }
+   ],
+   "planGaps": [],
+   "size": 146,
+   "files": [
+    {
+     "path": "wi222222-333333-pagos/FIX_WI222222_duplicados.sql",
+     "name": "FIX_WI222222_duplicados.sql",
+     "size": 24,
+     "kind": "FIX",
+     "cat": "fix",
+     "text": true,
+     "media": null
+    },
+    {
+     "path": "wi222222-333333-pagos/README.md",
+     "name": "README.md",
+     "size": 122,
+     "kind": null,
+     "cat": "doc",
+     "text": true,
+     "media": null
+    }
+   ],
+   "kinds": [
+    "FIX"
+   ],
+   "dupes": []
+  },
+  {
+   "name": "wi666666-plan-pendiente",
+   "kind": "wi",
+   "group": "",
+   "members": [],
+   "wis": [
+    "666666"
+   ],
+   "title": "Plan pendiente",
+   "tipo": "",
+   "meta": {
+    "estado": "plan"
+   },
+   "hasReadme": true,
+   "deploy": "",
+   "tasks": [
+    {
+     "text": "hecho",
+     "done": true
+    }
+   ],
+   "planGaps": [
+    "plan",
+    "pendientes"
+   ],
+   "size": 121,
+   "files": [
+    {
+     "path": "wi666666-plan-pendiente/README.md",
+     "name": "README.md",
+     "size": 121,
+     "kind": null,
+     "cat": "doc",
+     "text": true,
+     "media": null
+    }
+   ],
+   "kinds": [],
+   "dupes": []
+  },
+  {
+   "name": "wi777777-sin-readme",
+   "kind": "wi",
+   "group": "",
+   "members": [],
+   "wis": [
+    "777777"
+   ],
+   "title": "",
+   "tipo": "",
+   "meta": {},
+   "hasReadme": false,
+   "deploy": "",
+   "tasks": [],
+   "planGaps": [],
+   "size": 16,
+   "files": [
+    {
+     "path": "wi777777-sin-readme/notas.txt",
+     "name": "notas.txt",
+     "size": 16,
+     "kind": null,
+     "cat": "doc",
+     "text": true,
+     "media": null
+    }
+   ],
+   "kinds": [],
+   "dupes": []
+  }
+ ],
+ "list_deleted": [
+  {
+   "path": "_deleted/grp-viejo",
+   "base": "grp-viejo",
+   "title": "Grupo eliminado",
+   "estado": "",
+   "group": true
+  },
+  {
+   "path": "_deleted/wi888888-eliminado",
+   "base": "wi888888-eliminado",
+   "title": "Eliminado",
+   "estado": "qa",
+   "group": false
+  }
+ ],
+ "folder_of": [
+  {
+   "name": "wi111111-login-con-sso",
+   "ok": "wi111111-login-con-sso"
+  },
+  {
+   "name": "grp-checkout",
+   "ok": "grp-checkout"
+  },
+  {
+   "name": "grp-checkout/wi444444-carrito",
+   "ok": "grp-checkout/wi444444-carrito"
+  },
+  {
+   "name": "grp-checkout/_privado",
+   "error": "FileNotFoundError",
+   "message": "No existe la carpeta de trabajo: grp-checkout/_privado"
+  },
+  {
+   "name": "_deleted/wi888888-eliminado",
+   "error": "FileNotFoundError",
+   "message": "No existe la carpeta de trabajo: _deleted/wi888888-eliminado"
+  },
+  {
+   "name": "_interno",
+   "error": "FileNotFoundError",
+   "message": "No existe la carpeta de trabajo: _interno"
+  },
+  {
+   "name": ".config",
+   "error": "FileNotFoundError",
+   "message": "No existe la carpeta de trabajo: .config"
+  },
+  {
+   "name": "suelto.md",
+   "error": "FileNotFoundError",
+   "message": "No existe la carpeta de trabajo: suelto.md"
+  },
+  {
+   "name": "no-existe",
+   "error": "FileNotFoundError",
+   "message": "No existe la carpeta de trabajo: no-existe"
+  },
+  {
+   "name": "../x",
+   "error": "PermissionError",
+   "message": "Fuera de la raíz: ../x"
+  },
+  {
+   "name": "",
+   "error": "FileNotFoundError",
+   "message": "No existe la carpeta de trabajo: "
+  },
+  {
+   "name": "wi111111-login-con-sso/docs",
+   "error": "FileNotFoundError",
+   "message": "No existe la carpeta de trabajo: wi111111-login-con-sso/docs"
+  },
+  {
+   "name": "grp-checkout/wi444444-carrito/../wi555555-envio",
+   "ok": "grp-checkout/wi555555-envio"
+  }
+ ],
+ "safe_path": [
+  {
+   "rel": "",
+   "ok": "."
+  },
+  {
+   "rel": ".",
+   "ok": "."
+  },
+  {
+   "rel": "a/b",
+   "ok": "a/b"
+  },
+  {
+   "rel": "../x",
+   "error": "PermissionError",
+   "message": "Fuera de la raíz: ../x"
+  },
+  {
+   "rel": "a/../../x",
+   "error": "PermissionError",
+   "message": "Fuera de la raíz: a/../../x"
+  },
+  {
+   "rel": "a/../b",
+   "ok": "b"
+  },
+  {
+   "rel": "C:/Windows",
+   "error": "PermissionError",
+   "message": "Fuera de la raíz: C:/Windows"
+  }
+ ],
+ "read_file": [
+  {
+   "rel": "wi111111-login-con-sso/consulta.sql",
+   "ok": "SELECT 2;\n"
+  },
+  {
+   "rel": "wi111111-copia-vieja/README.md",
+   "ok": "---\nestado: descartado\n---\n\n# Copia vieja de sesión\n"
+  },
+  {
+   "rel": "no/existe.txt",
+   "error": "FileNotFoundError",
+   "message": "no/existe.txt"
+  },
+  {
+   "rel": "../x",
+   "error": "PermissionError",
+   "message": "Fuera de la raíz: ../x"
+  },
+  {
+   "rel": "wi111111-login-con-sso",
+   "error": "FileNotFoundError",
+   "message": "wi111111-login-con-sso"
+  }
+ ],
+ "read_media": [
+  {
+   "rel": "wi111111-login-con-sso/captura.png",
+   "ok": {
+    "mime": "image/png",
+    "data": "iVBORw0KGgoAAAANSUhEUg=="
+   }
+  },
+  {
+   "rel": "wi111111-login-con-sso/consulta.sql",
+   "error": "FileNotFoundError",
+   "message": "wi111111-login-con-sso/consulta.sql"
+  }
+ ],
+ "get_meta": [
+  {
+   "name": "wi222222-333333-pagos",
+   "ok": {
+    "estado": "qa",
+    "tipo": "bug",
+    "ambientes": [
+     "dev",
+     "qa"
+    ]
+   }
+  },
+  {
+   "name": "wi777777-sin-readme",
+   "ok": {}
+  },
+  {
+   "name": "grp-checkout",
+   "ok": {
+    "estado": "en-curso",
+    "notas": "grupo del checkout"
+   }
+  }
+ ]
+}

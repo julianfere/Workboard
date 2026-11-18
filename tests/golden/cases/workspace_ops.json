@@ -1,0 +1,2786 @@
+{
+ "steps": [
+  {
+   "desc": "cambia estado y notas con caracteres que van entre comillas",
+   "op": "update_meta",
+   "args": [
+    "wi111111-login-con-sso",
+    {
+     "estado": "codeado",
+     "notas": "ok: listo",
+     "ambientes": [
+      "dev",
+      "qa"
+     ]
+    }
+   ],
+   "ok": {
+    "name": "wi111111-login-con-sso",
+    "kind": "wi",
+    "group": "",
+    "members": [],
+    "wis": [
+     "111111"
+    ],
+    "title": "Login con SSO",
+    "tipo": "us",
+    "meta": {
+     "estado": "codeado",
+     "tipo": "us",
+     "ambientes": [
+      "dev",
+      "qa"
+     ],
+     "notas": "ok: listo",
+     "rama": "feature/111111-sso",
+     "pactada": "2026-11-25",
+     "horas": "12,5"
+    },
+    "hasReadme": true,
+    "deploy": "1. Correr la migración.\n### Detalle\nSigue dentro del deploy.",
+    "tasks": [
+     {
+      "text": "Configurar el proveedor",
+      "done": false
+     },
+     {
+      "text": "Crear la tabla de sesiones",
+      "done": true
+     },
+     {
+      "text": "Probar   con   espacios",
+      "done": false
+     }
+    ],
+    "planGaps": [],
+    "size": 597,
+    "files": [
+     {
+      "path": "wi111111-login-con-sso/captura.png",
+      "name": "captura.png",
+      "size": 16,
+      "kind": null,
+      "cat": "otro",
+      "text": false,
+      "media": "image/png"
+     },
+     {
+      "path": "wi111111-login-con-sso/consulta.sql",
+      "name": "consulta.sql",
+      "size": 10,
+      "kind": null,
+      "cat": "sql",
+      "text": true,
+      "media": null
+     },
+     {
+      "path": "wi111111-login-con-sso/datos.bin",
+      "name": "datos.bin",
+      "size": 3,
+      "kind": null,
+      "cat": "otro",
+      "text": false,
+      "media": null
+     },
+     {
+      "path": "wi111111-login-con-sso/DIAG_WI111111_usuarios.sql",
+      "name": "DIAG_WI111111_usuarios.sql",
+      "size": 10,
+      "kind": "DIAG",
+      "cat": "diag",
+      "text": true,
+      "media": null
+     },
+     {
+      "path": "wi111111-login-con-sso/docs/flujo.drawio",
+      "name": "flujo.drawio",
+      "size": 10,
+      "kind": null,
+      "cat": "doc",
+      "text": true,
+      "media": null
+     },
+     {
+      "path": "wi111111-login-con-sso/docs/PLAN_sso.md",
+      "name": "PLAN_sso.md",
+      "size": 7,
+      "kind": "PLAN",
+      "cat": "doc",
+      "text": true,
+      "media": null
+     },
+     {
+      "path": "wi111111-login-con-sso/gen_diag.py",
+      "name": "gen_diag.py",
+      "size": 24,
+      "kind": "DIAG",
+      "cat": "script",
+      "text": true,
+      "media": null
+     },
+     {
+      "path": "wi111111-login-con-sso/MIGRATION_WI111111_sesiones.sql",
+      "name": "MIGRATION_WI111111_sesiones.sql",
+      "size": 32,
+      "kind": "MIGRATION",
+      "cat": "migracion",
+      "text": true,
+      "media": null
+     },
+     {
+      "path": "wi111111-login-con-sso/README.md",
+      "name": "README.md",
+      "size": 464,
+      "kind": null,
+      "cat": "doc",
+      "text": true,
+      "media": null
+     },
+     {
+      "path": "wi111111-login-con-sso/ROLLBACK_WI111111_sesiones.sql",
+      "name": "ROLLBACK_WI111111_sesiones.sql",
+      "size": 21,
+      "kind": "ROLLBACK",
+      "cat": "migracion",
+      "text": true,
+      "media": null
+     }
+    ],
+    "kinds": [
+     "DIAG",
+     "MIGRATION",
+     "PLAN",
+     "ROLLBACK"
+    ]
+   },
+   "tree": [
+    "suelto.md",
+    ".config/x.txt",
+    "_deleted/grp-viejo/README.md",
+    "_deleted/wi888888-eliminado/README.md",
+    "_interno/x.txt",
+    "arreglo-sin-wi/README.md",
+    "arreglo-sin-wi/SEED_datos.sql",
+    "grp-checkout/README.md",
+    "grp-checkout/VERIF_checkout.sql",
+    "grp-checkout/_privado/x.txt",
+    "grp-checkout/wi444444-carrito/README.md",
+    "grp-checkout/wi444444-carrito/script.ps1",
+    "grp-checkout/wi555555-envio/README.md",
+    "wi111111-copia-vieja/README.md",
+    "wi111111-login-con-sso/DIAG_WI111111_usuarios.sql",
+    "wi111111-login-con-sso/MIGRATION_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/README.md",
+    "wi111111-login-con-sso/ROLLBACK_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/captura.png",
+    "wi111111-login-con-sso/consulta.sql",
+    "wi111111-login-con-sso/datos.bin",
+    "wi111111-login-con-sso/gen_diag.py",
+    "wi111111-login-con-sso/.oculto/secreto.txt",
+    "wi111111-login-con-sso/docs/PLAN_sso.md",
+    "wi111111-login-con-sso/docs/flujo.drawio",
+    "wi222222-333333-pagos/FIX_WI222222_duplicados.sql",
+    "wi222222-333333-pagos/README.md",
+    "wi666666-plan-pendiente/README.md",
+    "wi777777-sin-readme/notas.txt"
+   ],
+   "readmes_changed": {
+    "wi111111-login-con-sso/README.md": "---\nestado: codeado\ntipo: us\nambientes: [dev, qa]\nnotas: \"ok: listo\"\nrama: feature/111111-sso\npactada: 2026-11-25\nhoras: 12,5\n---\n# Login con SSO\n\nTexto libre.\n\n## Pendientes\n\n- [ ] Configurar el proveedor\n  - [ ] sub-ítem: no es tarea\n- [x] Crear la tabla de sesiones\nTexto suelto dentro de la sección.\n- [ ]   Probar   con   espacios  \n\n## Deploy\n\n1. Correr la migración.\n### Detalle\nSigue dentro del deploy.\n\n## Notas\n\n- [ ] fuera de Pendientes: no es tarea\n"
+   }
+  },
+  {
+   "desc": "borra un campo con \"\"",
+   "op": "update_meta",
+   "args": [
+    "wi111111-login-con-sso",
+    {
+     "horas": ""
+    }
+   ],
+   "ok": {
+    "name": "wi111111-login-con-sso",
+    "kind": "wi",
+    "group": "",
+    "members": [],
+    "wis": [
+     "111111"
+    ],
+    "title": "Login con SSO",
+    "tipo": "us",
+    "meta": {
+     "estado": "codeado",
+     "tipo": "us",
+     "ambientes": [
+      "dev",
+      "qa"
+     ],
+     "notas": "ok: listo",
+     "rama": "feature/111111-sso",
+     "pactada": "2026-11-25"
+    },
+    "hasReadme": true,
+    "deploy": "1. Correr la migración.\n### Detalle\nSigue dentro del deploy.",
+    "tasks": [
+     {
+      "text": "Configurar el proveedor",
+      "done": false
+     },
+     {
+      "text": "Crear la tabla de sesiones",
+      "done": true
+     },
+     {
+      "text": "Probar   con   espacios",
+      "done": false
+     }
+    ],
+    "planGaps": [],
+    "size": 585,
+    "files": [
+     {
+      "path": "wi111111-login-con-sso/captura.png",
+      "name": "captura.png",
+      "size": 16,
+      "kind": null,
+      "cat": "otro",
+      "text": false,
+      "media": "image/png"
+     },
+     {
+      "path": "wi111111-login-con-sso/consulta.sql",
+      "name": "consulta.sql",
+      "size": 10,
+      "kind": null,
+      "cat": "sql",
+      "text": true,
+      "media": null
+     },
+     {
+      "path": "wi111111-login-con-sso/datos.bin",
+      "name": "datos.bin",
+      "size": 3,
+      "kind": null,
+      "cat": "otro",
+      "text": false,
+      "media": null
+     },
+     {
+      "path": "wi111111-login-con-sso/DIAG_WI111111_usuarios.sql",
+      "name": "DIAG_WI111111_usuarios.sql",
+      "size": 10,
+      "kind": "DIAG",
+      "cat": "diag",
+      "text": true,
+      "media": null
+     },
+     {
+      "path": "wi111111-login-con-sso/docs/flujo.drawio",
+      "name": "flujo.drawio",
+      "size": 10,
+      "kind": null,
+      "cat": "doc",
+      "text": true,
+      "media": null
+     },
+     {
+      "path": "wi111111-login-con-sso/docs/PLAN_sso.md",
+      "name": "PLAN_sso.md",
+      "size": 7,
+      "kind": "PLAN",
+      "cat": "doc",
+      "text": true,
+      "media": null
+     },
+     {
+      "path": "wi111111-login-con-sso/gen_diag.py",
+      "name": "gen_diag.py",
+      "size": 24,
+      "kind": "DIAG",
+      "cat": "script",
+      "text": true,
+      "media": null
+     },
+     {
+      "path": "wi111111-login-con-sso/MIGRATION_WI111111_sesiones.sql",
+      "name": "MIGRATION_WI111111_sesiones.sql",
+      "size": 32,
+      "kind": "MIGRATION",
+      "cat": "migracion",
+      "text": true,
+      "media": null
+     },
+     {
+      "path": "wi111111-login-con-sso/README.md",
+      "name": "README.md",
+      "size": 452,
+      "kind": null,
+      "cat": "doc",
+      "text": true,
+      "media": null
+     },
+     {
+      "path": "wi111111-login-con-sso/ROLLBACK_WI111111_sesiones.sql",
+      "name": "ROLLBACK_WI111111_sesiones.sql",
+      "size": 21,
+      "kind": "ROLLBACK",
+      "cat": "migracion",
+      "text": true,
+      "media": null
+     }
+    ],
+    "kinds": [
+     "DIAG",
+     "MIGRATION",
+     "PLAN",
+     "ROLLBACK"
+    ]
+   },
+   "tree": [
+    "suelto.md",
+    ".config/x.txt",
+    "_deleted/grp-viejo/README.md",
+    "_deleted/wi888888-eliminado/README.md",
+    "_interno/x.txt",
+    "arreglo-sin-wi/README.md",
+    "arreglo-sin-wi/SEED_datos.sql",
+    "grp-checkout/README.md",
+    "grp-checkout/VERIF_checkout.sql",
+    "grp-checkout/_privado/x.txt",
+    "grp-checkout/wi444444-carrito/README.md",
+    "grp-checkout/wi444444-carrito/script.ps1",
+    "grp-checkout/wi555555-envio/README.md",
+    "wi111111-copia-vieja/README.md",
+    "wi111111-login-con-sso/DIAG_WI111111_usuarios.sql",
+    "wi111111-login-con-sso/MIGRATION_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/README.md",
+    "wi111111-login-con-sso/ROLLBACK_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/captura.png",
+    "wi111111-login-con-sso/consulta.sql",
+    "wi111111-login-con-sso/datos.bin",
+    "wi111111-login-con-sso/gen_diag.py",
+    "wi111111-login-con-sso/.oculto/secreto.txt",
+    "wi111111-login-con-sso/docs/PLAN_sso.md",
+    "wi111111-login-con-sso/docs/flujo.drawio",
+    "wi222222-333333-pagos/FIX_WI222222_duplicados.sql",
+    "wi222222-333333-pagos/README.md",
+    "wi666666-plan-pendiente/README.md",
+    "wi777777-sin-readme/notas.txt"
+   ],
+   "readmes_changed": {
+    "wi111111-login-con-sso/README.md": "---\nestado: codeado\ntipo: us\nambientes: [dev, qa]\nnotas: \"ok: listo\"\nrama: feature/111111-sso\npactada: 2026-11-25\n---\n# Login con SSO\n\nTexto libre.\n\n## Pendientes\n\n- [ ] Configurar el proveedor\n  - [ ] sub-ítem: no es tarea\n- [x] Crear la tabla de sesiones\nTexto suelto dentro de la sección.\n- [ ]   Probar   con   espacios  \n\n## Deploy\n\n1. Correr la migración.\n### Detalle\nSigue dentro del deploy.\n\n## Notas\n\n- [ ] fuera de Pendientes: no es tarea\n"
+   }
+  },
+  {
+   "desc": "pasar a prod tilda los pendientes abiertos",
+   "op": "update_meta",
+   "args": [
+    "wi111111-login-con-sso",
+    {
+     "estado": "prod"
+    }
+   ],
+   "ok": {
+    "name": "wi111111-login-con-sso",
+    "kind": "wi",
+    "group": "",
+    "members": [],
+    "wis": [
+     "111111"
+    ],
+    "title": "Login con SSO",
+    "tipo": "us",
+    "meta": {
+     "estado": "prod",
+     "tipo": "us",
+     "ambientes": [
+      "dev",
+      "qa"
+     ],
+     "notas": "ok: listo",
+     "rama": "feature/111111-sso",
+     "pactada": "2026-11-25"
+    },
+    "hasReadme": true,
+    "deploy": "1. Correr la migración.\n### Detalle\nSigue dentro del deploy.",
+    "tasks": [
+     {
+      "text": "Configurar el proveedor",
+      "done": true
+     },
+     {
+      "text": "Crear la tabla de sesiones",
+      "done": true
+     },
+     {
+      "text": "Probar   con   espacios",
+      "done": true
+     }
+    ],
+    "planGaps": [],
+    "size": 578,
+    "files": [
+     {
+      "path": "wi111111-login-con-sso/captura.png",
+      "name": "captura.png",
+      "size": 16,
+      "kind": null,
+      "cat": "otro",
+      "text": false,
+      "media": "image/png"
+     },
+     {
+      "path": "wi111111-login-con-sso/consulta.sql",
+      "name": "consulta.sql",
+      "size": 10,
+      "kind": null,
+      "cat": "sql",
+      "text": true,
+      "media": null
+     },
+     {
+      "path": "wi111111-login-con-sso/datos.bin",
+      "name": "datos.bin",
+      "size": 3,
+      "kind": null,
+      "cat": "otro",
+      "text": false,
+      "media": null
+     },
+     {
+      "path": "wi111111-login-con-sso/DIAG_WI111111_usuarios.sql",
+      "name": "DIAG_WI111111_usuarios.sql",
+      "size": 10,
+      "kind": "DIAG",
+      "cat": "diag",
+      "text": true,
+      "media": null
+     },
+     {
+      "path": "wi111111-login-con-sso/docs/flujo.drawio",
+      "name": "flujo.drawio",
+      "size": 10,
+      "kind": null,
+      "cat": "doc",
+      "text": true,
+      "media": null
+     },
+     {
+      "path": "wi111111-login-con-sso/docs/PLAN_sso.md",
+      "name": "PLAN_sso.md",
+      "size": 7,
+      "kind": "PLAN",
+      "cat": "doc",
+      "text": true,
+      "media": null
+     },
+     {
+      "path": "wi111111-login-con-sso/gen_diag.py",
+      "name": "gen_diag.py",
+      "size": 24,
+      "kind": "DIAG",
+      "cat": "script",
+      "text": true,
+      "media": null
+     },
+     {
+      "path": "wi111111-login-con-sso/MIGRATION_WI111111_sesiones.sql",
+      "name": "MIGRATION_WI111111_sesiones.sql",
+      "size": 32,
+      "kind": "MIGRATION",
+      "cat": "migracion",
+      "text": true,
+      "media": null
+     },
+     {
+      "path": "wi111111-login-con-sso/README.md",
+      "name": "README.md",
+      "size": 445,
+      "kind": null,
+      "cat": "doc",
+      "text": true,
+      "media": null
+     },
+     {
+      "path": "wi111111-login-con-sso/ROLLBACK_WI111111_sesiones.sql",
+      "name": "ROLLBACK_WI111111_sesiones.sql",
+      "size": 21,
+      "kind": "ROLLBACK",
+      "cat": "migracion",
+      "text": true,
+      "media": null
+     }
+    ],
+    "kinds": [
+     "DIAG",
+     "MIGRATION",
+     "PLAN",
+     "ROLLBACK"
+    ]
+   },
+   "tree": [
+    "suelto.md",
+    ".config/x.txt",
+    "_deleted/grp-viejo/README.md",
+    "_deleted/wi888888-eliminado/README.md",
+    "_interno/x.txt",
+    "arreglo-sin-wi/README.md",
+    "arreglo-sin-wi/SEED_datos.sql",
+    "grp-checkout/README.md",
+    "grp-checkout/VERIF_checkout.sql",
+    "grp-checkout/_privado/x.txt",
+    "grp-checkout/wi444444-carrito/README.md",
+    "grp-checkout/wi444444-carrito/script.ps1",
+    "grp-checkout/wi555555-envio/README.md",
+    "wi111111-copia-vieja/README.md",
+    "wi111111-login-con-sso/DIAG_WI111111_usuarios.sql",
+    "wi111111-login-con-sso/MIGRATION_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/README.md",
+    "wi111111-login-con-sso/ROLLBACK_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/captura.png",
+    "wi111111-login-con-sso/consulta.sql",
+    "wi111111-login-con-sso/datos.bin",
+    "wi111111-login-con-sso/gen_diag.py",
+    "wi111111-login-con-sso/.oculto/secreto.txt",
+    "wi111111-login-con-sso/docs/PLAN_sso.md",
+    "wi111111-login-con-sso/docs/flujo.drawio",
+    "wi222222-333333-pagos/FIX_WI222222_duplicados.sql",
+    "wi222222-333333-pagos/README.md",
+    "wi666666-plan-pendiente/README.md",
+    "wi777777-sin-readme/notas.txt"
+   ],
+   "readmes_changed": {
+    "wi111111-login-con-sso/README.md": "---\nestado: prod\ntipo: us\nambientes: [dev, qa]\nnotas: \"ok: listo\"\nrama: feature/111111-sso\npactada: 2026-11-25\n---\n# Login con SSO\n\nTexto libre.\n\n## Pendientes\n\n- [x] Configurar el proveedor\n  - [ ] sub-ítem: no es tarea\n- [x] Crear la tabla de sesiones\nTexto suelto dentro de la sección.\n- [x] Probar   con   espacios\n\n## Deploy\n\n1. Correr la migración.\n### Detalle\nSigue dentro del deploy.\n\n## Notas\n\n- [ ] fuera de Pendientes: no es tarea\n"
+   }
+  },
+  {
+   "desc": "de prod a descartado no vuelve a tocar el cuerpo",
+   "op": "update_meta",
+   "args": [
+    "wi111111-login-con-sso",
+    {
+     "estado": "descartado"
+    }
+   ],
+   "ok": {
+    "name": "wi111111-login-con-sso",
+    "kind": "wi",
+    "group": "",
+    "members": [],
+    "wis": [
+     "111111"
+    ],
+    "title": "Login con SSO",
+    "tipo": "us",
+    "meta": {
+     "estado": "descartado",
+     "tipo": "us",
+     "ambientes": [
+      "dev",
+      "qa"
+     ],
+     "notas": "ok: listo",
+     "rama": "feature/111111-sso",
+     "pactada": "2026-11-25"
+    },
+    "hasReadme": true,
+    "deploy": "1. Correr la migración.\n### Detalle\nSigue dentro del deploy.",
+    "tasks": [
+     {
+      "text": "Configurar el proveedor",
+      "done": true
+     },
+     {
+      "text": "Crear la tabla de sesiones",
+      "done": true
+     },
+     {
+      "text": "Probar   con   espacios",
+      "done": true
+     }
+    ],
+    "planGaps": [],
+    "size": 584,
+    "files": [
+     {
+      "path": "wi111111-login-con-sso/captura.png",
+      "name": "captura.png",
+      "size": 16,
+      "kind": null,
+      "cat": "otro",
+      "text": false,
+      "media": "image/png"
+     },
+     {
+      "path": "wi111111-login-con-sso/consulta.sql",
+      "name": "consulta.sql",
+      "size": 10,
+      "kind": null,
+      "cat": "sql",
+      "text": true,
+      "media": null
+     },
+     {
+      "path": "wi111111-login-con-sso/datos.bin",
+      "name": "datos.bin",
+      "size": 3,
+      "kind": null,
+      "cat": "otro",
+      "text": false,
+      "media": null
+     },
+     {
+      "path": "wi111111-login-con-sso/DIAG_WI111111_usuarios.sql",
+      "name": "DIAG_WI111111_usuarios.sql",
+      "size": 10,
+      "kind": "DIAG",
+      "cat": "diag",
+      "text": true,
+      "media": null
+     },
+     {
+      "path": "wi111111-login-con-sso/docs/flujo.drawio",
+      "name": "flujo.drawio",
+      "size": 10,
+      "kind": null,
+      "cat": "doc",
+      "text": true,
+      "media": null
+     },
+     {
+      "path": "wi111111-login-con-sso/docs/PLAN_sso.md",
+      "name": "PLAN_sso.md",
+      "size": 7,
+      "kind": "PLAN",
+      "cat": "doc",
+      "text": true,
+      "media": null
+     },
+     {
+      "path": "wi111111-login-con-sso/gen_diag.py",
+      "name": "gen_diag.py",
+      "size": 24,
+      "kind": "DIAG",
+      "cat": "script",
+      "text": true,
+      "media": null
+     },
+     {
+      "path": "wi111111-login-con-sso/MIGRATION_WI111111_sesiones.sql",
+      "name": "MIGRATION_WI111111_sesiones.sql",
+      "size": 32,
+      "kind": "MIGRATION",
+      "cat": "migracion",
+      "text": true,
+      "media": null
+     },
+     {
+      "path": "wi111111-login-con-sso/README.md",
+      "name": "README.md",
+      "size": 451,
+      "kind": null,
+      "cat": "doc",
+      "text": true,
+      "media": null
+     },
+     {
+      "path": "wi111111-login-con-sso/ROLLBACK_WI111111_sesiones.sql",
+      "name": "ROLLBACK_WI111111_sesiones.sql",
+      "size": 21,
+      "kind": "ROLLBACK",
+      "cat": "migracion",
+      "text": true,
+      "media": null
+     }
+    ],
+    "kinds": [
+     "DIAG",
+     "MIGRATION",
+     "PLAN",
+     "ROLLBACK"
+    ]
+   },
+   "tree": [
+    "suelto.md",
+    ".config/x.txt",
+    "_deleted/grp-viejo/README.md",
+    "_deleted/wi888888-eliminado/README.md",
+    "_interno/x.txt",
+    "arreglo-sin-wi/README.md",
+    "arreglo-sin-wi/SEED_datos.sql",
+    "grp-checkout/README.md",
+    "grp-checkout/VERIF_checkout.sql",
+    "grp-checkout/_privado/x.txt",
+    "grp-checkout/wi444444-carrito/README.md",
+    "grp-checkout/wi444444-carrito/script.ps1",
+    "grp-checkout/wi555555-envio/README.md",
+    "wi111111-copia-vieja/README.md",
+    "wi111111-login-con-sso/DIAG_WI111111_usuarios.sql",
+    "wi111111-login-con-sso/MIGRATION_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/README.md",
+    "wi111111-login-con-sso/ROLLBACK_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/captura.png",
+    "wi111111-login-con-sso/consulta.sql",
+    "wi111111-login-con-sso/datos.bin",
+    "wi111111-login-con-sso/gen_diag.py",
+    "wi111111-login-con-sso/.oculto/secreto.txt",
+    "wi111111-login-con-sso/docs/PLAN_sso.md",
+    "wi111111-login-con-sso/docs/flujo.drawio",
+    "wi222222-333333-pagos/FIX_WI222222_duplicados.sql",
+    "wi222222-333333-pagos/README.md",
+    "wi666666-plan-pendiente/README.md",
+    "wi777777-sin-readme/notas.txt"
+   ],
+   "readmes_changed": {
+    "wi111111-login-con-sso/README.md": "---\nestado: descartado\ntipo: us\nambientes: [dev, qa]\nnotas: \"ok: listo\"\nrama: feature/111111-sso\npactada: 2026-11-25\n---\n# Login con SSO\n\nTexto libre.\n\n## Pendientes\n\n- [x] Configurar el proveedor\n  - [ ] sub-ítem: no es tarea\n- [x] Crear la tabla de sesiones\nTexto suelto dentro de la sección.\n- [x] Probar   con   espacios\n\n## Deploy\n\n1. Correr la migración.\n### Detalle\nSigue dentro del deploy.\n\n## Notas\n\n- [ ] fuera de Pendientes: no es tarea\n"
+   }
+  },
+  {
+   "desc": "clave inválida",
+   "op": "update_meta",
+   "args": [
+    "wi111111-login-con-sso",
+    {
+     "Estado": "qa"
+    }
+   ],
+   "error": "ValueError",
+   "message": "Clave inválida: Estado",
+   "tree": [
+    "suelto.md",
+    ".config/x.txt",
+    "_deleted/grp-viejo/README.md",
+    "_deleted/wi888888-eliminado/README.md",
+    "_interno/x.txt",
+    "arreglo-sin-wi/README.md",
+    "arreglo-sin-wi/SEED_datos.sql",
+    "grp-checkout/README.md",
+    "grp-checkout/VERIF_checkout.sql",
+    "grp-checkout/_privado/x.txt",
+    "grp-checkout/wi444444-carrito/README.md",
+    "grp-checkout/wi444444-carrito/script.ps1",
+    "grp-checkout/wi555555-envio/README.md",
+    "wi111111-copia-vieja/README.md",
+    "wi111111-login-con-sso/DIAG_WI111111_usuarios.sql",
+    "wi111111-login-con-sso/MIGRATION_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/README.md",
+    "wi111111-login-con-sso/ROLLBACK_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/captura.png",
+    "wi111111-login-con-sso/consulta.sql",
+    "wi111111-login-con-sso/datos.bin",
+    "wi111111-login-con-sso/gen_diag.py",
+    "wi111111-login-con-sso/.oculto/secreto.txt",
+    "wi111111-login-con-sso/docs/PLAN_sso.md",
+    "wi111111-login-con-sso/docs/flujo.drawio",
+    "wi222222-333333-pagos/FIX_WI222222_duplicados.sql",
+    "wi222222-333333-pagos/README.md",
+    "wi666666-plan-pendiente/README.md",
+    "wi777777-sin-readme/notas.txt"
+   ],
+   "readmes_changed": {}
+  },
+  {
+   "desc": "sin cambios no escribe",
+   "op": "update_meta",
+   "args": [
+    "wi222222-333333-pagos",
+    {
+     "estado": "qa"
+    }
+   ],
+   "ok": {
+    "name": "wi222222-333333-pagos",
+    "kind": "wi",
+    "group": "",
+    "members": [],
+    "wis": [
+     "222222",
+     "333333"
+    ],
+    "title": "Pagos duplicados",
+    "tipo": "bug",
+    "meta": {
+     "estado": "qa",
+     "tipo": "bug",
+     "ambientes": [
+      "dev",
+      "qa"
+     ]
+    },
+    "hasReadme": true,
+    "deploy": "",
+    "tasks": [
+     {
+      "text": "Verificar en QA",
+      "done": false
+     }
+    ],
+    "planGaps": [],
+    "size": 138,
+    "files": [
+     {
+      "path": "wi222222-333333-pagos/FIX_WI222222_duplicados.sql",
+      "name": "FIX_WI222222_duplicados.sql",
+      "size": 24,
+      "kind": "FIX",
+      "cat": "fix",
+      "text": true,
+      "media": null
+     },
+     {
+      "path": "wi222222-333333-pagos/README.md",
+      "name": "README.md",
+      "size": 114,
+      "kind": null,
+      "cat": "doc",
+      "text": true,
+      "media": null
+     }
+    ],
+    "kinds": [
+     "FIX"
+    ]
+   },
+   "tree": [
+    "suelto.md",
+    ".config/x.txt",
+    "_deleted/grp-viejo/README.md",
+    "_deleted/wi888888-eliminado/README.md",
+    "_interno/x.txt",
+    "arreglo-sin-wi/README.md",
+    "arreglo-sin-wi/SEED_datos.sql",
+    "grp-checkout/README.md",
+    "grp-checkout/VERIF_checkout.sql",
+    "grp-checkout/_privado/x.txt",
+    "grp-checkout/wi444444-carrito/README.md",
+    "grp-checkout/wi444444-carrito/script.ps1",
+    "grp-checkout/wi555555-envio/README.md",
+    "wi111111-copia-vieja/README.md",
+    "wi111111-login-con-sso/DIAG_WI111111_usuarios.sql",
+    "wi111111-login-con-sso/MIGRATION_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/README.md",
+    "wi111111-login-con-sso/ROLLBACK_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/captura.png",
+    "wi111111-login-con-sso/consulta.sql",
+    "wi111111-login-con-sso/datos.bin",
+    "wi111111-login-con-sso/gen_diag.py",
+    "wi111111-login-con-sso/.oculto/secreto.txt",
+    "wi111111-login-con-sso/docs/PLAN_sso.md",
+    "wi111111-login-con-sso/docs/flujo.drawio",
+    "wi222222-333333-pagos/FIX_WI222222_duplicados.sql",
+    "wi222222-333333-pagos/README.md",
+    "wi666666-plan-pendiente/README.md",
+    "wi777777-sin-readme/notas.txt"
+   ],
+   "readmes_changed": {
+    "wi222222-333333-pagos/README.md": "---\nestado: qa\ntipo: bug\nambientes: [dev, qa]\n---\n\r\n# Pagos duplicados\r\n\r\n## Pendientes\r\n\r\n- [ ] Verificar en QA\r\n"
+   }
+  },
+  {
+   "desc": "README con CRLF y BOM: reescribe en LF",
+   "op": "update_meta",
+   "args": [
+    "wi222222-333333-pagos",
+    {
+     "notas": "n"
+    }
+   ],
+   "ok": {
+    "name": "wi222222-333333-pagos",
+    "kind": "wi",
+    "group": "",
+    "members": [],
+    "wis": [
+     "222222",
+     "333333"
+    ],
+    "title": "Pagos duplicados",
+    "tipo": "bug",
+    "meta": {
+     "estado": "qa",
+     "tipo": "bug",
+     "ambientes": [
+      "dev",
+      "qa"
+     ],
+     "notas": "n"
+    },
+    "hasReadme": true,
+    "deploy": "",
+    "tasks": [
+     {
+      "text": "Verificar en QA",
+      "done": false
+     }
+    ],
+    "planGaps": [],
+    "size": 147,
+    "files": [
+     {
+      "path": "wi222222-333333-pagos/FIX_WI222222_duplicados.sql",
+      "name": "FIX_WI222222_duplicados.sql",
+      "size": 24,
+      "kind": "FIX",
+      "cat": "fix",
+      "text": true,
+      "media": null
+     },
+     {
+      "path": "wi222222-333333-pagos/README.md",
+      "name": "README.md",
+      "size": 123,
+      "kind": null,
+      "cat": "doc",
+      "text": true,
+      "media": null
+     }
+    ],
+    "kinds": [
+     "FIX"
+    ]
+   },
+   "tree": [
+    "suelto.md",
+    ".config/x.txt",
+    "_deleted/grp-viejo/README.md",
+    "_deleted/wi888888-eliminado/README.md",
+    "_interno/x.txt",
+    "arreglo-sin-wi/README.md",
+    "arreglo-sin-wi/SEED_datos.sql",
+    "grp-checkout/README.md",
+    "grp-checkout/VERIF_checkout.sql",
+    "grp-checkout/_privado/x.txt",
+    "grp-checkout/wi444444-carrito/README.md",
+    "grp-checkout/wi444444-carrito/script.ps1",
+    "grp-checkout/wi555555-envio/README.md",
+    "wi111111-copia-vieja/README.md",
+    "wi111111-login-con-sso/DIAG_WI111111_usuarios.sql",
+    "wi111111-login-con-sso/MIGRATION_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/README.md",
+    "wi111111-login-con-sso/ROLLBACK_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/captura.png",
+    "wi111111-login-con-sso/consulta.sql",
+    "wi111111-login-con-sso/datos.bin",
+    "wi111111-login-con-sso/gen_diag.py",
+    "wi111111-login-con-sso/.oculto/secreto.txt",
+    "wi111111-login-con-sso/docs/PLAN_sso.md",
+    "wi111111-login-con-sso/docs/flujo.drawio",
+    "wi222222-333333-pagos/FIX_WI222222_duplicados.sql",
+    "wi222222-333333-pagos/README.md",
+    "wi666666-plan-pendiente/README.md",
+    "wi777777-sin-readme/notas.txt"
+   ],
+   "readmes_changed": {
+    "wi222222-333333-pagos/README.md": "---\nestado: qa\ntipo: bug\nambientes: [dev, qa]\nnotas: n\n---\n\r\n# Pagos duplicados\r\n\r\n## Pendientes\r\n\r\n- [ ] Verificar en QA\r\n"
+   }
+  },
+  {
+   "desc": "README cp1252: reescribe en UTF-8",
+   "op": "update_meta",
+   "args": [
+    "wi111111-copia-vieja",
+    {
+     "tipo": "bug"
+    }
+   ],
+   "ok": {
+    "name": "wi111111-copia-vieja",
+    "kind": "wi",
+    "group": "",
+    "members": [],
+    "wis": [
+     "111111"
+    ],
+    "title": "Copia vieja de sesión",
+    "tipo": "bug",
+    "meta": {
+     "estado": "descartado",
+     "tipo": "bug"
+    },
+    "hasReadme": true,
+    "deploy": "",
+    "tasks": [],
+    "planGaps": [],
+    "size": 62,
+    "files": [
+     {
+      "path": "wi111111-copia-vieja/README.md",
+      "name": "README.md",
+      "size": 62,
+      "kind": null,
+      "cat": "doc",
+      "text": true,
+      "media": null
+     }
+    ],
+    "kinds": []
+   },
+   "tree": [
+    "suelto.md",
+    ".config/x.txt",
+    "_deleted/grp-viejo/README.md",
+    "_deleted/wi888888-eliminado/README.md",
+    "_interno/x.txt",
+    "arreglo-sin-wi/README.md",
+    "arreglo-sin-wi/SEED_datos.sql",
+    "grp-checkout/README.md",
+    "grp-checkout/VERIF_checkout.sql",
+    "grp-checkout/_privado/x.txt",
+    "grp-checkout/wi444444-carrito/README.md",
+    "grp-checkout/wi444444-carrito/script.ps1",
+    "grp-checkout/wi555555-envio/README.md",
+    "wi111111-copia-vieja/README.md",
+    "wi111111-login-con-sso/DIAG_WI111111_usuarios.sql",
+    "wi111111-login-con-sso/MIGRATION_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/README.md",
+    "wi111111-login-con-sso/ROLLBACK_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/captura.png",
+    "wi111111-login-con-sso/consulta.sql",
+    "wi111111-login-con-sso/datos.bin",
+    "wi111111-login-con-sso/gen_diag.py",
+    "wi111111-login-con-sso/.oculto/secreto.txt",
+    "wi111111-login-con-sso/docs/PLAN_sso.md",
+    "wi111111-login-con-sso/docs/flujo.drawio",
+    "wi222222-333333-pagos/FIX_WI222222_duplicados.sql",
+    "wi222222-333333-pagos/README.md",
+    "wi666666-plan-pendiente/README.md",
+    "wi777777-sin-readme/notas.txt"
+   ],
+   "readmes_changed": {
+    "wi111111-copia-vieja/README.md": "---\nestado: descartado\ntipo: bug\n---\n# Copia vieja de sesión\n"
+   }
+  },
+  {
+   "desc": "sin README: lo crea con # nombre",
+   "op": "add_task",
+   "args": [
+    "wi777777-sin-readme",
+    "primera tarea"
+   ],
+   "ok": {
+    "name": "wi777777-sin-readme",
+    "kind": "wi",
+    "group": "",
+    "members": [],
+    "wis": [
+     "777777"
+    ],
+    "title": "wi777777-sin-readme",
+    "tipo": "",
+    "meta": {},
+    "hasReadme": true,
+    "deploy": "",
+    "tasks": [
+     {
+      "text": "primera tarea",
+      "done": false
+     }
+    ],
+    "planGaps": [],
+    "size": 74,
+    "files": [
+     {
+      "path": "wi777777-sin-readme/notas.txt",
+      "name": "notas.txt",
+      "size": 16,
+      "kind": null,
+      "cat": "doc",
+      "text": true,
+      "media": null
+     },
+     {
+      "path": "wi777777-sin-readme/README.md",
+      "name": "README.md",
+      "size": 58,
+      "kind": null,
+      "cat": "doc",
+      "text": true,
+      "media": null
+     }
+    ],
+    "kinds": []
+   },
+   "tree": [
+    "suelto.md",
+    ".config/x.txt",
+    "_deleted/grp-viejo/README.md",
+    "_deleted/wi888888-eliminado/README.md",
+    "_interno/x.txt",
+    "arreglo-sin-wi/README.md",
+    "arreglo-sin-wi/SEED_datos.sql",
+    "grp-checkout/README.md",
+    "grp-checkout/VERIF_checkout.sql",
+    "grp-checkout/_privado/x.txt",
+    "grp-checkout/wi444444-carrito/README.md",
+    "grp-checkout/wi444444-carrito/script.ps1",
+    "grp-checkout/wi555555-envio/README.md",
+    "wi111111-copia-vieja/README.md",
+    "wi111111-login-con-sso/DIAG_WI111111_usuarios.sql",
+    "wi111111-login-con-sso/MIGRATION_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/README.md",
+    "wi111111-login-con-sso/ROLLBACK_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/captura.png",
+    "wi111111-login-con-sso/consulta.sql",
+    "wi111111-login-con-sso/datos.bin",
+    "wi111111-login-con-sso/gen_diag.py",
+    "wi111111-login-con-sso/.oculto/secreto.txt",
+    "wi111111-login-con-sso/docs/PLAN_sso.md",
+    "wi111111-login-con-sso/docs/flujo.drawio",
+    "wi222222-333333-pagos/FIX_WI222222_duplicados.sql",
+    "wi222222-333333-pagos/README.md",
+    "wi666666-plan-pendiente/README.md",
+    "wi777777-sin-readme/README.md",
+    "wi777777-sin-readme/notas.txt"
+   ],
+   "readmes_changed": {
+    "wi777777-sin-readme/README.md": "# wi777777-sin-readme\n\n## Pendientes\n\n- [ ] primera tarea\n"
+   }
+  },
+  {
+   "desc": "agrega a una sección existente",
+   "op": "add_task",
+   "args": [
+    "grp-checkout",
+    "  otra   tarea "
+   ],
+   "ok": {
+    "name": "grp-checkout",
+    "kind": "group",
+    "group": "",
+    "members": [
+     "grp-checkout/wi444444-carrito",
+     "grp-checkout/wi555555-envio"
+    ],
+    "wis": [],
+    "title": "Checkout",
+    "tipo": "",
+    "meta": {
+     "estado": "en-curso",
+     "notas": "grupo del checkout"
+    },
+    "hasReadme": true,
+    "deploy": "",
+    "tasks": [
+     {
+      "text": "Coordinar deploy",
+      "done": false
+     },
+     {
+      "text": "otra tarea",
+      "done": false
+     }
+    ],
+    "planGaps": [],
+    "size": 159,
+    "files": [
+     {
+      "path": "grp-checkout/_privado/x.txt",
+      "name": "x.txt",
+      "size": 31,
+      "kind": null,
+      "cat": "doc",
+      "text": true,
+      "media": null
+     },
+     {
+      "path": "grp-checkout/README.md",
+      "name": "README.md",
+      "size": 118,
+      "kind": null,
+      "cat": "doc",
+      "text": true,
+      "media": null
+     },
+     {
+      "path": "grp-checkout/VERIF_checkout.sql",
+      "name": "VERIF_checkout.sql",
+      "size": 10,
+      "kind": "VERIF",
+      "cat": "diag",
+      "text": true,
+      "media": null
+     }
+    ],
+    "kinds": [
+     "VERIF"
+    ]
+   },
+   "tree": [
+    "suelto.md",
+    ".config/x.txt",
+    "_deleted/grp-viejo/README.md",
+    "_deleted/wi888888-eliminado/README.md",
+    "_interno/x.txt",
+    "arreglo-sin-wi/README.md",
+    "arreglo-sin-wi/SEED_datos.sql",
+    "grp-checkout/README.md",
+    "grp-checkout/VERIF_checkout.sql",
+    "grp-checkout/_privado/x.txt",
+    "grp-checkout/wi444444-carrito/README.md",
+    "grp-checkout/wi444444-carrito/script.ps1",
+    "grp-checkout/wi555555-envio/README.md",
+    "wi111111-copia-vieja/README.md",
+    "wi111111-login-con-sso/DIAG_WI111111_usuarios.sql",
+    "wi111111-login-con-sso/MIGRATION_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/README.md",
+    "wi111111-login-con-sso/ROLLBACK_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/captura.png",
+    "wi111111-login-con-sso/consulta.sql",
+    "wi111111-login-con-sso/datos.bin",
+    "wi111111-login-con-sso/gen_diag.py",
+    "wi111111-login-con-sso/.oculto/secreto.txt",
+    "wi111111-login-con-sso/docs/PLAN_sso.md",
+    "wi111111-login-con-sso/docs/flujo.drawio",
+    "wi222222-333333-pagos/FIX_WI222222_duplicados.sql",
+    "wi222222-333333-pagos/README.md",
+    "wi666666-plan-pendiente/README.md",
+    "wi777777-sin-readme/README.md",
+    "wi777777-sin-readme/notas.txt"
+   ],
+   "readmes_changed": {
+    "grp-checkout/README.md": "---\nestado: en-curso\nnotas: grupo del checkout\n---\n# Checkout\n\n## Pendientes\n\n- [ ] Coordinar deploy\n- [ ] otra tarea\n"
+   }
+  },
+  {
+   "desc": "tarea vacía",
+   "op": "add_task",
+   "args": [
+    "grp-checkout",
+    "   "
+   ],
+   "error": "ValueError",
+   "message": "La tarea está vacía",
+   "tree": [
+    "suelto.md",
+    ".config/x.txt",
+    "_deleted/grp-viejo/README.md",
+    "_deleted/wi888888-eliminado/README.md",
+    "_interno/x.txt",
+    "arreglo-sin-wi/README.md",
+    "arreglo-sin-wi/SEED_datos.sql",
+    "grp-checkout/README.md",
+    "grp-checkout/VERIF_checkout.sql",
+    "grp-checkout/_privado/x.txt",
+    "grp-checkout/wi444444-carrito/README.md",
+    "grp-checkout/wi444444-carrito/script.ps1",
+    "grp-checkout/wi555555-envio/README.md",
+    "wi111111-copia-vieja/README.md",
+    "wi111111-login-con-sso/DIAG_WI111111_usuarios.sql",
+    "wi111111-login-con-sso/MIGRATION_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/README.md",
+    "wi111111-login-con-sso/ROLLBACK_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/captura.png",
+    "wi111111-login-con-sso/consulta.sql",
+    "wi111111-login-con-sso/datos.bin",
+    "wi111111-login-con-sso/gen_diag.py",
+    "wi111111-login-con-sso/.oculto/secreto.txt",
+    "wi111111-login-con-sso/docs/PLAN_sso.md",
+    "wi111111-login-con-sso/docs/flujo.drawio",
+    "wi222222-333333-pagos/FIX_WI222222_duplicados.sql",
+    "wi222222-333333-pagos/README.md",
+    "wi666666-plan-pendiente/README.md",
+    "wi777777-sin-readme/README.md",
+    "wi777777-sin-readme/notas.txt"
+   ],
+   "readmes_changed": {}
+  },
+  {
+   "desc": "tilda con expect correcto",
+   "op": "set_task",
+   "args": [
+    "grp-checkout",
+    1,
+    true,
+    "otra tarea"
+   ],
+   "ok": {
+    "name": "grp-checkout",
+    "kind": "group",
+    "group": "",
+    "members": [
+     "grp-checkout/wi444444-carrito",
+     "grp-checkout/wi555555-envio"
+    ],
+    "wis": [],
+    "title": "Checkout",
+    "tipo": "",
+    "meta": {
+     "estado": "en-curso",
+     "notas": "grupo del checkout"
+    },
+    "hasReadme": true,
+    "deploy": "",
+    "tasks": [
+     {
+      "text": "Coordinar deploy",
+      "done": false
+     },
+     {
+      "text": "otra tarea",
+      "done": true
+     }
+    ],
+    "planGaps": [],
+    "size": 159,
+    "files": [
+     {
+      "path": "grp-checkout/_privado/x.txt",
+      "name": "x.txt",
+      "size": 31,
+      "kind": null,
+      "cat": "doc",
+      "text": true,
+      "media": null
+     },
+     {
+      "path": "grp-checkout/README.md",
+      "name": "README.md",
+      "size": 118,
+      "kind": null,
+      "cat": "doc",
+      "text": true,
+      "media": null
+     },
+     {
+      "path": "grp-checkout/VERIF_checkout.sql",
+      "name": "VERIF_checkout.sql",
+      "size": 10,
+      "kind": "VERIF",
+      "cat": "diag",
+      "text": true,
+      "media": null
+     }
+    ],
+    "kinds": [
+     "VERIF"
+    ]
+   },
+   "tree": [
+    "suelto.md",
+    ".config/x.txt",
+    "_deleted/grp-viejo/README.md",
+    "_deleted/wi888888-eliminado/README.md",
+    "_interno/x.txt",
+    "arreglo-sin-wi/README.md",
+    "arreglo-sin-wi/SEED_datos.sql",
+    "grp-checkout/README.md",
+    "grp-checkout/VERIF_checkout.sql",
+    "grp-checkout/_privado/x.txt",
+    "grp-checkout/wi444444-carrito/README.md",
+    "grp-checkout/wi444444-carrito/script.ps1",
+    "grp-checkout/wi555555-envio/README.md",
+    "wi111111-copia-vieja/README.md",
+    "wi111111-login-con-sso/DIAG_WI111111_usuarios.sql",
+    "wi111111-login-con-sso/MIGRATION_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/README.md",
+    "wi111111-login-con-sso/ROLLBACK_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/captura.png",
+    "wi111111-login-con-sso/consulta.sql",
+    "wi111111-login-con-sso/datos.bin",
+    "wi111111-login-con-sso/gen_diag.py",
+    "wi111111-login-con-sso/.oculto/secreto.txt",
+    "wi111111-login-con-sso/docs/PLAN_sso.md",
+    "wi111111-login-con-sso/docs/flujo.drawio",
+    "wi222222-333333-pagos/FIX_WI222222_duplicados.sql",
+    "wi222222-333333-pagos/README.md",
+    "wi666666-plan-pendiente/README.md",
+    "wi777777-sin-readme/README.md",
+    "wi777777-sin-readme/notas.txt"
+   ],
+   "readmes_changed": {
+    "grp-checkout/README.md": "---\nestado: en-curso\nnotas: grupo del checkout\n---\n# Checkout\n\n## Pendientes\n\n- [ ] Coordinar deploy\n- [x] otra tarea\n"
+   }
+  },
+  {
+   "desc": "tilda con expect que no coincide",
+   "op": "set_task",
+   "args": [
+    "grp-checkout",
+    0,
+    true,
+    "no es esta"
+   ],
+   "error": "ValueError",
+   "message": "La lista de pendientes cambió en disco; recargá y reintentá",
+   "tree": [
+    "suelto.md",
+    ".config/x.txt",
+    "_deleted/grp-viejo/README.md",
+    "_deleted/wi888888-eliminado/README.md",
+    "_interno/x.txt",
+    "arreglo-sin-wi/README.md",
+    "arreglo-sin-wi/SEED_datos.sql",
+    "grp-checkout/README.md",
+    "grp-checkout/VERIF_checkout.sql",
+    "grp-checkout/_privado/x.txt",
+    "grp-checkout/wi444444-carrito/README.md",
+    "grp-checkout/wi444444-carrito/script.ps1",
+    "grp-checkout/wi555555-envio/README.md",
+    "wi111111-copia-vieja/README.md",
+    "wi111111-login-con-sso/DIAG_WI111111_usuarios.sql",
+    "wi111111-login-con-sso/MIGRATION_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/README.md",
+    "wi111111-login-con-sso/ROLLBACK_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/captura.png",
+    "wi111111-login-con-sso/consulta.sql",
+    "wi111111-login-con-sso/datos.bin",
+    "wi111111-login-con-sso/gen_diag.py",
+    "wi111111-login-con-sso/.oculto/secreto.txt",
+    "wi111111-login-con-sso/docs/PLAN_sso.md",
+    "wi111111-login-con-sso/docs/flujo.drawio",
+    "wi222222-333333-pagos/FIX_WI222222_duplicados.sql",
+    "wi222222-333333-pagos/README.md",
+    "wi666666-plan-pendiente/README.md",
+    "wi777777-sin-readme/README.md",
+    "wi777777-sin-readme/notas.txt"
+   ],
+   "readmes_changed": {}
+  },
+  {
+   "desc": "índice fuera de rango",
+   "op": "set_task",
+   "args": [
+    "grp-checkout",
+    9,
+    true
+   ],
+   "error": "ValueError",
+   "message": "No existe esa tarea",
+   "tree": [
+    "suelto.md",
+    ".config/x.txt",
+    "_deleted/grp-viejo/README.md",
+    "_deleted/wi888888-eliminado/README.md",
+    "_interno/x.txt",
+    "arreglo-sin-wi/README.md",
+    "arreglo-sin-wi/SEED_datos.sql",
+    "grp-checkout/README.md",
+    "grp-checkout/VERIF_checkout.sql",
+    "grp-checkout/_privado/x.txt",
+    "grp-checkout/wi444444-carrito/README.md",
+    "grp-checkout/wi444444-carrito/script.ps1",
+    "grp-checkout/wi555555-envio/README.md",
+    "wi111111-copia-vieja/README.md",
+    "wi111111-login-con-sso/DIAG_WI111111_usuarios.sql",
+    "wi111111-login-con-sso/MIGRATION_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/README.md",
+    "wi111111-login-con-sso/ROLLBACK_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/captura.png",
+    "wi111111-login-con-sso/consulta.sql",
+    "wi111111-login-con-sso/datos.bin",
+    "wi111111-login-con-sso/gen_diag.py",
+    "wi111111-login-con-sso/.oculto/secreto.txt",
+    "wi111111-login-con-sso/docs/PLAN_sso.md",
+    "wi111111-login-con-sso/docs/flujo.drawio",
+    "wi222222-333333-pagos/FIX_WI222222_duplicados.sql",
+    "wi222222-333333-pagos/README.md",
+    "wi666666-plan-pendiente/README.md",
+    "wi777777-sin-readme/README.md",
+    "wi777777-sin-readme/notas.txt"
+   ],
+   "readmes_changed": {}
+  },
+  {
+   "desc": "edita conservando hecha",
+   "op": "edit_task",
+   "args": [
+    "grp-checkout",
+    1,
+    "otra tarea editada"
+   ],
+   "ok": {
+    "name": "grp-checkout",
+    "kind": "group",
+    "group": "",
+    "members": [
+     "grp-checkout/wi444444-carrito",
+     "grp-checkout/wi555555-envio"
+    ],
+    "wis": [],
+    "title": "Checkout",
+    "tipo": "",
+    "meta": {
+     "estado": "en-curso",
+     "notas": "grupo del checkout"
+    },
+    "hasReadme": true,
+    "deploy": "",
+    "tasks": [
+     {
+      "text": "Coordinar deploy",
+      "done": false
+     },
+     {
+      "text": "otra tarea editada",
+      "done": true
+     }
+    ],
+    "planGaps": [],
+    "size": 167,
+    "files": [
+     {
+      "path": "grp-checkout/_privado/x.txt",
+      "name": "x.txt",
+      "size": 31,
+      "kind": null,
+      "cat": "doc",
+      "text": true,
+      "media": null
+     },
+     {
+      "path": "grp-checkout/README.md",
+      "name": "README.md",
+      "size": 126,
+      "kind": null,
+      "cat": "doc",
+      "text": true,
+      "media": null
+     },
+     {
+      "path": "grp-checkout/VERIF_checkout.sql",
+      "name": "VERIF_checkout.sql",
+      "size": 10,
+      "kind": "VERIF",
+      "cat": "diag",
+      "text": true,
+      "media": null
+     }
+    ],
+    "kinds": [
+     "VERIF"
+    ]
+   },
+   "tree": [
+    "suelto.md",
+    ".config/x.txt",
+    "_deleted/grp-viejo/README.md",
+    "_deleted/wi888888-eliminado/README.md",
+    "_interno/x.txt",
+    "arreglo-sin-wi/README.md",
+    "arreglo-sin-wi/SEED_datos.sql",
+    "grp-checkout/README.md",
+    "grp-checkout/VERIF_checkout.sql",
+    "grp-checkout/_privado/x.txt",
+    "grp-checkout/wi444444-carrito/README.md",
+    "grp-checkout/wi444444-carrito/script.ps1",
+    "grp-checkout/wi555555-envio/README.md",
+    "wi111111-copia-vieja/README.md",
+    "wi111111-login-con-sso/DIAG_WI111111_usuarios.sql",
+    "wi111111-login-con-sso/MIGRATION_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/README.md",
+    "wi111111-login-con-sso/ROLLBACK_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/captura.png",
+    "wi111111-login-con-sso/consulta.sql",
+    "wi111111-login-con-sso/datos.bin",
+    "wi111111-login-con-sso/gen_diag.py",
+    "wi111111-login-con-sso/.oculto/secreto.txt",
+    "wi111111-login-con-sso/docs/PLAN_sso.md",
+    "wi111111-login-con-sso/docs/flujo.drawio",
+    "wi222222-333333-pagos/FIX_WI222222_duplicados.sql",
+    "wi222222-333333-pagos/README.md",
+    "wi666666-plan-pendiente/README.md",
+    "wi777777-sin-readme/README.md",
+    "wi777777-sin-readme/notas.txt"
+   ],
+   "readmes_changed": {
+    "grp-checkout/README.md": "---\nestado: en-curso\nnotas: grupo del checkout\n---\n# Checkout\n\n## Pendientes\n\n- [ ] Coordinar deploy\n- [x] otra tarea editada\n"
+   }
+  },
+  {
+   "desc": "borra",
+   "op": "remove_task",
+   "args": [
+    "grp-checkout",
+    0,
+    "Coordinar deploy"
+   ],
+   "ok": {
+    "name": "grp-checkout",
+    "kind": "group",
+    "group": "",
+    "members": [
+     "grp-checkout/wi444444-carrito",
+     "grp-checkout/wi555555-envio"
+    ],
+    "wis": [],
+    "title": "Checkout",
+    "tipo": "",
+    "meta": {
+     "estado": "en-curso",
+     "notas": "grupo del checkout"
+    },
+    "hasReadme": true,
+    "deploy": "",
+    "tasks": [
+     {
+      "text": "otra tarea editada",
+      "done": true
+     }
+    ],
+    "planGaps": [],
+    "size": 144,
+    "files": [
+     {
+      "path": "grp-checkout/_privado/x.txt",
+      "name": "x.txt",
+      "size": 31,
+      "kind": null,
+      "cat": "doc",
+      "text": true,
+      "media": null
+     },
+     {
+      "path": "grp-checkout/README.md",
+      "name": "README.md",
+      "size": 103,
+      "kind": null,
+      "cat": "doc",
+      "text": true,
+      "media": null
+     },
+     {
+      "path": "grp-checkout/VERIF_checkout.sql",
+      "name": "VERIF_checkout.sql",
+      "size": 10,
+      "kind": "VERIF",
+      "cat": "diag",
+      "text": true,
+      "media": null
+     }
+    ],
+    "kinds": [
+     "VERIF"
+    ]
+   },
+   "tree": [
+    "suelto.md",
+    ".config/x.txt",
+    "_deleted/grp-viejo/README.md",
+    "_deleted/wi888888-eliminado/README.md",
+    "_interno/x.txt",
+    "arreglo-sin-wi/README.md",
+    "arreglo-sin-wi/SEED_datos.sql",
+    "grp-checkout/README.md",
+    "grp-checkout/VERIF_checkout.sql",
+    "grp-checkout/_privado/x.txt",
+    "grp-checkout/wi444444-carrito/README.md",
+    "grp-checkout/wi444444-carrito/script.ps1",
+    "grp-checkout/wi555555-envio/README.md",
+    "wi111111-copia-vieja/README.md",
+    "wi111111-login-con-sso/DIAG_WI111111_usuarios.sql",
+    "wi111111-login-con-sso/MIGRATION_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/README.md",
+    "wi111111-login-con-sso/ROLLBACK_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/captura.png",
+    "wi111111-login-con-sso/consulta.sql",
+    "wi111111-login-con-sso/datos.bin",
+    "wi111111-login-con-sso/gen_diag.py",
+    "wi111111-login-con-sso/.oculto/secreto.txt",
+    "wi111111-login-con-sso/docs/PLAN_sso.md",
+    "wi111111-login-con-sso/docs/flujo.drawio",
+    "wi222222-333333-pagos/FIX_WI222222_duplicados.sql",
+    "wi222222-333333-pagos/README.md",
+    "wi666666-plan-pendiente/README.md",
+    "wi777777-sin-readme/README.md",
+    "wi777777-sin-readme/notas.txt"
+   ],
+   "readmes_changed": {
+    "grp-checkout/README.md": "---\nestado: en-curso\nnotas: grupo del checkout\n---\n# Checkout\n\n## Pendientes\n\n- [x] otra tarea editada\n"
+   }
+  },
+  {
+   "desc": "WI de un grupo",
+   "op": "update_meta",
+   "args": [
+    "grp-checkout/wi444444-carrito",
+    {
+     "estado": "codeado"
+    }
+   ],
+   "ok": {
+    "name": "grp-checkout/wi444444-carrito",
+    "kind": "wi",
+    "group": "grp-checkout",
+    "members": [],
+    "wis": [
+     "444444"
+    ],
+    "title": "Carrito",
+    "tipo": "task",
+    "meta": {
+     "estado": "codeado",
+     "tipo": "task"
+    },
+    "hasReadme": true,
+    "deploy": "",
+    "tasks": [],
+    "planGaps": [],
+    "size": 61,
+    "files": [
+     {
+      "path": "grp-checkout/wi444444-carrito/README.md",
+      "name": "README.md",
+      "size": 45,
+      "kind": null,
+      "cat": "doc",
+      "text": true,
+      "media": null
+     },
+     {
+      "path": "grp-checkout/wi444444-carrito/script.ps1",
+      "name": "script.ps1",
+      "size": 16,
+      "kind": null,
+      "cat": "script",
+      "text": true,
+      "media": null
+     }
+    ],
+    "kinds": []
+   },
+   "tree": [
+    "suelto.md",
+    ".config/x.txt",
+    "_deleted/grp-viejo/README.md",
+    "_deleted/wi888888-eliminado/README.md",
+    "_interno/x.txt",
+    "arreglo-sin-wi/README.md",
+    "arreglo-sin-wi/SEED_datos.sql",
+    "grp-checkout/README.md",
+    "grp-checkout/VERIF_checkout.sql",
+    "grp-checkout/_privado/x.txt",
+    "grp-checkout/wi444444-carrito/README.md",
+    "grp-checkout/wi444444-carrito/script.ps1",
+    "grp-checkout/wi555555-envio/README.md",
+    "wi111111-copia-vieja/README.md",
+    "wi111111-login-con-sso/DIAG_WI111111_usuarios.sql",
+    "wi111111-login-con-sso/MIGRATION_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/README.md",
+    "wi111111-login-con-sso/ROLLBACK_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/captura.png",
+    "wi111111-login-con-sso/consulta.sql",
+    "wi111111-login-con-sso/datos.bin",
+    "wi111111-login-con-sso/gen_diag.py",
+    "wi111111-login-con-sso/.oculto/secreto.txt",
+    "wi111111-login-con-sso/docs/PLAN_sso.md",
+    "wi111111-login-con-sso/docs/flujo.drawio",
+    "wi222222-333333-pagos/FIX_WI222222_duplicados.sql",
+    "wi222222-333333-pagos/README.md",
+    "wi666666-plan-pendiente/README.md",
+    "wi777777-sin-readme/README.md",
+    "wi777777-sin-readme/notas.txt"
+   ],
+   "readmes_changed": {
+    "grp-checkout/wi444444-carrito/README.md": "---\nestado: codeado\ntipo: task\n---\n# Carrito\n"
+   }
+  },
+  {
+   "desc": "mueve un WI a un grupo",
+   "op": "move_folder",
+   "args": [
+    "wi666666-plan-pendiente",
+    "grp-checkout"
+   ],
+   "ok": "grp-checkout/wi666666-plan-pendiente",
+   "tree": [
+    "suelto.md",
+    ".config/x.txt",
+    "_deleted/grp-viejo/README.md",
+    "_deleted/wi888888-eliminado/README.md",
+    "_interno/x.txt",
+    "arreglo-sin-wi/README.md",
+    "arreglo-sin-wi/SEED_datos.sql",
+    "grp-checkout/README.md",
+    "grp-checkout/VERIF_checkout.sql",
+    "grp-checkout/_privado/x.txt",
+    "grp-checkout/wi444444-carrito/README.md",
+    "grp-checkout/wi444444-carrito/script.ps1",
+    "grp-checkout/wi555555-envio/README.md",
+    "grp-checkout/wi666666-plan-pendiente/README.md",
+    "wi111111-copia-vieja/README.md",
+    "wi111111-login-con-sso/DIAG_WI111111_usuarios.sql",
+    "wi111111-login-con-sso/MIGRATION_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/README.md",
+    "wi111111-login-con-sso/ROLLBACK_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/captura.png",
+    "wi111111-login-con-sso/consulta.sql",
+    "wi111111-login-con-sso/datos.bin",
+    "wi111111-login-con-sso/gen_diag.py",
+    "wi111111-login-con-sso/.oculto/secreto.txt",
+    "wi111111-login-con-sso/docs/PLAN_sso.md",
+    "wi111111-login-con-sso/docs/flujo.drawio",
+    "wi222222-333333-pagos/FIX_WI222222_duplicados.sql",
+    "wi222222-333333-pagos/README.md",
+    "wi777777-sin-readme/README.md",
+    "wi777777-sin-readme/notas.txt"
+   ],
+   "readmes_changed": {
+    "grp-checkout/wi666666-plan-pendiente/README.md": "---\nestado: plan\n---\n# Plan pendiente\n\n## Plan\n\n*(lo completa la sesión de planificación)*\n\n## Pendientes\n\n- [x] hecho\n"
+   }
+  },
+  {
+   "desc": "lo saca a la raíz",
+   "op": "move_folder",
+   "args": [
+    "grp-checkout/wi666666-plan-pendiente",
+    ""
+   ],
+   "ok": "wi666666-plan-pendiente",
+   "tree": [
+    "suelto.md",
+    ".config/x.txt",
+    "_deleted/grp-viejo/README.md",
+    "_deleted/wi888888-eliminado/README.md",
+    "_interno/x.txt",
+    "arreglo-sin-wi/README.md",
+    "arreglo-sin-wi/SEED_datos.sql",
+    "grp-checkout/README.md",
+    "grp-checkout/VERIF_checkout.sql",
+    "grp-checkout/_privado/x.txt",
+    "grp-checkout/wi444444-carrito/README.md",
+    "grp-checkout/wi444444-carrito/script.ps1",
+    "grp-checkout/wi555555-envio/README.md",
+    "wi111111-copia-vieja/README.md",
+    "wi111111-login-con-sso/DIAG_WI111111_usuarios.sql",
+    "wi111111-login-con-sso/MIGRATION_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/README.md",
+    "wi111111-login-con-sso/ROLLBACK_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/captura.png",
+    "wi111111-login-con-sso/consulta.sql",
+    "wi111111-login-con-sso/datos.bin",
+    "wi111111-login-con-sso/gen_diag.py",
+    "wi111111-login-con-sso/.oculto/secreto.txt",
+    "wi111111-login-con-sso/docs/PLAN_sso.md",
+    "wi111111-login-con-sso/docs/flujo.drawio",
+    "wi222222-333333-pagos/FIX_WI222222_duplicados.sql",
+    "wi222222-333333-pagos/README.md",
+    "wi666666-plan-pendiente/README.md",
+    "wi777777-sin-readme/README.md",
+    "wi777777-sin-readme/notas.txt"
+   ],
+   "readmes_changed": {
+    "wi666666-plan-pendiente/README.md": "---\nestado: plan\n---\n# Plan pendiente\n\n## Plan\n\n*(lo completa la sesión de planificación)*\n\n## Pendientes\n\n- [x] hecho\n"
+   }
+  },
+  {
+   "desc": "un grupo no entra en otro",
+   "op": "move_folder",
+   "args": [
+    "grp-checkout",
+    "grp-checkout"
+   ],
+   "error": "ValueError",
+   "message": "Un grupo no se puede meter dentro de otro grupo",
+   "tree": [
+    "suelto.md",
+    ".config/x.txt",
+    "_deleted/grp-viejo/README.md",
+    "_deleted/wi888888-eliminado/README.md",
+    "_interno/x.txt",
+    "arreglo-sin-wi/README.md",
+    "arreglo-sin-wi/SEED_datos.sql",
+    "grp-checkout/README.md",
+    "grp-checkout/VERIF_checkout.sql",
+    "grp-checkout/_privado/x.txt",
+    "grp-checkout/wi444444-carrito/README.md",
+    "grp-checkout/wi444444-carrito/script.ps1",
+    "grp-checkout/wi555555-envio/README.md",
+    "wi111111-copia-vieja/README.md",
+    "wi111111-login-con-sso/DIAG_WI111111_usuarios.sql",
+    "wi111111-login-con-sso/MIGRATION_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/README.md",
+    "wi111111-login-con-sso/ROLLBACK_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/captura.png",
+    "wi111111-login-con-sso/consulta.sql",
+    "wi111111-login-con-sso/datos.bin",
+    "wi111111-login-con-sso/gen_diag.py",
+    "wi111111-login-con-sso/.oculto/secreto.txt",
+    "wi111111-login-con-sso/docs/PLAN_sso.md",
+    "wi111111-login-con-sso/docs/flujo.drawio",
+    "wi222222-333333-pagos/FIX_WI222222_duplicados.sql",
+    "wi222222-333333-pagos/README.md",
+    "wi666666-plan-pendiente/README.md",
+    "wi777777-sin-readme/README.md",
+    "wi777777-sin-readme/notas.txt"
+   ],
+   "readmes_changed": {}
+  },
+  {
+   "desc": "destino que no es grupo",
+   "op": "move_folder",
+   "args": [
+    "wi666666-plan-pendiente",
+    "wi111111-login-con-sso"
+   ],
+   "error": "ValueError",
+   "message": "wi111111-login-con-sso no es un grupo",
+   "tree": [
+    "suelto.md",
+    ".config/x.txt",
+    "_deleted/grp-viejo/README.md",
+    "_deleted/wi888888-eliminado/README.md",
+    "_interno/x.txt",
+    "arreglo-sin-wi/README.md",
+    "arreglo-sin-wi/SEED_datos.sql",
+    "grp-checkout/README.md",
+    "grp-checkout/VERIF_checkout.sql",
+    "grp-checkout/_privado/x.txt",
+    "grp-checkout/wi444444-carrito/README.md",
+    "grp-checkout/wi444444-carrito/script.ps1",
+    "grp-checkout/wi555555-envio/README.md",
+    "wi111111-copia-vieja/README.md",
+    "wi111111-login-con-sso/DIAG_WI111111_usuarios.sql",
+    "wi111111-login-con-sso/MIGRATION_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/README.md",
+    "wi111111-login-con-sso/ROLLBACK_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/captura.png",
+    "wi111111-login-con-sso/consulta.sql",
+    "wi111111-login-con-sso/datos.bin",
+    "wi111111-login-con-sso/gen_diag.py",
+    "wi111111-login-con-sso/.oculto/secreto.txt",
+    "wi111111-login-con-sso/docs/PLAN_sso.md",
+    "wi111111-login-con-sso/docs/flujo.drawio",
+    "wi222222-333333-pagos/FIX_WI222222_duplicados.sql",
+    "wi222222-333333-pagos/README.md",
+    "wi666666-plan-pendiente/README.md",
+    "wi777777-sin-readme/README.md",
+    "wi777777-sin-readme/notas.txt"
+   ],
+   "readmes_changed": {}
+  },
+  {
+   "desc": "mover a donde ya está",
+   "op": "move_folder",
+   "args": [
+    "wi666666-plan-pendiente",
+    ""
+   ],
+   "ok": "wi666666-plan-pendiente",
+   "tree": [
+    "suelto.md",
+    ".config/x.txt",
+    "_deleted/grp-viejo/README.md",
+    "_deleted/wi888888-eliminado/README.md",
+    "_interno/x.txt",
+    "arreglo-sin-wi/README.md",
+    "arreglo-sin-wi/SEED_datos.sql",
+    "grp-checkout/README.md",
+    "grp-checkout/VERIF_checkout.sql",
+    "grp-checkout/_privado/x.txt",
+    "grp-checkout/wi444444-carrito/README.md",
+    "grp-checkout/wi444444-carrito/script.ps1",
+    "grp-checkout/wi555555-envio/README.md",
+    "wi111111-copia-vieja/README.md",
+    "wi111111-login-con-sso/DIAG_WI111111_usuarios.sql",
+    "wi111111-login-con-sso/MIGRATION_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/README.md",
+    "wi111111-login-con-sso/ROLLBACK_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/captura.png",
+    "wi111111-login-con-sso/consulta.sql",
+    "wi111111-login-con-sso/datos.bin",
+    "wi111111-login-con-sso/gen_diag.py",
+    "wi111111-login-con-sso/.oculto/secreto.txt",
+    "wi111111-login-con-sso/docs/PLAN_sso.md",
+    "wi111111-login-con-sso/docs/flujo.drawio",
+    "wi222222-333333-pagos/FIX_WI222222_duplicados.sql",
+    "wi222222-333333-pagos/README.md",
+    "wi666666-plan-pendiente/README.md",
+    "wi777777-sin-readme/README.md",
+    "wi777777-sin-readme/notas.txt"
+   ],
+   "readmes_changed": {}
+  },
+  {
+   "desc": "eliminar a _deleted",
+   "op": "trash",
+   "args": [
+    "wi222222-333333-pagos"
+   ],
+   "ok": "_deleted/wi222222-333333-pagos",
+   "tree": [
+    "suelto.md",
+    ".config/x.txt",
+    "_deleted/grp-viejo/README.md",
+    "_deleted/wi222222-333333-pagos/FIX_WI222222_duplicados.sql",
+    "_deleted/wi222222-333333-pagos/README.md",
+    "_deleted/wi888888-eliminado/README.md",
+    "_interno/x.txt",
+    "arreglo-sin-wi/README.md",
+    "arreglo-sin-wi/SEED_datos.sql",
+    "grp-checkout/README.md",
+    "grp-checkout/VERIF_checkout.sql",
+    "grp-checkout/_privado/x.txt",
+    "grp-checkout/wi444444-carrito/README.md",
+    "grp-checkout/wi444444-carrito/script.ps1",
+    "grp-checkout/wi555555-envio/README.md",
+    "wi111111-copia-vieja/README.md",
+    "wi111111-login-con-sso/DIAG_WI111111_usuarios.sql",
+    "wi111111-login-con-sso/MIGRATION_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/README.md",
+    "wi111111-login-con-sso/ROLLBACK_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/captura.png",
+    "wi111111-login-con-sso/consulta.sql",
+    "wi111111-login-con-sso/datos.bin",
+    "wi111111-login-con-sso/gen_diag.py",
+    "wi111111-login-con-sso/.oculto/secreto.txt",
+    "wi111111-login-con-sso/docs/PLAN_sso.md",
+    "wi111111-login-con-sso/docs/flujo.drawio",
+    "wi666666-plan-pendiente/README.md",
+    "wi777777-sin-readme/README.md",
+    "wi777777-sin-readme/notas.txt"
+   ],
+   "readmes_changed": {
+    "_deleted/wi222222-333333-pagos/README.md": "---\nestado: qa\ntipo: bug\nambientes: [dev, qa]\nnotas: n\n---\n\r\n# Pagos duplicados\r\n\r\n## Pendientes\r\n\r\n- [ ] Verificar en QA\r\n"
+   }
+  },
+  {
+   "desc": "restaurar",
+   "op": "untrash",
+   "args": [
+    "_deleted/wi222222-333333-pagos",
+    "wi222222-333333-pagos"
+   ],
+   "ok": "wi222222-333333-pagos",
+   "tree": [
+    "suelto.md",
+    ".config/x.txt",
+    "_deleted/grp-viejo/README.md",
+    "_deleted/wi888888-eliminado/README.md",
+    "_interno/x.txt",
+    "arreglo-sin-wi/README.md",
+    "arreglo-sin-wi/SEED_datos.sql",
+    "grp-checkout/README.md",
+    "grp-checkout/VERIF_checkout.sql",
+    "grp-checkout/_privado/x.txt",
+    "grp-checkout/wi444444-carrito/README.md",
+    "grp-checkout/wi444444-carrito/script.ps1",
+    "grp-checkout/wi555555-envio/README.md",
+    "wi111111-copia-vieja/README.md",
+    "wi111111-login-con-sso/DIAG_WI111111_usuarios.sql",
+    "wi111111-login-con-sso/MIGRATION_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/README.md",
+    "wi111111-login-con-sso/ROLLBACK_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/captura.png",
+    "wi111111-login-con-sso/consulta.sql",
+    "wi111111-login-con-sso/datos.bin",
+    "wi111111-login-con-sso/gen_diag.py",
+    "wi111111-login-con-sso/.oculto/secreto.txt",
+    "wi111111-login-con-sso/docs/PLAN_sso.md",
+    "wi111111-login-con-sso/docs/flujo.drawio",
+    "wi222222-333333-pagos/FIX_WI222222_duplicados.sql",
+    "wi222222-333333-pagos/README.md",
+    "wi666666-plan-pendiente/README.md",
+    "wi777777-sin-readme/README.md",
+    "wi777777-sin-readme/notas.txt"
+   ],
+   "readmes_changed": {
+    "wi222222-333333-pagos/README.md": "---\nestado: qa\ntipo: bug\nambientes: [dev, qa]\nnotas: n\n---\n\r\n# Pagos duplicados\r\n\r\n## Pendientes\r\n\r\n- [ ] Verificar en QA\r\n"
+   }
+  },
+  {
+   "desc": "restaurar algo que no está en _deleted",
+   "op": "untrash",
+   "args": [
+    "wi111111-login-con-sso",
+    "x"
+   ],
+   "error": "FileNotFoundError",
+   "message": "No está en _deleted: wi111111-login-con-sso",
+   "tree": [
+    "suelto.md",
+    ".config/x.txt",
+    "_deleted/grp-viejo/README.md",
+    "_deleted/wi888888-eliminado/README.md",
+    "_interno/x.txt",
+    "arreglo-sin-wi/README.md",
+    "arreglo-sin-wi/SEED_datos.sql",
+    "grp-checkout/README.md",
+    "grp-checkout/VERIF_checkout.sql",
+    "grp-checkout/_privado/x.txt",
+    "grp-checkout/wi444444-carrito/README.md",
+    "grp-checkout/wi444444-carrito/script.ps1",
+    "grp-checkout/wi555555-envio/README.md",
+    "wi111111-copia-vieja/README.md",
+    "wi111111-login-con-sso/DIAG_WI111111_usuarios.sql",
+    "wi111111-login-con-sso/MIGRATION_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/README.md",
+    "wi111111-login-con-sso/ROLLBACK_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/captura.png",
+    "wi111111-login-con-sso/consulta.sql",
+    "wi111111-login-con-sso/datos.bin",
+    "wi111111-login-con-sso/gen_diag.py",
+    "wi111111-login-con-sso/.oculto/secreto.txt",
+    "wi111111-login-con-sso/docs/PLAN_sso.md",
+    "wi111111-login-con-sso/docs/flujo.drawio",
+    "wi222222-333333-pagos/FIX_WI222222_duplicados.sql",
+    "wi222222-333333-pagos/README.md",
+    "wi666666-plan-pendiente/README.md",
+    "wi777777-sin-readme/README.md",
+    "wi777777-sin-readme/notas.txt"
+   ],
+   "readmes_changed": {}
+  },
+  {
+   "desc": "restaurar sobre una carpeta que existe",
+   "op": "untrash",
+   "args": [
+    "_deleted/wi888888-eliminado",
+    "wi111111-login-con-sso"
+   ],
+   "error": "FileExistsError",
+   "message": "Ya existe wi111111-login-con-sso",
+   "tree": [
+    "suelto.md",
+    ".config/x.txt",
+    "_deleted/grp-viejo/README.md",
+    "_deleted/wi888888-eliminado/README.md",
+    "_interno/x.txt",
+    "arreglo-sin-wi/README.md",
+    "arreglo-sin-wi/SEED_datos.sql",
+    "grp-checkout/README.md",
+    "grp-checkout/VERIF_checkout.sql",
+    "grp-checkout/_privado/x.txt",
+    "grp-checkout/wi444444-carrito/README.md",
+    "grp-checkout/wi444444-carrito/script.ps1",
+    "grp-checkout/wi555555-envio/README.md",
+    "wi111111-copia-vieja/README.md",
+    "wi111111-login-con-sso/DIAG_WI111111_usuarios.sql",
+    "wi111111-login-con-sso/MIGRATION_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/README.md",
+    "wi111111-login-con-sso/ROLLBACK_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/captura.png",
+    "wi111111-login-con-sso/consulta.sql",
+    "wi111111-login-con-sso/datos.bin",
+    "wi111111-login-con-sso/gen_diag.py",
+    "wi111111-login-con-sso/.oculto/secreto.txt",
+    "wi111111-login-con-sso/docs/PLAN_sso.md",
+    "wi111111-login-con-sso/docs/flujo.drawio",
+    "wi222222-333333-pagos/FIX_WI222222_duplicados.sql",
+    "wi222222-333333-pagos/README.md",
+    "wi666666-plan-pendiente/README.md",
+    "wi777777-sin-readme/README.md",
+    "wi777777-sin-readme/notas.txt"
+   ],
+   "readmes_changed": {}
+  },
+  {
+   "desc": "restaurar dentro de un grupo",
+   "op": "untrash",
+   "args": [
+    "_deleted/wi888888-eliminado",
+    "grp-checkout/wi888888-eliminado"
+   ],
+   "ok": "grp-checkout/wi888888-eliminado",
+   "tree": [
+    "suelto.md",
+    ".config/x.txt",
+    "_deleted/grp-viejo/README.md",
+    "_interno/x.txt",
+    "arreglo-sin-wi/README.md",
+    "arreglo-sin-wi/SEED_datos.sql",
+    "grp-checkout/README.md",
+    "grp-checkout/VERIF_checkout.sql",
+    "grp-checkout/_privado/x.txt",
+    "grp-checkout/wi444444-carrito/README.md",
+    "grp-checkout/wi444444-carrito/script.ps1",
+    "grp-checkout/wi555555-envio/README.md",
+    "grp-checkout/wi888888-eliminado/README.md",
+    "wi111111-copia-vieja/README.md",
+    "wi111111-login-con-sso/DIAG_WI111111_usuarios.sql",
+    "wi111111-login-con-sso/MIGRATION_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/README.md",
+    "wi111111-login-con-sso/ROLLBACK_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/captura.png",
+    "wi111111-login-con-sso/consulta.sql",
+    "wi111111-login-con-sso/datos.bin",
+    "wi111111-login-con-sso/gen_diag.py",
+    "wi111111-login-con-sso/.oculto/secreto.txt",
+    "wi111111-login-con-sso/docs/PLAN_sso.md",
+    "wi111111-login-con-sso/docs/flujo.drawio",
+    "wi222222-333333-pagos/FIX_WI222222_duplicados.sql",
+    "wi222222-333333-pagos/README.md",
+    "wi666666-plan-pendiente/README.md",
+    "wi777777-sin-readme/README.md",
+    "wi777777-sin-readme/notas.txt"
+   ],
+   "readmes_changed": {
+    "grp-checkout/wi888888-eliminado/README.md": "---\nestado: qa\n---\n# Eliminado\n"
+   }
+  },
+  {
+   "desc": "renombrar WI",
+   "op": "rename_folder",
+   "args": [
+    "wi666666-plan-pendiente",
+    "wi666666-plan-listo"
+   ],
+   "ok": "wi666666-plan-listo",
+   "tree": [
+    "suelto.md",
+    ".config/x.txt",
+    "_deleted/grp-viejo/README.md",
+    "_interno/x.txt",
+    "arreglo-sin-wi/README.md",
+    "arreglo-sin-wi/SEED_datos.sql",
+    "grp-checkout/README.md",
+    "grp-checkout/VERIF_checkout.sql",
+    "grp-checkout/_privado/x.txt",
+    "grp-checkout/wi444444-carrito/README.md",
+    "grp-checkout/wi444444-carrito/script.ps1",
+    "grp-checkout/wi555555-envio/README.md",
+    "grp-checkout/wi888888-eliminado/README.md",
+    "wi111111-copia-vieja/README.md",
+    "wi111111-login-con-sso/DIAG_WI111111_usuarios.sql",
+    "wi111111-login-con-sso/MIGRATION_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/README.md",
+    "wi111111-login-con-sso/ROLLBACK_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/captura.png",
+    "wi111111-login-con-sso/consulta.sql",
+    "wi111111-login-con-sso/datos.bin",
+    "wi111111-login-con-sso/gen_diag.py",
+    "wi111111-login-con-sso/.oculto/secreto.txt",
+    "wi111111-login-con-sso/docs/PLAN_sso.md",
+    "wi111111-login-con-sso/docs/flujo.drawio",
+    "wi222222-333333-pagos/FIX_WI222222_duplicados.sql",
+    "wi222222-333333-pagos/README.md",
+    "wi666666-plan-listo/README.md",
+    "wi777777-sin-readme/README.md",
+    "wi777777-sin-readme/notas.txt"
+   ],
+   "readmes_changed": {
+    "wi666666-plan-listo/README.md": "---\nestado: plan\n---\n# Plan pendiente\n\n## Plan\n\n*(lo completa la sesión de planificación)*\n\n## Pendientes\n\n- [x] hecho\n"
+   }
+  },
+  {
+   "desc": "un WI no puede empezar con grp-",
+   "op": "rename_folder",
+   "args": [
+    "wi666666-plan-listo",
+    "grp-x"
+   ],
+   "error": "ValueError",
+   "message": "Un WI no puede empezar con grp-",
+   "tree": [
+    "suelto.md",
+    ".config/x.txt",
+    "_deleted/grp-viejo/README.md",
+    "_interno/x.txt",
+    "arreglo-sin-wi/README.md",
+    "arreglo-sin-wi/SEED_datos.sql",
+    "grp-checkout/README.md",
+    "grp-checkout/VERIF_checkout.sql",
+    "grp-checkout/_privado/x.txt",
+    "grp-checkout/wi444444-carrito/README.md",
+    "grp-checkout/wi444444-carrito/script.ps1",
+    "grp-checkout/wi555555-envio/README.md",
+    "grp-checkout/wi888888-eliminado/README.md",
+    "wi111111-copia-vieja/README.md",
+    "wi111111-login-con-sso/DIAG_WI111111_usuarios.sql",
+    "wi111111-login-con-sso/MIGRATION_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/README.md",
+    "wi111111-login-con-sso/ROLLBACK_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/captura.png",
+    "wi111111-login-con-sso/consulta.sql",
+    "wi111111-login-con-sso/datos.bin",
+    "wi111111-login-con-sso/gen_diag.py",
+    "wi111111-login-con-sso/.oculto/secreto.txt",
+    "wi111111-login-con-sso/docs/PLAN_sso.md",
+    "wi111111-login-con-sso/docs/flujo.drawio",
+    "wi222222-333333-pagos/FIX_WI222222_duplicados.sql",
+    "wi222222-333333-pagos/README.md",
+    "wi666666-plan-listo/README.md",
+    "wi777777-sin-readme/README.md",
+    "wi777777-sin-readme/notas.txt"
+   ],
+   "readmes_changed": {}
+  },
+  {
+   "desc": "un grupo tiene que seguir siendo grupo",
+   "op": "rename_folder",
+   "args": [
+    "grp-checkout",
+    "checkout"
+   ],
+   "error": "ValueError",
+   "message": "Un grupo tiene que empezar con grp- y un WI no",
+   "tree": [
+    "suelto.md",
+    ".config/x.txt",
+    "_deleted/grp-viejo/README.md",
+    "_interno/x.txt",
+    "arreglo-sin-wi/README.md",
+    "arreglo-sin-wi/SEED_datos.sql",
+    "grp-checkout/README.md",
+    "grp-checkout/VERIF_checkout.sql",
+    "grp-checkout/_privado/x.txt",
+    "grp-checkout/wi444444-carrito/README.md",
+    "grp-checkout/wi444444-carrito/script.ps1",
+    "grp-checkout/wi555555-envio/README.md",
+    "grp-checkout/wi888888-eliminado/README.md",
+    "wi111111-copia-vieja/README.md",
+    "wi111111-login-con-sso/DIAG_WI111111_usuarios.sql",
+    "wi111111-login-con-sso/MIGRATION_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/README.md",
+    "wi111111-login-con-sso/ROLLBACK_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/captura.png",
+    "wi111111-login-con-sso/consulta.sql",
+    "wi111111-login-con-sso/datos.bin",
+    "wi111111-login-con-sso/gen_diag.py",
+    "wi111111-login-con-sso/.oculto/secreto.txt",
+    "wi111111-login-con-sso/docs/PLAN_sso.md",
+    "wi111111-login-con-sso/docs/flujo.drawio",
+    "wi222222-333333-pagos/FIX_WI222222_duplicados.sql",
+    "wi222222-333333-pagos/README.md",
+    "wi666666-plan-listo/README.md",
+    "wi777777-sin-readme/README.md",
+    "wi777777-sin-readme/notas.txt"
+   ],
+   "readmes_changed": {}
+  },
+  {
+   "desc": "nombre inválido",
+   "op": "rename_folder",
+   "args": [
+    "wi666666-plan-listo",
+    "con espacio"
+   ],
+   "error": "ValueError",
+   "message": "Nombre de carpeta inválido: 'con espacio'",
+   "tree": [
+    "suelto.md",
+    ".config/x.txt",
+    "_deleted/grp-viejo/README.md",
+    "_interno/x.txt",
+    "arreglo-sin-wi/README.md",
+    "arreglo-sin-wi/SEED_datos.sql",
+    "grp-checkout/README.md",
+    "grp-checkout/VERIF_checkout.sql",
+    "grp-checkout/_privado/x.txt",
+    "grp-checkout/wi444444-carrito/README.md",
+    "grp-checkout/wi444444-carrito/script.ps1",
+    "grp-checkout/wi555555-envio/README.md",
+    "grp-checkout/wi888888-eliminado/README.md",
+    "wi111111-copia-vieja/README.md",
+    "wi111111-login-con-sso/DIAG_WI111111_usuarios.sql",
+    "wi111111-login-con-sso/MIGRATION_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/README.md",
+    "wi111111-login-con-sso/ROLLBACK_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/captura.png",
+    "wi111111-login-con-sso/consulta.sql",
+    "wi111111-login-con-sso/datos.bin",
+    "wi111111-login-con-sso/gen_diag.py",
+    "wi111111-login-con-sso/.oculto/secreto.txt",
+    "wi111111-login-con-sso/docs/PLAN_sso.md",
+    "wi111111-login-con-sso/docs/flujo.drawio",
+    "wi222222-333333-pagos/FIX_WI222222_duplicados.sql",
+    "wi222222-333333-pagos/README.md",
+    "wi666666-plan-listo/README.md",
+    "wi777777-sin-readme/README.md",
+    "wi777777-sin-readme/notas.txt"
+   ],
+   "readmes_changed": {}
+  },
+  {
+   "desc": "nombre que empieza con _",
+   "op": "rename_folder",
+   "args": [
+    "wi666666-plan-listo",
+    "_oculto"
+   ],
+   "error": "ValueError",
+   "message": "Nombre de carpeta inválido: '_oculto'",
+   "tree": [
+    "suelto.md",
+    ".config/x.txt",
+    "_deleted/grp-viejo/README.md",
+    "_interno/x.txt",
+    "arreglo-sin-wi/README.md",
+    "arreglo-sin-wi/SEED_datos.sql",
+    "grp-checkout/README.md",
+    "grp-checkout/VERIF_checkout.sql",
+    "grp-checkout/_privado/x.txt",
+    "grp-checkout/wi444444-carrito/README.md",
+    "grp-checkout/wi444444-carrito/script.ps1",
+    "grp-checkout/wi555555-envio/README.md",
+    "grp-checkout/wi888888-eliminado/README.md",
+    "wi111111-copia-vieja/README.md",
+    "wi111111-login-con-sso/DIAG_WI111111_usuarios.sql",
+    "wi111111-login-con-sso/MIGRATION_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/README.md",
+    "wi111111-login-con-sso/ROLLBACK_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/captura.png",
+    "wi111111-login-con-sso/consulta.sql",
+    "wi111111-login-con-sso/datos.bin",
+    "wi111111-login-con-sso/gen_diag.py",
+    "wi111111-login-con-sso/.oculto/secreto.txt",
+    "wi111111-login-con-sso/docs/PLAN_sso.md",
+    "wi111111-login-con-sso/docs/flujo.drawio",
+    "wi222222-333333-pagos/FIX_WI222222_duplicados.sql",
+    "wi222222-333333-pagos/README.md",
+    "wi666666-plan-listo/README.md",
+    "wi777777-sin-readme/README.md",
+    "wi777777-sin-readme/notas.txt"
+   ],
+   "readmes_changed": {}
+  },
+  {
+   "desc": "renombrar a uno que existe",
+   "op": "rename_folder",
+   "args": [
+    "wi666666-plan-listo",
+    "arreglo-sin-wi"
+   ],
+   "error": "FileExistsError",
+   "message": "Ya existe arreglo-sin-wi",
+   "tree": [
+    "suelto.md",
+    ".config/x.txt",
+    "_deleted/grp-viejo/README.md",
+    "_interno/x.txt",
+    "arreglo-sin-wi/README.md",
+    "arreglo-sin-wi/SEED_datos.sql",
+    "grp-checkout/README.md",
+    "grp-checkout/VERIF_checkout.sql",
+    "grp-checkout/_privado/x.txt",
+    "grp-checkout/wi444444-carrito/README.md",
+    "grp-checkout/wi444444-carrito/script.ps1",
+    "grp-checkout/wi555555-envio/README.md",
+    "grp-checkout/wi888888-eliminado/README.md",
+    "wi111111-copia-vieja/README.md",
+    "wi111111-login-con-sso/DIAG_WI111111_usuarios.sql",
+    "wi111111-login-con-sso/MIGRATION_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/README.md",
+    "wi111111-login-con-sso/ROLLBACK_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/captura.png",
+    "wi111111-login-con-sso/consulta.sql",
+    "wi111111-login-con-sso/datos.bin",
+    "wi111111-login-con-sso/gen_diag.py",
+    "wi111111-login-con-sso/.oculto/secreto.txt",
+    "wi111111-login-con-sso/docs/PLAN_sso.md",
+    "wi111111-login-con-sso/docs/flujo.drawio",
+    "wi222222-333333-pagos/FIX_WI222222_duplicados.sql",
+    "wi222222-333333-pagos/README.md",
+    "wi666666-plan-listo/README.md",
+    "wi777777-sin-readme/README.md",
+    "wi777777-sin-readme/notas.txt"
+   ],
+   "readmes_changed": {}
+  },
+  {
+   "desc": "solo cambia mayúsculas",
+   "op": "rename_folder",
+   "args": [
+    "arreglo-sin-wi",
+    "Arreglo-Sin-WI"
+   ],
+   "ok": "Arreglo-Sin-WI",
+   "tree": [
+    "suelto.md",
+    ".config/x.txt",
+    "Arreglo-Sin-WI/README.md",
+    "Arreglo-Sin-WI/SEED_datos.sql",
+    "_deleted/grp-viejo/README.md",
+    "_interno/x.txt",
+    "grp-checkout/README.md",
+    "grp-checkout/VERIF_checkout.sql",
+    "grp-checkout/_privado/x.txt",
+    "grp-checkout/wi444444-carrito/README.md",
+    "grp-checkout/wi444444-carrito/script.ps1",
+    "grp-checkout/wi555555-envio/README.md",
+    "grp-checkout/wi888888-eliminado/README.md",
+    "wi111111-copia-vieja/README.md",
+    "wi111111-login-con-sso/DIAG_WI111111_usuarios.sql",
+    "wi111111-login-con-sso/MIGRATION_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/README.md",
+    "wi111111-login-con-sso/ROLLBACK_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/captura.png",
+    "wi111111-login-con-sso/consulta.sql",
+    "wi111111-login-con-sso/datos.bin",
+    "wi111111-login-con-sso/gen_diag.py",
+    "wi111111-login-con-sso/.oculto/secreto.txt",
+    "wi111111-login-con-sso/docs/PLAN_sso.md",
+    "wi111111-login-con-sso/docs/flujo.drawio",
+    "wi222222-333333-pagos/FIX_WI222222_duplicados.sql",
+    "wi222222-333333-pagos/README.md",
+    "wi666666-plan-listo/README.md",
+    "wi777777-sin-readme/README.md",
+    "wi777777-sin-readme/notas.txt"
+   ],
+   "readmes_changed": {
+    "Arreglo-Sin-WI/README.md": "---\ntipo: fix\nwi: [444444, 555555]\nestado: codeado\n---\n# Arreglo sin work item\n"
+   }
+  },
+  {
+   "desc": "renombrar grupo",
+   "op": "rename_folder",
+   "args": [
+    "grp-checkout",
+    "grp-checkout-v2"
+   ],
+   "ok": "grp-checkout-v2",
+   "tree": [
+    "suelto.md",
+    ".config/x.txt",
+    "Arreglo-Sin-WI/README.md",
+    "Arreglo-Sin-WI/SEED_datos.sql",
+    "_deleted/grp-viejo/README.md",
+    "_interno/x.txt",
+    "grp-checkout-v2/README.md",
+    "grp-checkout-v2/VERIF_checkout.sql",
+    "grp-checkout-v2/_privado/x.txt",
+    "grp-checkout-v2/wi444444-carrito/README.md",
+    "grp-checkout-v2/wi444444-carrito/script.ps1",
+    "grp-checkout-v2/wi555555-envio/README.md",
+    "grp-checkout-v2/wi888888-eliminado/README.md",
+    "wi111111-copia-vieja/README.md",
+    "wi111111-login-con-sso/DIAG_WI111111_usuarios.sql",
+    "wi111111-login-con-sso/MIGRATION_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/README.md",
+    "wi111111-login-con-sso/ROLLBACK_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/captura.png",
+    "wi111111-login-con-sso/consulta.sql",
+    "wi111111-login-con-sso/datos.bin",
+    "wi111111-login-con-sso/gen_diag.py",
+    "wi111111-login-con-sso/.oculto/secreto.txt",
+    "wi111111-login-con-sso/docs/PLAN_sso.md",
+    "wi111111-login-con-sso/docs/flujo.drawio",
+    "wi222222-333333-pagos/FIX_WI222222_duplicados.sql",
+    "wi222222-333333-pagos/README.md",
+    "wi666666-plan-listo/README.md",
+    "wi777777-sin-readme/README.md",
+    "wi777777-sin-readme/notas.txt"
+   ],
+   "readmes_changed": {
+    "grp-checkout-v2/README.md": "---\nestado: en-curso\nnotas: grupo del checkout\n---\n# Checkout\n\n## Pendientes\n\n- [x] otra tarea editada\n",
+    "grp-checkout-v2/wi444444-carrito/README.md": "---\nestado: codeado\ntipo: task\n---\n# Carrito\n",
+    "grp-checkout-v2/wi555555-envio/README.md": "---\nestado: pendiente\ntipo: raro\n---\n# Envío\n",
+    "grp-checkout-v2/wi888888-eliminado/README.md": "---\nestado: qa\n---\n# Eliminado\n"
+   }
+  },
+  {
+   "desc": "crear carpeta",
+   "op": "create_folder",
+   "args": [
+    "wi999999-nuevo"
+   ],
+   "ok": "wi999999-nuevo",
+   "tree": [
+    "suelto.md",
+    ".config/x.txt",
+    "Arreglo-Sin-WI/README.md",
+    "Arreglo-Sin-WI/SEED_datos.sql",
+    "_deleted/grp-viejo/README.md",
+    "_interno/x.txt",
+    "grp-checkout-v2/README.md",
+    "grp-checkout-v2/VERIF_checkout.sql",
+    "grp-checkout-v2/_privado/x.txt",
+    "grp-checkout-v2/wi444444-carrito/README.md",
+    "grp-checkout-v2/wi444444-carrito/script.ps1",
+    "grp-checkout-v2/wi555555-envio/README.md",
+    "grp-checkout-v2/wi888888-eliminado/README.md",
+    "wi111111-copia-vieja/README.md",
+    "wi111111-login-con-sso/DIAG_WI111111_usuarios.sql",
+    "wi111111-login-con-sso/MIGRATION_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/README.md",
+    "wi111111-login-con-sso/ROLLBACK_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/captura.png",
+    "wi111111-login-con-sso/consulta.sql",
+    "wi111111-login-con-sso/datos.bin",
+    "wi111111-login-con-sso/gen_diag.py",
+    "wi111111-login-con-sso/.oculto/secreto.txt",
+    "wi111111-login-con-sso/docs/PLAN_sso.md",
+    "wi111111-login-con-sso/docs/flujo.drawio",
+    "wi222222-333333-pagos/FIX_WI222222_duplicados.sql",
+    "wi222222-333333-pagos/README.md",
+    "wi666666-plan-listo/README.md",
+    "wi777777-sin-readme/README.md",
+    "wi777777-sin-readme/notas.txt"
+   ],
+   "readmes_changed": {}
+  },
+  {
+   "desc": "crear carpeta que existe",
+   "op": "create_folder",
+   "args": [
+    "wi999999-nuevo"
+   ],
+   "error": "FileExistsError",
+   "message": "Ya existe la carpeta wi999999-nuevo",
+   "tree": [
+    "suelto.md",
+    ".config/x.txt",
+    "Arreglo-Sin-WI/README.md",
+    "Arreglo-Sin-WI/SEED_datos.sql",
+    "_deleted/grp-viejo/README.md",
+    "_interno/x.txt",
+    "grp-checkout-v2/README.md",
+    "grp-checkout-v2/VERIF_checkout.sql",
+    "grp-checkout-v2/_privado/x.txt",
+    "grp-checkout-v2/wi444444-carrito/README.md",
+    "grp-checkout-v2/wi444444-carrito/script.ps1",
+    "grp-checkout-v2/wi555555-envio/README.md",
+    "grp-checkout-v2/wi888888-eliminado/README.md",
+    "wi111111-copia-vieja/README.md",
+    "wi111111-login-con-sso/DIAG_WI111111_usuarios.sql",
+    "wi111111-login-con-sso/MIGRATION_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/README.md",
+    "wi111111-login-con-sso/ROLLBACK_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/captura.png",
+    "wi111111-login-con-sso/consulta.sql",
+    "wi111111-login-con-sso/datos.bin",
+    "wi111111-login-con-sso/gen_diag.py",
+    "wi111111-login-con-sso/.oculto/secreto.txt",
+    "wi111111-login-con-sso/docs/PLAN_sso.md",
+    "wi111111-login-con-sso/docs/flujo.drawio",
+    "wi222222-333333-pagos/FIX_WI222222_duplicados.sql",
+    "wi222222-333333-pagos/README.md",
+    "wi666666-plan-listo/README.md",
+    "wi777777-sin-readme/README.md",
+    "wi777777-sin-readme/notas.txt"
+   ],
+   "readmes_changed": {}
+  },
+  {
+   "desc": "crear con ruta",
+   "op": "create_folder",
+   "args": [
+    "a/b"
+   ],
+   "error": "ValueError",
+   "message": "Nombre de carpeta inválido: 'a/b'",
+   "tree": [
+    "suelto.md",
+    ".config/x.txt",
+    "Arreglo-Sin-WI/README.md",
+    "Arreglo-Sin-WI/SEED_datos.sql",
+    "_deleted/grp-viejo/README.md",
+    "_interno/x.txt",
+    "grp-checkout-v2/README.md",
+    "grp-checkout-v2/VERIF_checkout.sql",
+    "grp-checkout-v2/_privado/x.txt",
+    "grp-checkout-v2/wi444444-carrito/README.md",
+    "grp-checkout-v2/wi444444-carrito/script.ps1",
+    "grp-checkout-v2/wi555555-envio/README.md",
+    "grp-checkout-v2/wi888888-eliminado/README.md",
+    "wi111111-copia-vieja/README.md",
+    "wi111111-login-con-sso/DIAG_WI111111_usuarios.sql",
+    "wi111111-login-con-sso/MIGRATION_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/README.md",
+    "wi111111-login-con-sso/ROLLBACK_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/captura.png",
+    "wi111111-login-con-sso/consulta.sql",
+    "wi111111-login-con-sso/datos.bin",
+    "wi111111-login-con-sso/gen_diag.py",
+    "wi111111-login-con-sso/.oculto/secreto.txt",
+    "wi111111-login-con-sso/docs/PLAN_sso.md",
+    "wi111111-login-con-sso/docs/flujo.drawio",
+    "wi222222-333333-pagos/FIX_WI222222_duplicados.sql",
+    "wi222222-333333-pagos/README.md",
+    "wi666666-plan-listo/README.md",
+    "wi777777-sin-readme/README.md",
+    "wi777777-sin-readme/notas.txt"
+   ],
+   "readmes_changed": {}
+  },
+  {
+   "desc": "eliminar dos veces el mismo nombre",
+   "op": "trash",
+   "args": [
+    "wi999999-nuevo"
+   ],
+   "ok": "_deleted/wi999999-nuevo",
+   "tree": [
+    "suelto.md",
+    ".config/x.txt",
+    "Arreglo-Sin-WI/README.md",
+    "Arreglo-Sin-WI/SEED_datos.sql",
+    "_deleted/grp-viejo/README.md",
+    "_interno/x.txt",
+    "grp-checkout-v2/README.md",
+    "grp-checkout-v2/VERIF_checkout.sql",
+    "grp-checkout-v2/_privado/x.txt",
+    "grp-checkout-v2/wi444444-carrito/README.md",
+    "grp-checkout-v2/wi444444-carrito/script.ps1",
+    "grp-checkout-v2/wi555555-envio/README.md",
+    "grp-checkout-v2/wi888888-eliminado/README.md",
+    "wi111111-copia-vieja/README.md",
+    "wi111111-login-con-sso/DIAG_WI111111_usuarios.sql",
+    "wi111111-login-con-sso/MIGRATION_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/README.md",
+    "wi111111-login-con-sso/ROLLBACK_WI111111_sesiones.sql",
+    "wi111111-login-con-sso/captura.png",
+    "wi111111-login-con-sso/consulta.sql",
+    "wi111111-login-con-sso/datos.bin",
+    "wi111111-login-con-sso/gen_diag.py",
+    "wi111111-login-con-sso/.oculto/secreto.txt",
+    "wi111111-login-con-sso/docs/PLAN_sso.md",
+    "wi111111-login-con-sso/docs/flujo.drawio",
+    "wi222222-333333-pagos/FIX_WI222222_duplicados.sql",
+    "wi222222-333333-pagos/README.md",
+    "wi666666-plan-listo/README.md",
+    "wi777777-sin-readme/README.md",
+    "wi777777-sin-readme/notas.txt"
+   ],
+   "readmes_changed": {}
+  },
+  {
+   "desc": "eliminar un nombre que ya está en _deleted agrega -AAAAMMDD-HHMMSS",
+   "op": "trash",
+   "args": [
+    "wi999999-nuevo"
+   ],
+   "ok_pattern": "^_deleted/wi999999-nuevo-\\d{8}-\\d{6}$",
+   "matches": true
+  }
+ ],
+ "versions": {
+  "count_before_restore": 4,
+  "oldest_equals_fixture": true,
+  "restored_equals_oldest": true,
+  "count_after_restore": 5,
+  "invalid_id": {
+   "error": "ValueError",
+   "message": "Versión inválida"
+  },
+  "missing_id": {
+   "error": "FileNotFoundError",
+   "message": "No existe esa versión"
+  }
+ },
+ "state_log": [
+  {
+   "wi": "wi111111-login-con-sso",
+   "de": "en-curso",
+   "a": "codeado",
+   "session": null
+  },
+  {
+   "wi": "wi111111-login-con-sso",
+   "de": "codeado",
+   "a": "prod",
+   "session": null
+  },
+  {
+   "wi": "wi111111-login-con-sso",
+   "de": "prod",
+   "a": "descartado",
+   "session": null
+  },
+  {
+   "wi": "grp-checkout/wi444444-carrito",
+   "de": "diag",
+   "a": "codeado",
+   "session": null
+  },
+  {
+   "wi": "wi111111-login-con-sso",
+   "de": "descartado",
+   "a": "en-curso",
+   "session": null
+  }
+ ],
+ "backup_rotation": {
+  "writes": 21,
+  "kept": 20,
+  "oldest_notas": "v0"
+ }
+}

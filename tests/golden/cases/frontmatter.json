@@ -1,0 +1,331 @@
+{
+ "split": [
+  {
+   "text": "",
+   "ok": [
+    {},
+    ""
+   ]
+  },
+  {
+   "text": "# Sin frontmatter\n",
+   "ok": [
+    {},
+    "# Sin frontmatter\n"
+   ]
+  },
+  {
+   "text": "---\nestado: qa\n---\n# T\n",
+   "ok": [
+    {
+     "estado": "qa"
+    },
+    "# T\n"
+   ]
+  },
+  {
+   "text": "---\nestado: qa\n---\n\n\n# Líneas vacías antes del cuerpo\n",
+   "ok": [
+    {
+     "estado": "qa"
+    },
+    "# Líneas vacías antes del cuerpo\n"
+   ]
+  },
+  {
+   "text": "---\r\nestado: qa\r\n---\r\n\r\n# CRLF\r\n",
+   "ok": [
+    {
+     "estado": "qa"
+    },
+    "\r\n# CRLF\r\n"
+   ]
+  },
+  {
+   "text": "---\nsin cierre\n# T\n",
+   "ok": [
+    {},
+    "---\nsin cierre\n# T\n"
+   ]
+  },
+  {
+   "text": "---\n---\n# Bloque vacío\n",
+   "ok": [
+    {},
+    "# Bloque vacío\n"
+   ]
+  },
+  {
+   "text": "  ---  \nestado:  en-curso  \n  ---  \ncuerpo",
+   "ok": [
+    {
+     "estado": "en-curso"
+    },
+    "cuerpo"
+   ]
+  },
+  {
+   "text": "---\nambientes: [dev, qa , prod]\nvacia: []\nuno: [ dev ]\ncomas: [a,,b, ]\n---\n",
+   "ok": [
+    {
+     "ambientes": [
+      "dev",
+      "qa",
+      "prod"
+     ],
+     "vacia": [],
+     "uno": [
+      "dev"
+     ],
+     "comas": [
+      "a",
+      "b"
+     ]
+    },
+    ""
+   ]
+  },
+  {
+   "text": "---\nnotas: \"con: dos puntos\"\ncita: 'simple'\nmal: \"abre\nraro: \"\n---\n",
+   "ok": [
+    {
+     "notas": "con: dos puntos",
+     "cita": "simple",
+     "mal": "\"abre",
+     "raro": "\""
+    },
+    ""
+   ]
+  },
+  {
+   "text": "---\nurl: http://x.y:8080/z\nk:\n: sin clave\nsin dos puntos\n# comentario: x\n  # otro: y\n---\n",
+   "ok": [
+    {
+     "url": "http://x.y:8080/z",
+     "k": "",
+     "": "sin clave"
+    },
+    ""
+   ]
+  },
+  {
+   "text": "---\nk: v1\nk: v2\nMayus: x\nwi: 123456\n---\n",
+   "ok": [
+    {
+     "k": "v2",
+     "Mayus": "x",
+     "wi": "123456"
+    },
+    ""
+   ]
+  },
+  {
+   "text": "---\nestado: qa\n---",
+   "ok": [
+    {
+     "estado": "qa"
+    },
+    ""
+   ]
+  },
+  {
+   "text": "﻿---\nestado: qa\n---\n",
+   "ok": [
+    {},
+    "﻿---\nestado: qa\n---\n"
+   ]
+  },
+  {
+   "text": "---\nk: v\n---\n---\nsegundo: bloque\n---\n",
+   "ok": [
+    {
+     "k": "v"
+    },
+    "---\nsegundo: bloque\n---\n"
+   ]
+  }
+ ],
+ "join": [
+  {
+   "meta": {},
+   "body": "# Solo cuerpo\n",
+   "ok": "# Solo cuerpo\n"
+  },
+  {
+   "meta": {
+    "estado": "qa"
+   },
+   "body": "# T\n",
+   "ok": "---\nestado: qa\n---\n# T\n"
+  },
+  {
+   "meta": {
+    "estado": "",
+    "tipo": null,
+    "ambientes": [],
+    "notas": "x"
+   },
+   "body": "cuerpo",
+   "ok": "---\nnotas: x\n---\ncuerpo"
+  },
+  {
+   "meta": {
+    "notas": "con: dos puntos",
+    "otra": "con #",
+    "c": "con [corchete]",
+    "q": "con \"comillas\"",
+    "s": "con 'simple'"
+   },
+   "body": "",
+   "ok": "---\nnotas: \"con: dos puntos\"\notra: \"con #\"\nc: \"con [corchete]\"\nq: \"con 'comillas'\"\ns: \"con 'simple'\"\n---\n"
+  },
+  {
+   "meta": {
+    "notas": "multi\nlínea\r\nacá  "
+   },
+   "body": "",
+   "ok": "---\nnotas: multi línea  acá\n---\n"
+  },
+  {
+   "meta": {
+    "ambientes": [
+     "dev",
+     "qa"
+    ],
+    "comas": [
+     "a,b",
+     "c"
+    ]
+   },
+   "body": "",
+   "ok": "---\nambientes: [dev, qa]\ncomas: [a b, c]\n---\n"
+  },
+  {
+   "meta": {
+    "horas": 12.5,
+    "n": 3,
+    "b": true
+   },
+   "body": "",
+   "ok": "---\nhoras: 12.5\nn: 3\nb: True\n---\n"
+  },
+  {
+   "meta": {
+    "wi": [
+     "123456",
+     "654321"
+    ]
+   },
+   "body": "\n# Cuerpo con línea vacía\n",
+   "ok": "---\nwi: [123456, 654321]\n---\n\n# Cuerpo con línea vacía\n"
+  },
+  {
+   "meta": {
+    "k": "  espacios  "
+   },
+   "body": "",
+   "ok": "---\nk: espacios\n---\n"
+  },
+  {
+   "meta": {
+    "vacio_tras_strip": "   "
+   },
+   "body": "",
+   "ok": "---\nvacio_tras_strip: \n---\n"
+  }
+ ],
+ "roundtrip": [
+  {
+   "text": "",
+   "result": ""
+  },
+  {
+   "text": "# Sin frontmatter\n",
+   "result": "# Sin frontmatter\n"
+  },
+  {
+   "text": "---\nestado: qa\n---\n# T\n",
+   "result": "---\nestado: qa\n---\n# T\n"
+  },
+  {
+   "text": "---\nestado: qa\n---\n\n\n# Líneas vacías antes del cuerpo\n",
+   "result": "---\nestado: qa\n---\n# Líneas vacías antes del cuerpo\n"
+  },
+  {
+   "text": "---\r\nestado: qa\r\n---\r\n\r\n# CRLF\r\n",
+   "result": "---\nestado: qa\n---\n\r\n# CRLF\r\n"
+  },
+  {
+   "text": "---\nsin cierre\n# T\n",
+   "result": "---\nsin cierre\n# T\n"
+  },
+  {
+   "text": "---\n---\n# Bloque vacío\n",
+   "result": "# Bloque vacío\n"
+  },
+  {
+   "text": "  ---  \nestado:  en-curso  \n  ---  \ncuerpo",
+   "result": "---\nestado: en-curso\n---\ncuerpo"
+  },
+  {
+   "text": "---\nambientes: [dev, qa , prod]\nvacia: []\nuno: [ dev ]\ncomas: [a,,b, ]\n---\n",
+   "result": "---\nambientes: [dev, qa, prod]\nuno: [dev]\ncomas: [a, b]\n---\n"
+  },
+  {
+   "text": "---\nnotas: \"con: dos puntos\"\ncita: 'simple'\nmal: \"abre\nraro: \"\n---\n",
+   "result": "---\nnotas: \"con: dos puntos\"\ncita: simple\nmal: \"'abre\"\nraro: \"'\"\n---\n"
+  },
+  {
+   "text": "---\nurl: http://x.y:8080/z\nk:\n: sin clave\nsin dos puntos\n# comentario: x\n  # otro: y\n---\n",
+   "result": "---\nurl: \"http://x.y:8080/z\"\n: sin clave\n---\n"
+  },
+  {
+   "text": "---\nk: v1\nk: v2\nMayus: x\nwi: 123456\n---\n",
+   "result": "---\nk: v2\nMayus: x\nwi: 123456\n---\n"
+  },
+  {
+   "text": "---\nestado: qa\n---",
+   "result": "---\nestado: qa\n---\n"
+  },
+  {
+   "text": "﻿---\nestado: qa\n---\n",
+   "result": "﻿---\nestado: qa\n---\n"
+  },
+  {
+   "text": "---\nk: v\n---\n---\nsegundo: bloque\n---\n",
+   "result": "---\nk: v\n---\n---\nsegundo: bloque\n---\n"
+  }
+ ],
+ "read_text": [
+  {
+   "name": "utf8",
+   "bytes_hex": "c3b1616e64c3ba",
+   "text": "ñandú"
+  },
+  {
+   "name": "utf8_bom",
+   "bytes_hex": "efbbbfc3b1616e64c3ba",
+   "text": "ñandú"
+  },
+  {
+   "name": "cp1252",
+   "bytes_hex": "f1616e64fa2080",
+   "text": "ñandú €"
+  },
+  {
+   "name": "invalid_both",
+   "bytes_hex": "818d8f909d",
+   "text": "�����"
+  },
+  {
+   "name": "mixed",
+   "bytes_hex": "c3b1f1",
+   "text": "Ã±ñ"
+  },
+  {
+   "name": "empty",
+   "bytes_hex": "",
+   "text": ""
+  }
+ ]
+}

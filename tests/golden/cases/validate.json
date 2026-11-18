@@ -1,0 +1,463 @@
+[
+ {
+  "fields": {
+   "estado": "qa"
+  },
+  "ok": {
+   "estado": "qa"
+  }
+ },
+ {
+  "fields": {
+   "estado": "QA"
+  },
+  "error": "ValueError",
+  "message": "estado inválido: 'QA'. Válidos: pendiente, plan, en-curso, diag, codeado, qa, prod, descartado, desconocido"
+ },
+ {
+  "fields": {
+   "estado": "inventado"
+  },
+  "error": "ValueError",
+  "message": "estado inválido: 'inventado'. Válidos: pendiente, plan, en-curso, diag, codeado, qa, prod, descartado, desconocido"
+ },
+ {
+  "fields": {
+   "estado": ""
+  },
+  "ok": {
+   "estado": ""
+  }
+ },
+ {
+  "fields": {
+   "estado": null
+  },
+  "ok": {}
+ },
+ {
+  "fields": {
+   "tipo": "bug"
+  },
+  "ok": {
+   "tipo": "bug"
+  }
+ },
+ {
+  "fields": {
+   "tipo": "epic"
+  },
+  "error": "ValueError",
+  "message": "tipo inválido: 'epic'. Válidos: bug, us, task, fix"
+ },
+ {
+  "fields": {
+   "ambientes": [
+    "prod",
+    "dev"
+   ]
+  },
+  "ok": {
+   "ambientes": [
+    "dev",
+    "prod"
+   ]
+  }
+ },
+ {
+  "fields": {
+   "ambientes": [
+    "dev",
+    "dev"
+   ]
+  },
+  "ok": {
+   "ambientes": [
+    "dev"
+   ]
+  }
+ },
+ {
+  "fields": {
+   "ambientes": "dev"
+  },
+  "error": "ValueError",
+  "message": "ambientes debe ser una lista con valores de: dev, qa, prod"
+ },
+ {
+  "fields": {
+   "ambientes": [
+    "uat"
+   ]
+  },
+  "error": "ValueError",
+  "message": "ambientes debe ser una lista con valores de: dev, qa, prod"
+ },
+ {
+  "fields": {
+   "ambientes": []
+  },
+  "ok": {
+   "ambientes": ""
+  }
+ },
+ {
+  "fields": {
+   "wi": "123456"
+  },
+  "ok": {
+   "wi": "123456"
+  }
+ },
+ {
+  "fields": {
+   "wi": "#123456"
+  },
+  "ok": {
+   "wi": "123456"
+  }
+ },
+ {
+  "fields": {
+   "wi": "123456, 654321"
+  },
+  "ok": {
+   "wi": [
+    "123456",
+    "654321"
+   ]
+  }
+ },
+ {
+  "fields": {
+   "wi": "12 34567"
+  },
+  "error": "ValueError",
+  "message": "wi debe ser uno o más números de work item"
+ },
+ {
+  "fields": {
+   "wi": [
+    "123456",
+    "#7654321"
+   ]
+  },
+  "ok": {
+   "wi": [
+    "123456",
+    "7654321"
+   ]
+  }
+ },
+ {
+  "fields": {
+   "wi": "123"
+  },
+  "error": "ValueError",
+  "message": "wi debe ser uno o más números de work item"
+ },
+ {
+  "fields": {
+   "wi": "12345678"
+  },
+  "error": "ValueError",
+  "message": "wi debe ser uno o más números de work item"
+ },
+ {
+  "fields": {
+   "wi": "abc"
+  },
+  "error": "ValueError",
+  "message": "wi debe ser uno o más números de work item"
+ },
+ {
+  "fields": {
+   "wi": " , "
+  },
+  "error": "ValueError",
+  "message": "wi debe ser uno o más números de work item"
+ },
+ {
+  "fields": {
+   "pactada": "2026-11-25"
+  },
+  "ok": {
+   "pactada": "2026-11-25"
+  }
+ },
+ {
+  "fields": {
+   "pactada": "2026-11-25T10:00:00"
+  },
+  "ok": {
+   "pactada": "2026-11-25"
+  }
+ },
+ {
+  "fields": {
+   "pactada": " 2026-02-30"
+  },
+  "error": "ValueError",
+  "message": "pactada debe ser una fecha AAAA-MM-DD: '2026-02-30'"
+ },
+ {
+  "fields": {
+   "pactada": "1989-01-01"
+  },
+  "error": "ValueError",
+  "message": "pactada debe ser una fecha AAAA-MM-DD: '1989-01-01'"
+ },
+ {
+  "fields": {
+   "pactada": "2101-01-01"
+  },
+  "error": "ValueError",
+  "message": "pactada debe ser una fecha AAAA-MM-DD: '2101-01-01'"
+ },
+ {
+  "fields": {
+   "pactada": "25/11/2026"
+  },
+  "error": "ValueError",
+  "message": "pactada debe ser una fecha AAAA-MM-DD: '25/11/2026'"
+ },
+ {
+  "fields": {
+   "periodo": "2026-11"
+  },
+  "ok": {
+   "periodo": "2026-11"
+  }
+ },
+ {
+  "fields": {
+   "periodo": "2026-13"
+  },
+  "error": "ValueError",
+  "message": "periodo debe ser AAAA-MM (el mes en que empieza, el 20): '2026-13'"
+ },
+ {
+  "fields": {
+   "periodo": "2026-00"
+  },
+  "error": "ValueError",
+  "message": "periodo debe ser AAAA-MM (el mes en que empieza, el 20): '2026-00'"
+ },
+ {
+  "fields": {
+   "periodo": "2026-1"
+  },
+  "error": "ValueError",
+  "message": "periodo debe ser AAAA-MM (el mes en que empieza, el 20): '2026-1'"
+ },
+ {
+  "fields": {
+   "periodo": " 2026-01 "
+  },
+  "ok": {
+   "periodo": "2026-01"
+  }
+ },
+ {
+  "fields": {
+   "horas": "12"
+  },
+  "ok": {
+   "horas": "12"
+  }
+ },
+ {
+  "fields": {
+   "horas": "12,5"
+  },
+  "ok": {
+   "horas": "12.5"
+  }
+ },
+ {
+  "fields": {
+   "horas": "12.50"
+  },
+  "ok": {
+   "horas": "12.5"
+  }
+ },
+ {
+  "fields": {
+   "horas": 8
+  },
+  "ok": {
+   "horas": "8"
+  }
+ },
+ {
+  "fields": {
+   "horas": 0.1
+  },
+  "ok": {
+   "horas": "0.1"
+  }
+ },
+ {
+  "fields": {
+   "horas": "-1"
+  },
+  "error": "ValueError",
+  "message": "horas debe ser un número entre 0 y 10000: '-1'"
+ },
+ {
+  "fields": {
+   "horas": "10001"
+  },
+  "error": "ValueError",
+  "message": "horas debe ser un número entre 0 y 10000: '10001'"
+ },
+ {
+  "fields": {
+   "horas": "10000"
+  },
+  "ok": {
+   "horas": "10000"
+  }
+ },
+ {
+  "fields": {
+   "horas": "x"
+  },
+  "error": "ValueError",
+  "message": "horas debe ser un número entre 0 y 10000: 'x'"
+ },
+ {
+  "fields": {
+   "horas": "1e3"
+  },
+  "ok": {
+   "horas": "1000"
+  }
+ },
+ {
+  "fields": {
+   "horas": "nan"
+  },
+  "error": "ValueError",
+  "message": "horas debe ser un número entre 0 y 10000: 'nan'"
+ },
+ {
+  "fields": {
+   "horas": "inf"
+  },
+  "error": "ValueError",
+  "message": "horas debe ser un número entre 0 y 10000: 'inf'"
+ },
+ {
+  "fields": {
+   "notas": "una línea"
+  },
+  "ok": {
+   "notas": "una línea"
+  }
+ },
+ {
+  "fields": {
+   "notas": "dos\nlíneas"
+  },
+  "error": "ValueError",
+  "message": "notas debe ser una sola línea"
+ },
+ {
+  "fields": {
+   "notas": "  recorta  "
+  },
+  "ok": {
+   "notas": "recorta"
+  }
+ },
+ {
+  "fields": {
+   "notas": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  },
+  "ok": {
+   "notas": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  }
+ },
+ {
+  "fields": {
+   "notas": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  },
+  "error": "ValueError",
+  "message": "notas supera 300 caracteres"
+ },
+ {
+  "fields": {
+   "rama": "feature/x"
+  },
+  "ok": {
+   "rama": "feature/x"
+  }
+ },
+ {
+  "fields": {
+   "rama": "con espacio"
+  },
+  "error": "ValueError",
+  "message": "rama no puede tener espacios"
+ },
+ {
+  "fields": {
+   "release_manual": "123"
+  },
+  "ok": {
+   "release_manual": "123"
+  }
+ },
+ {
+  "fields": {
+   "release_manual": "a b"
+  },
+  "error": "ValueError",
+  "message": "release_manual no puede tener espacios"
+ },
+ {
+  "fields": {
+   "titulo": "T: con dos puntos"
+  },
+  "ok": {
+   "titulo": "T: con dos puntos"
+  }
+ },
+ {
+  "fields": {
+   "otro": "x"
+  },
+  "error": "ValueError",
+  "message": "Campo no editable: otro"
+ },
+ {
+  "fields": {
+   "estado": "qa",
+   "otro": "x"
+  },
+  "error": "ValueError",
+  "message": "Campo no editable: otro"
+ },
+ {
+  "fields": {
+   "estado": "prod",
+   "tipo": "us",
+   "ambientes": [
+    "qa"
+   ],
+   "notas": "n",
+   "horas": "3"
+  },
+  "ok": {
+   "estado": "prod",
+   "tipo": "us",
+   "ambientes": [
+    "qa"
+   ],
+   "notas": "n",
+   "horas": "3"
+  }
+ }
+]
