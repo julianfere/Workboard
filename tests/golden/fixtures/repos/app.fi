@@ -1,0 +1,331 @@
+blob
+mark :1
+data 6
+# app
+
+blob
+mark :2
+data 3
+v1
+
+blob
+mark :3
+data 4
+a=1
+
+reset refs/heads/main
+commit refs/heads/main
+mark :4
+author Ana <ana@example.com> 1790018000 +0000
+committer Ana <ana@example.com> 1790018000 +0000
+data 8
+initial
+M 100644 :1 README.md
+M 100644 :2 src/app.txt
+M 100644 :3 src/config.txt
+
+blob
+mark :5
+data 5
+form
+
+commit refs/remotes/origin/Feature/111111-login
+mark :6
+author Ana <ana@example.com> 1790061200 +0000
+committer Ana <ana@example.com> 1790061200 +0000
+data 25
+111111 login: formulario
+from :4
+M 100644 :5 src/login.txt
+
+blob
+mark :7
+data 4
+api
+
+commit refs/remotes/origin/Feature/111111-login
+mark :8
+author Ana <ana@example.com> 1790072000 +0000
+committer Ana <ana@example.com> 1790072000 +0000
+data 18
+111111 login: api
+from :6
+M 100644 :7 src/login_api.txt
+
+blob
+mark :9
+data 6
+costo
+
+commit refs/heads/Bug/555555-envio
+mark :10
+author Beto <beto@example.com> 1790093600 +0000
+committer Beto <beto@example.com> 1790093600 +0000
+data 20
+555555 envio: costo
+from :8
+M 100644 :9 src/envio.txt
+
+blob
+mark :11
+data 6
+unico
+
+commit refs/heads/promote/cp-qa-111111-20260101-1200
+mark :12
+author Ana <ana@example.com> 1790122400 +0000
+committer Ana <ana@example.com> 1790147600 +0000
+data 96
+222222 pagos: no duplicar
+
+(cherry picked from commit 7238ab41ec5941434fe327b4f356ee50935b46c4)
+from :4
+M 100644 :11 src/pagos.txt
+
+blob
+mark :13
+data 13
+base
+filtros
+
+commit refs/heads/promote/cp-qa-111111-20260101-1200
+mark :14
+author Ana <ana@example.com> 1790273600 +0000
+committer Ana <ana@example.com> 1790273600 +0000
+data 25
+666666 reportes (squash)
+from :12
+M 100644 :13 src/reportes.txt
+
+commit refs/heads/Feature/999999-ff
+mark :15
+author Ana <ana@example.com> 1790111600 +0000
+committer Ana <ana@example.com> 1790111600 +0000
+data 31
+Merged PR 900001: 111111 login
+from :4
+merge :8
+M 100644 :5 src/login.txt
+M 100644 :7 src/login_api.txt
+
+commit refs/heads/Feature/222222-pagos
+mark :16
+author Ana <ana@example.com> 1790122400 +0000
+committer Ana <ana@example.com> 1790122400 +0000
+data 26
+222222 pagos: no duplicar
+from :15
+M 100644 :11 src/pagos.txt
+
+commit refs/heads/Feature/999999-ff
+mark :17
+author Ana <ana@example.com> 1790140400 +0000
+committer Ana <ana@example.com> 1790140400 +0000
+data 31
+Merged PR 900002: 222222 pagos
+from :15
+merge :16
+M 100644 :11 src/pagos.txt
+
+blob
+mark :18
+data 4
+a=2
+
+commit refs/heads/Feature/999999-ff
+mark :19
+author Caro <caro@example.com> 1790158400 +0000
+committer Caro <caro@example.com> 1790158400 +0000
+data 24
+333333 ajuste de config
+from :17
+M 100644 :18 src/config.txt
+
+blob
+mark :20
+data 7
+modelo
+
+commit refs/heads/Feature/444444-carrito
+mark :21
+author Ana <ana@example.com> 1790172800 +0000
+committer Ana <ana@example.com> 1790172800 +0000
+data 23
+444444 carrito: modelo
+from :19
+M 100644 :20 src/carrito.txt
+
+blob
+mark :22
+data 2
+x
+
+commit refs/heads/Feature/999999-ff
+mark :23
+author Caro <caro@example.com> 1790187200 +0000
+committer Caro <caro@example.com> 1790187200 +0000
+data 28
+otro trabajo en development
+from :19
+M 100644 :22 src/otro.txt
+
+commit refs/heads/Feature/444444-carrito
+mark :24
+author Ana <ana@example.com> 1790198000 +0000
+committer Ana <ana@example.com> 1790198000 +0000
+data 55
+Merge branch 'development' into Feature/444444-carrito
+from :21
+merge :23
+M 100644 :22 src/otro.txt
+
+blob
+mark :25
+data 6
+vista
+
+commit refs/heads/Feature/444444-carrito
+mark :26
+author Ana <ana@example.com> 1790205200 +0000
+committer Ana <ana@example.com> 1790205200 +0000
+data 22
+444444 carrito: vista
+from :24
+M 100644 :25 src/carrito_vista.txt
+
+commit refs/heads/Feature/999999-ff
+mark :27
+author Ana <ana@example.com> 1790223200 +0000
+committer Ana <ana@example.com> 1790223200 +0000
+data 33
+Merged PR 900004: 444444 carrito
+from :23
+merge :26
+M 100644 :20 src/carrito.txt
+M 100644 :25 src/carrito_vista.txt
+
+blob
+mark :28
+data 5
+base
+
+commit refs/heads/Feature/666666-reportes
+mark :29
+author Ana <ana@example.com> 1790234000 +0000
+committer Ana <ana@example.com> 1790234000 +0000
+data 22
+666666 reportes: base
+from :27
+M 100644 :28 src/reportes.txt
+
+commit refs/heads/Feature/666666-reportes
+mark :30
+author Ana <ana@example.com> 1790244800 +0000
+committer Ana <ana@example.com> 1790244800 +0000
+data 25
+666666 reportes: filtros
+from :29
+M 100644 :13 src/reportes.txt
+
+commit refs/heads/Feature/999999-ff
+mark :31
+author Ana <ana@example.com> 1790262800 +0000
+committer Ana <ana@example.com> 1790262800 +0000
+data 34
+Merged PR 900006: 666666 reportes
+from :27
+merge :30
+M 100644 :13 src/reportes.txt
+
+blob
+mark :32
+data 7
+indice
+
+commit refs/heads/Feature/777777-busqueda
+mark :33
+author Ana <ana@example.com> 1790288000 +0000
+committer Ana <ana@example.com> 1790288000 +0000
+data 24
+777777 busqueda: indice
+from :31
+M 100644 :32 src/busqueda.txt
+
+blob
+mark :34
+data 6
+ajeno
+
+commit refs/heads/Feature/777777-busqueda
+mark :35
+author Dani <dani@example.com> 1790298800 +0000
+committer Dani <dani@example.com> 1790298800 +0000
+data 21
+888888 arreglo ajeno
+from :33
+M 100644 :34 src/ajeno.txt
+
+blob
+mark :36
+data 3
+ff
+
+commit refs/heads/Feature/999999-ff
+mark :37
+author Ana <ana@example.com> 1790320400 +0000
+committer Ana <ana@example.com> 1790320400 +0000
+data 10
+999999 ff
+from :31
+M 100644 :36 src/ff.txt
+
+blob
+mark :38
+data 5
+test
+
+commit refs/heads/Feature/111111-login
+mark :39
+author Ana <ana@example.com> 1790374400 +0000
+committer Ana <ana@example.com> 1790374400 +0000
+data 34
+111111 login: tests (sin pushear)
+from :8
+M 100644 :38 src/login_test.txt
+
+reset refs/remotes/origin/qa
+from :14
+
+reset refs/remotes/origin/promote/cp-qa-111111-20260101-1200
+from :14
+
+reset refs/remotes/origin/main
+from :4
+
+reset refs/remotes/origin/development
+from :37
+
+reset refs/remotes/origin/Feature/999999-ff
+from :37
+
+reset refs/remotes/origin/Feature/777777-busqueda
+from :35
+
+reset refs/remotes/origin/Feature/666666-reportes
+from :30
+
+reset refs/remotes/origin/Feature/444444-carrito
+from :26
+
+reset refs/remotes/origin/Feature/222222-pagos
+from :16
+
+reset refs/remotes/origin/Bug/555555-envio
+from :10
+
+reset refs/heads/qa
+from :14
+
+reset refs/heads/development
+from :37
+

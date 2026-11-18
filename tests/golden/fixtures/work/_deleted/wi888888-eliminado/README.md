@@ -1,0 +1,4 @@
+---
+estado: qa
+---
+# Eliminado
