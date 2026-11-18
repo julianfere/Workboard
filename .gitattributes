@@ -1,0 +1,6 @@
+* text=auto eol=lf
+
+# Golden files: se comparan byte a byte (hay README con CRLF, BOM y cp1252 a propósito).
+tests/golden/** -text
+*.ico binary
+*.png binary
