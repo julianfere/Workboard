@@ -31,6 +31,8 @@ pub struct Settings {
     pub recents: Vec<String>,
     /// Carpeta de notas (`None` = `<config>/notes`).
     pub notes_folder: Option<String>,
+    /// Agentes de las sesiones: el de por defecto, el comando propio y prefijos de planificación.
+    pub agents: wb_sessions::AgentSettings,
 }
 
 impl Default for Settings {
@@ -42,6 +44,7 @@ impl Default for Settings {
             root: None,
             recents: vec![],
             notes_folder: None,
+            agents: Default::default(),
         }
     }
 }

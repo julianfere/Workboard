@@ -269,5 +269,9 @@
   "session.rec.idle": "{hours} h since the last activity and {why}: ask for a handoff and continue in a new one.",
   "session.rec.inProgress": "You are in the middle of something and {why}: compact to keep going without losing the thread.",
   "session.rec.why.code": "there is code the README doesn't reflect yet",
-  "session.rec.why.chat": "what was done is only in the conversation"
+  "session.rec.why.chat": "what was done is only in the conversation",
+  "agent.plan.withId": "Plan work item {id}: {title}. The README in the folder {folder} has its description and acceptance criteria. Investigate the code, write the plan in the ## {heading} section of that README and load the tasks under ## {tasks} with the workboard MCP.",
+  "agent.plan.noId": "Plan Â«{title}Â» (it has no work item id). The README in the folder {folder} has what is known about it. Investigate the code, write the plan in the ## {heading} section of that README and load the tasks under ## {tasks} with the workboard MCP.",
+  "session.planName": "Plan {what}",
+  "error.noPlanState": "The workflow has no planned state"
 }

@@ -4275,12 +4275,14 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "indexmap 2.14.2",
+ "regex",
  "serde",
  "serde_json",
  "tiny_http",
  "wb-core",
  "wb-i18n",
  "wb-platform",
+ "wb-sessions",
 ]
 
 [[package]]
@@ -4774,6 +4776,7 @@ dependencies = [
  "tauri-plugin-dialog",
  "wb-api",
  "wb-platform",
+ "wb-sessions",
 ]
 
 [[package]]

@@ -13,12 +13,14 @@ path = "src/bin/devserver.rs"
 [dependencies]
 chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
 indexmap = { version = "2", features = ["serde"] }
+regex.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 tiny_http = "0.12"
 wb-core.workspace = true
 wb-i18n.workspace = true
 wb-platform.workspace = true
+wb-sessions.workspace = true
 
 [lints]
 workspace = true

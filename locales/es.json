@@ -269,5 +269,9 @@
   "session.rec.idle": "Pasaron {hours} h desde la Ãºltima actividad y {why}: pedÃ­ el traspaso y seguÃ­ en una nueva.",
   "session.rec.inProgress": "EstÃ¡s en medio de algo y {why}: compactÃ¡ para seguir sin perder el hilo.",
   "session.rec.why.code": "hay cÃ³digo que el README todavÃ­a no refleja",
-  "session.rec.why.chat": "lo trabajado solo estÃ¡ en la conversaciÃ³n"
+  "session.rec.why.chat": "lo trabajado solo estÃ¡ en la conversaciÃ³n",
+  "agent.plan.withId": "PlanificÃ¡ el WI {id}: {title}. El README de la carpeta {folder} tiene la descripciÃ³n y los criterios. InvestigÃ¡ el cÃ³digo, dejÃ¡ el plan en la secciÃ³n ## {heading} de ese README y cargÃ¡ las tareas en ## {tasks} con el MCP workboard.",
+  "agent.plan.noId": "PlanificÃ¡ el arreglo Â«{title}Â» (no tiene work item). El README de la carpeta {folder} tiene lo que se sabe. InvestigÃ¡ el cÃ³digo, dejÃ¡ el plan en la secciÃ³n ## {heading} de ese README y cargÃ¡ las tareas en ## {tasks} con el MCP workboard.",
+  "session.planName": "Planear {what}",
+  "error.noPlanState": "El flujo no tiene un estado de planificaciÃ³n"
 }

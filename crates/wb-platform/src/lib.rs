@@ -21,10 +21,11 @@ pub fn config_dir() -> PathBuf {
     dirs::config_dir().or_else(dirs::home_dir).unwrap_or_else(|| PathBuf::from(".")).join(APP_DIR_NAME)
 }
 
-/// Comando sin ventana de consola en Windows (las apps de escritorio no deben hacer parpadear una).
+/// Comando sin ventana de consola en Windows (las apps de escritorio no deben hacer parpadear una) y sin
+/// salida (`taskkill` avisa cada proceso que termina).
 fn command(program: &str) -> Command {
-    #[allow(unused_mut)]
     let mut cmd = Command::new(program);
+    cmd.stdout(std::process::Stdio::null()).stderr(std::process::Stdio::null());
     #[cfg(windows)]
     {
         use std::os::windows::process::CommandExt;

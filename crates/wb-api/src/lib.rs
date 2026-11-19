@@ -3,10 +3,11 @@
 //! Todo se lee en cada llamada: la carpeta de trabajos puede cambiar por fuera (agentes, el usuario).
 
 pub mod error;
+mod sessions;
 pub mod settings;
 
 use std::path::{Path, PathBuf};
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex, OnceLock};
 
 use indexmap::IndexMap;
 use serde::Serialize;
@@ -20,11 +21,15 @@ use wb_core::write::Change;
 use wb_core::{StateCategory, Workflow, Workspace};
 
 pub use error::{ApiError, ApiResult};
+pub use sessions::{HOOK_BIN_ENV, MCP_BIN_ENV};
 use settings::Settings;
 
 pub struct Api {
     config_dir: PathBuf,
     settings: Mutex<Settings>,
+    sessions: OnceLock<Arc<wb_sessions::SessionManager>>,
+    /// Ejecutables del MCP y del hook, si no son los que viajan junto a la app.
+    session_bins: Mutex<Option<(PathBuf, PathBuf)>>,
 }
 
 fn to_json<T: Serialize>(v: T) -> ApiResult<Json> {
@@ -32,7 +37,7 @@ fn to_json<T: Serialize>(v: T) -> ApiResult<Json> {
 }
 
 /// Argumentos de un comando (`{nombre: valor}`).
-struct Args<'a>(&'a Json);
+pub(crate) struct Args<'a>(&'a Json);
 
 impl Args<'_> {
     fn get(&self, k: &str) -> &Json {
@@ -62,7 +67,12 @@ impl Api {
         if Workflow::preset(&s.workflow).is_err() {
             s.workflow = Settings::default().workflow;
         }
-        Self { config_dir, settings: Mutex::new(s) }
+        Self {
+            config_dir,
+            settings: Mutex::new(s),
+            sessions: OnceLock::new(),
+            session_bins: Mutex::new(None),
+        }
     }
 
     fn settings(&self) -> Settings {
@@ -267,7 +277,9 @@ impl Api {
                     &today,
                 )?)
             }
-            _ => Err(ApiError::new("error.unknownCommand", &[("name", cmd)])),
+            _ => self
+                .session_command(cmd, &a)
+                .unwrap_or_else(|| Err(ApiError::new("error.unknownCommand", &[("name", cmd)]))),
         }
     }
 
@@ -277,6 +289,7 @@ impl Api {
         let new = f(&ws)?;
         if new != old {
             self.runs().move_prefix(ws.root(), old, &new)?;
+            self.sessions_moved(&ws, old, &new);
         }
         Ok(json!(new))
     }
@@ -322,6 +335,7 @@ impl Api {
         for m in members.as_array().into_iter().flatten().filter_map(Json::as_str) {
             let new = ws.move_folder(m, &name)?;
             self.runs().move_prefix(ws.root(), m, &new)?;
+            self.sessions_moved(&ws, m, &new);
             moved.push(new);
         }
         Ok(json!({"group": name, "members": moved}))
@@ -386,5 +400,53 @@ mod tests {
 
         assert_eq!(api.dispatch("nope", &json!({})).unwrap_err().code, "error.unknownCommand");
         std::fs::remove_dir_all(&base).unwrap();
+    }
+
+    #[test]
+    fn sessions_plan_and_agents() {
+        let (root, base) = fixture_copy("sessions");
+        // Este agente no lanza el MCP ni el hook: cualquier archivo existente sirve de binario.
+        let exe = std::env::current_exe().unwrap();
+        let api = Api::new(base.join("cfg"));
+        api.set_session_bins(exe.clone(), exe);
+        api.dispatch("set_settings", &json!({"settings": {"workflow": "classic-es", "lang": "es"}})).unwrap();
+        api.dispatch("open_root", &json!({"path": root})).unwrap();
+        let (cmd, args) =
+            if cfg!(windows) { ("cmd", "/c echo {session_id}") } else { ("sh", "-c \"echo {session_id}\"") };
+        let info = api
+            .dispatch("set_agents", &json!({"default": "custom", "custom": {"command": cmd, "args": args}, "planPrefix": {"claude": "/go ", "nope": "x"}}))
+            .unwrap();
+        assert_eq!(info["default"], "custom");
+        assert_eq!(info["planPrefix"], json!({"claude": "/go "}));
+        assert_eq!(
+            api.dispatch("set_agents", &json!({"default": "zzz"})).unwrap_err().code,
+            "session.agent.unknown"
+        );
+
+        let out = api
+            .dispatch("plan_item", &json!({"name": "wi222222-333333-pagos", "cols": 80, "rows": 24}))
+            .unwrap();
+        assert_eq!(out["session"]["mode"], "plan");
+        assert_eq!(out["session"]["plan"], true);
+        assert_eq!(out["session"]["name"], "Planear 222222");
+        let readme = std::fs::read_to_string(root.join("wi222222-333333-pagos/README.md")).unwrap();
+        assert!(readme.contains("estado: plan") && readme.contains("## Plan"), "{readme}");
+
+        let list = api.dispatch("sessions", &json!({})).unwrap();
+        assert_eq!(list["sessions"].as_array().unwrap().len(), 1);
+        assert!(list["rev"].as_u64().unwrap() > 0);
+        let sid = list["sessions"][0]["id"].as_str().unwrap().to_string();
+
+        // Mover la carpeta a un grupo: la sesión la sigue.
+        api.dispatch("create_group", &json!({"title": "Pagos", "members": ["wi222222-333333-pagos"]}))
+            .unwrap();
+        let list = api.dispatch("sessions", &json!({})).unwrap();
+        assert_eq!(list["sessions"][0]["items"][0], "grp-pagos/wi222222-333333-pagos");
+        assert_eq!(
+            api.dispatch("session_prompt", &json!({"id": sid, "kind": "x"})).unwrap_err().code,
+            "session.unknownPrompt"
+        );
+        api.shutdown();
+        std::fs::remove_dir_all(&base).ok();
     }
 }
