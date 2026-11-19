@@ -1,0 +1,21 @@
+[package]
+name = "wb-plugins"
+description = "Workboard plugins: external executables with a manifest that speak JSON-RPC over stdio"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+regex.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+wb-core.workspace = true
+wb-platform.workspace = true
+
+[lints]
+workspace = true
+
+[[test]]
+name = "rpc"
+harness = false

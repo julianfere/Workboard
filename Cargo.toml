@@ -14,6 +14,7 @@ wb-core = { path = "crates/wb-core" }
 wb-git = { path = "crates/wb-git" }
 wb-i18n = { path = "crates/wb-i18n" }
 wb-platform = { path = "crates/wb-platform" }
+wb-plugins = { path = "crates/wb-plugins" }
 wb-sessions = { path = "crates/wb-sessions" }
 wb-tracker = { path = "crates/wb-tracker" }
 regex = "1"
