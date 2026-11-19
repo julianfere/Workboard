@@ -1,0 +1,61 @@
+{
+  "id": "classic-es",
+  "name": { "en": "Classic (Spanish, Workboard v1)", "es": "Clásico (Workboard v1)" },
+  "states": [
+    { "id": "pendiente", "category": "backlog", "labels": { "en": "Pending", "es": "Pendiente" } },
+    { "id": "plan", "category": "planned", "labels": { "en": "Plan", "es": "Plan" } },
+    { "id": "en-curso", "category": "active", "labels": { "en": "In progress", "es": "En curso" } },
+    { "id": "diag", "category": "active", "labels": { "en": "Diagnosis", "es": "Diagnóstico" } },
+    { "id": "codeado", "category": "review", "labels": { "en": "Coded", "es": "Codeado" } },
+    { "id": "qa", "category": "review", "labels": { "en": "In QA", "es": "En QA" } },
+    { "id": "prod", "category": "done", "labels": { "en": "In PROD", "es": "En PROD" } },
+    { "id": "descartado", "category": "cancelled", "labels": { "en": "Discarded", "es": "Descartado" } },
+    { "id": "desconocido", "category": "unknown", "labels": { "en": "Unknown", "es": "Desconocido" } }
+  ],
+  "types": [
+    { "id": "bug", "labels": { "en": "Bug", "es": "Bug" } },
+    { "id": "us", "labels": { "en": "User story", "es": "User story" } },
+    { "id": "task", "labels": { "en": "Task", "es": "Task" } },
+    { "id": "fix", "labels": { "en": "Fix (no work item)", "es": "Arreglo (sin WI)" } }
+  ],
+  "environments": [
+    { "id": "dev", "labels": { "en": "DEV", "es": "DEV" } },
+    { "id": "qa", "labels": { "en": "QA", "es": "QA" } },
+    { "id": "prod", "labels": { "en": "PROD", "es": "PROD" } }
+  ],
+  "period": { "startDay": 20 },
+  "folders": {
+    "itemPattern": "(?i)^(?:wi)?(?P<id>\\d{6})(?:-(?P<id2>\\d{6}))?(?:-|$)",
+    "itemIdPattern": "^\\d{4,7}$",
+    "groupPrefix": "grp-",
+    "deletedDir": "_deleted",
+    "ignorePrefixes": ["_", "."]
+  },
+  "fields": {
+    "status": "estado",
+    "type": "tipo",
+    "environments": "ambientes",
+    "itemIds": "wi",
+    "notes": "notas",
+    "branch": "rama",
+    "title": "titulo",
+    "due": "pactada",
+    "period": "periodo",
+    "hours": "horas",
+    "extra": [{ "key": "release_manual", "noSpaces": true }]
+  },
+  "tasks": { "heading": "Pendientes", "maxLen": 300 },
+  "plan": { "heading": "Plan", "placeholder": "*(lo completa la sesión de planificación)*", "minChars": 40 },
+  "files": {
+    "kinds": ["ROLLBACK", "MIGRATION", "FIX", "SEED", "DIAG", "VERIF", "PLAN", "HANDOFF", "QA"],
+    "categories": [
+      { "id": "script", "runnable": true, "extensions": [".py", ".ps1", ".psm1", ".sh", ".bat", ".cmd", ".js", ".ts", ".cs", ".linq"], "labels": { "en": "Scripts and generators", "es": "Scripts y generadores" } },
+      { "id": "migracion", "runnable": true, "kinds": ["MIGRATION", "SEED", "ROLLBACK"], "labels": { "en": "Migrations", "es": "Migraciones" } },
+      { "id": "fix", "runnable": true, "kinds": ["FIX"], "labels": { "en": "Fixes", "es": "Fixes" } },
+      { "id": "diag", "runnable": true, "kinds": ["DIAG", "VERIF"], "labels": { "en": "Diagnostics", "es": "Diagnósticos" } },
+      { "id": "doc", "runnable": false, "kinds": ["PLAN", "HANDOFF", "QA"], "extensions": [".md", ".txt", ".docx", ".doc", ".pdf", ".drawio", ".dio", ".mmd", ".mermaid"], "labels": { "en": "Documentation", "es": "Documentación" } },
+      { "id": "sql", "runnable": true, "extensions": [".sql"], "labels": { "en": "Other SQL", "es": "Otros SQL" } }
+    ],
+    "fallbackCategory": { "id": "otro", "runnable": false, "labels": { "en": "Other", "es": "Otros" } }
+  }
+}
