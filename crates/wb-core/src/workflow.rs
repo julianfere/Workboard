@@ -107,6 +107,8 @@ pub struct FieldKeys {
     pub due: String,
     pub period: String,
     pub hours: String,
+    /// Sesiones de agentes que trabajaron el item (lista de ids; la escribe la app, no se edita a mano).
+    pub sessions: String,
     /// Campos de texto de una línea que agrega el flujo (o un plugin).
     #[serde(default)]
     pub extra: Vec<ExtraField>,

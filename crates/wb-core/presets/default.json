@@ -41,6 +41,7 @@
     "due": "due",
     "period": "period",
     "hours": "hours",
+    "sessions": "sessions",
     "extra": []
   },
   "tasks": { "heading": "Tasks", "maxLen": 300 },

@@ -22,6 +22,15 @@ impl Value {
         }
     }
 
+    /// Como lista: un texto no vacío es una lista de uno (como `_as_list` de la v1).
+    pub fn as_list(&self) -> Vec<String> {
+        match self {
+            Self::Text(s) if s.is_empty() => vec![],
+            Self::Text(s) => vec![s.clone()],
+            Self::List(l) => l.clone(),
+        }
+    }
+
     /// Lo que se considera "sin valor" al escribir (la clave no se escribe).
     pub fn is_empty(&self) -> bool {
         match self {

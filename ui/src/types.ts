@@ -34,6 +34,7 @@ export interface FieldKeys {
   due: string;
   period: string;
   hours: string;
+  sessions: string;
   extra: { key: string; noSpaces?: boolean }[];
 }
 

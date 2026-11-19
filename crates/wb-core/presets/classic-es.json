@@ -43,6 +43,7 @@
     "due": "pactada",
     "period": "periodo",
     "hours": "horas",
+    "sessions": "sesiones",
     "extra": [{ "key": "release_manual", "noSpaces": true }]
   },
   "tasks": { "heading": "Pendientes", "maxLen": 300 },
