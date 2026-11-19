@@ -7,8 +7,8 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit",
-    "bins": "cargo build -p wb-mcp -p wb-hook",
-    "bins:release": "cargo build --release -p wb-mcp -p wb-hook",
+    "bins": "node scripts/sidecars.mjs",
+    "bins:release": "node scripts/sidecars.mjs --release",
     "tauri": "tauri"
   },
   "dependencies": {

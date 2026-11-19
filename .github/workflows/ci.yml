@@ -49,6 +49,8 @@ jobs:
         with:
           components: rustfmt, clippy
       - uses: Swatinem/rust-cache@v2
+      # `externalBin` de tauri.conf.json: src-tauri no compila sin wb-mcp y wb-hook en src-tauri/binaries.
+      - run: npm run bins
       - run: cargo fmt --all --check
       - run: cargo clippy --workspace --all-targets -- -D warnings
       - run: cargo test --workspace
