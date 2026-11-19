@@ -11,6 +11,7 @@ rust-version = "1.90"
 
 [workspace.dependencies]
 wb-core = { path = "crates/wb-core" }
+wb-git = { path = "crates/wb-git" }
 wb-i18n = { path = "crates/wb-i18n" }
 wb-platform = { path = "crates/wb-platform" }
 wb-sessions = { path = "crates/wb-sessions" }

@@ -22,3 +22,13 @@ esperada y lo explica.
   la sesión. Ver `mcp.json` → `session`, última llamada.
 - **Decisión**: corregido en el port (Fase 3). Sin `item`, `workboard_run_tool` usa el primer item de la
   sesión; el test del MCP espera ese comportamiento en vez del error de la v1.
+
+## 3. La URL web del remote solo se arma para Azure DevOps
+
+- **Dónde**: `gitpanel.remote_web_url`.
+- **Qué pasa**: solo reconoce remotes `https://…/_git/…` (Azure DevOps). Un remote de GitHub o GitLab da
+  `None`, así que la promoción no puede ofrecer el link para abrir el PR.
+- **Efecto**: `git.json` → `helpers.remote_web_url`, el caso `https://github.com/acme/app.git` espera `null`.
+- **Decisión**: corregido en el port (Fase 5): `wb_git::web_url` también reconoce GitHub y GitLab (https y
+  `git@host:dueño/repo`) y devuelve la forja (`forge`) para que la UI arme el link del PR de cada una. El
+  test espera `https://github.com/acme/app` en ese caso; los de Azure siguen iguales a la v1.
