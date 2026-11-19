@@ -45,6 +45,7 @@
     "extra": [{ "key": "release_manual", "noSpaces": true }]
   },
   "tasks": { "heading": "Pendientes", "maxLen": 300 },
+  "deployKeywords": ["deploy", "despleg", "promoci", "cómo correr", "como correr"],
   "plan": { "heading": "Plan", "placeholder": "*(lo completa la sesión de planificación)*", "minChars": 40 },
   "files": {
     "kinds": ["ROLLBACK", "MIGRATION", "FIX", "SEED", "DIAG", "VERIF", "PLAN", "HANDOFF", "QA"],

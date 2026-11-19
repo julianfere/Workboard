@@ -43,6 +43,7 @@
     "extra": []
   },
   "tasks": { "heading": "Tasks", "maxLen": 300 },
+  "deployKeywords": ["deploy", "release", "rollout", "how to run"],
   "plan": { "heading": "Plan", "placeholder": "*(filled in by the planning session)*", "minChars": 40 },
   "files": {
     "kinds": ["ROLLBACK", "MIGRATION", "FIX", "SEED", "DIAG", "VERIF", "PLAN", "HANDOFF", "QA"],

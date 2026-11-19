@@ -181,6 +181,9 @@ pub struct Workflow {
     pub folders: FolderRules,
     pub fields: FieldKeys,
     pub tasks: TaskRules,
+    /// Palabras (en minúsculas) que identifican la sección "cómo deployar" del README.
+    #[serde(default)]
+    pub deploy_keywords: Vec<String>,
     pub plan: PlanRules,
     pub files: FileRules,
     #[serde(skip)]

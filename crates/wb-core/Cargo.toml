@@ -7,10 +7,14 @@ license.workspace = true
 rust-version.workspace = true
 
 [dependencies]
+base64 = "0.23.1"
+chrono = { version = "0.4.45", default-features = false, features = ["clock", "std"] }
+dunce = "1.0.5"
 indexmap = { version = "2.14.2", features = ["serde"] }
 regex.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+sha1_smol = "1.0.1"
 thiserror.workspace = true
 unicode-normalization = "0.1.26"
 
@@ -18,4 +22,6 @@ unicode-normalization = "0.1.26"
 workspace = true
 
 [dev-dependencies]
+dunce = "1.0.5"
+regex.workspace = true
 wb-i18n = { path = "../wb-i18n" }
