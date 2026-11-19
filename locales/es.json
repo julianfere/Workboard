@@ -455,6 +455,8 @@
   "tracker.sync.kind.type": "tipo",
   "tracker.sync.kind.differ": "avanza",
   "tracker.sync.kind.back": "retrocede",
+  "tracker.sync.kind.git": "según git",
+  "tracker.sync.gitWhy": "ya está en {env} en {repos}",
   "tracker.sync.nothing": "No hay cambios para proponer.",
   "tracker.sync.nothingEmpty": "No hay cambios para proponer entre las carpetas sin estado.",
   "tracker.sync.apply": "Aplicar {n} cambios",

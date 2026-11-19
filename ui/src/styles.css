@@ -298,6 +298,7 @@ iframe.pdf { width: 100%; height: 75vh; border: 0; }
 .trk-kind { font-size: 11px; padding: 1px 8px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); white-space: nowrap; }
 .trk-kind.k-fill, .trk-kind.k-differ { color: var(--ok); }
 .trk-kind.k-back { color: var(--warn); }
+.trk-kind.k-git { color: var(--blue); }
 .trk-unmapped { display: grid; grid-template-columns: auto auto 1fr; gap: 6px 12px; align-items: center; }
 .trk-chip { margin-left: 6px; font-weight: 400; }
 .modal .add-row { display: flex; gap: 8px; }

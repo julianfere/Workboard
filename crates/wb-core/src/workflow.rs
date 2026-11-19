@@ -210,6 +210,10 @@ pub struct GitRules {
     /// Ramas remotas candidatas de cada ambiente para los repos detectados: la primera que exista.
     #[serde(default)]
     pub env_refs: BTreeMap<String, Vec<String>>,
+    /// Estado que le corresponde a un item cuando su trabajo ya está en ese ambiente en todos sus repos
+    /// (lo propone el sync del tracker como fila «según git»). Un ambiente sin entrada no propone nada.
+    #[serde(default)]
+    pub env_states: BTreeMap<String, String>,
 }
 
 impl Default for GitRules {
@@ -219,6 +223,7 @@ impl Default for GitRules {
             ignore_pattern: r"(?i)\b(?:merged\s+)?(?:pr|pull\s+request)\s*#?\d+".into(),
             promote_prefix: "promote/".into(),
             env_refs: BTreeMap::new(),
+            env_states: BTreeMap::new(),
         }
     }
 }
@@ -321,6 +326,14 @@ impl Workflow {
         }
         if let Some(env) = self.git.env_refs.keys().find(|k| !self.environments.iter().any(|e| &e.id == *k)) {
             return bad(format!("git.envRefs uses unknown environment {env}"));
+        }
+        for (env, state) in &self.git.env_states {
+            if !self.environments.iter().any(|e| &e.id == env) {
+                return bad(format!("git.envStates uses unknown environment {env}"));
+            }
+            if !self.states.iter().any(|s| &s.id == state) {
+                return bad(format!("git.envStates uses unknown state {state}"));
+            }
         }
         let compiled = self.compile().map_err(|e| WorkflowError::Invalid(format!("{}: {e}", self.id)))?;
         let _ = self.compiled.set(compiled);

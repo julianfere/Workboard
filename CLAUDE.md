@@ -72,7 +72,7 @@ config real.
   `tracker.rs`: comandos `tracker_*`; `<config>/trackers.json` (conexión por raíz; estados, mapeo y campos por
   proyecto) y `<config>/tracker_cache.json` (última lectura por raíz, la lee el MCP); vista previa del sync en Rust
   (completar / tipo / avanza / retrocede; retroceder = categoría menor o antes en el preset), aplicar escribe solo
-  estado y tipo. `stats.rs`: `time_report`, `stats_report`, `tool_*`, `reflect_items`, `save_export`/`reveal_export`
+  estado y tipo; la fila «según git» (`git::env_reach`) propone el estado de `Workflow.git.envStates` cuando el trabajo ya está en ese ambiente en todos los repos del item. `stats.rs`: `time_report`, `stats_report`, `tool_*`, `reflect_items`, `save_export`/`reveal_export`
   (CSV a Descargas con BOM). Los `*_command` se encadenan en el fallback de `dispatch`. Binario `wb-devserver`: la misma API por HTTP (`POST /api/<cmd>`,
   header `X-Workboard: 1`) para desarrollar la UI en el navegador contra el backend real; `--fake-tracker <archivo.json>`
   responde las llamadas al tracker sin red.
@@ -119,5 +119,5 @@ config real.
 ## Plan
 
 Fases: 0 golden ✓ · 1 spike ✓ · 2 esqueleto ✓ · 3 core + MCP ✓ · 4 UI base ✓ · 5 git ✓ ·
-6 sesiones y agentes ✓ · 7 trackers (falta la fila «según git» del sync y horas de Azure en Horas) · 8 plugins + plugin privado · 9 multiplataforma, docs y release ·
+6 sesiones y agentes ✓ · 7 trackers (falta horas de Azure en Horas) · 8 plugins + plugin privado · 9 multiplataforma, docs y release ·
 10 cutover desde la v1. El checklist de paridad está en `docs/parity-checklist.md`.

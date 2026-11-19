@@ -455,6 +455,8 @@
   "tracker.sync.kind.type": "type",
   "tracker.sync.kind.differ": "advances",
   "tracker.sync.kind.back": "moves back",
+  "tracker.sync.kind.git": "per git",
+  "tracker.sync.gitWhy": "already in {env} in {repos}",
   "tracker.sync.nothing": "No changes to propose.",
   "tracker.sync.nothingEmpty": "No changes to propose among the folders without status.",
   "tracker.sync.apply": "Apply {n} changes",

@@ -323,7 +323,9 @@ export interface SyncRow {
   current: string;
   status: string;
   type: string;
-  kind: "fill" | "type" | "differ" | "back";
+  kind: "fill" | "type" | "differ" | "back" | "git";
+  /** Solo en las filas «según git»: el ambiente donde ya está el trabajo y en qué repos. */
+  why?: { env: string; repos: string[] };
   on: boolean;
 }
 

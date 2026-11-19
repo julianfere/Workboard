@@ -9,7 +9,7 @@
 //!   mapeo y campos) y `tracker_cache.json` (lo último leído, por raíz; lo lee también el MCP).
 //! - En el README solo se escriben el estado y el tipo (al aplicar el sync), o la carpeta nueva de un item.
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, MutexGuard};
 
@@ -267,6 +267,7 @@ fn preview(
     map: &BTreeMap<String, String>,
     only: Option<&BTreeSet<String>>,
     include_differ: bool,
+    git: &HashMap<String, (String, Vec<String>)>,
 ) -> Json {
     let status_key = &wf.fields.status;
     let known = |s: &str| wf.states.iter().any(|x| x.id == s);
@@ -338,8 +339,29 @@ fn preview(
                 "on": kind != "back",
             }));
         }
+        // Según git: el trabajo ya está en un ambiente en todos sus repos y eso es más que lo actual y lo
+        // propuesto. Va destildada y al final (si se tildan las dos, gana esta).
+        if let Some((env, repos)) = git.get(&it.name) {
+            let st = &wf.git.env_states[env];
+            let floor = [rank(wf, &cur), rank(wf, &status)].into_iter().flatten().max();
+            let off_scale = !cur.is_empty() && rank(wf, &cur).is_none();
+            if !off_scale && rank(wf, st).is_some_and(|r| floor.is_none_or(|f| r > f)) {
+                rows.push(json!({
+                    "key": format!("{}|git", it.name),
+                    "name": it.name,
+                    "ids": it.ids,
+                    "tracker": {"id": id, "state": w.state, "title": w.title, "type": w.kind},
+                    "current": cur,
+                    "status": st,
+                    "type": "",
+                    "kind": "git",
+                    "why": {"env": env, "repos": repos},
+                    "on": false,
+                }));
+            }
+        }
     }
-    let order = |k: &str| ["fill", "type", "differ", "back"].iter().position(|x| *x == k).unwrap_or(9);
+    let order = |k: &str| ["fill", "type", "differ", "back", "git"].iter().position(|x| *x == k).unwrap_or(9);
     rows.sort_by(|a, b| {
         let key = |r: &Json| {
             (order(r["kind"].as_str().unwrap_or("")), r["name"].as_str().unwrap_or("").to_string())
@@ -702,13 +724,16 @@ impl Api {
         let cache = self.read_cache(&ctx.root_key);
         let only: Option<BTreeSet<String>> =
             a.get("only").as_array().map(|_| str_list(a.get("only")).into_iter().collect());
+        let items = ctx.ws.list_items()?;
+        let git = self.git_reach(&items);
         Ok(preview(
             ctx.ws.workflow(),
-            &ctx.ws.list_items()?,
+            &items,
             &cache,
             &proc.map,
             only.as_ref(),
             a.bool("includeDiffer"),
+            &git,
         ))
     }
 
@@ -1003,4 +1028,70 @@ fn create_tracked(ws: &Workspace, source: &str, d: &NewTracked) -> ApiResult<Ite
     }
     let body = format!("{}\n", body.trim_end());
     Ok(ws.write_readme(&name, |_, _| Ok(Change::Parts(meta.clone(), body.clone())))?)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn preview_adds_an_unchecked_git_row_only_when_it_advances() {
+        let base = std::env::temp_dir().join(format!("wb-trk-git-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&base);
+        for (folder, estado) in [
+            ("wi111111-a", "codeado"),
+            ("wi222222-b", "prod"),
+            ("wi333333-c", "descartado"),
+            ("wi444444-d", ""),
+        ] {
+            std::fs::create_dir_all(base.join(folder)).unwrap();
+            let fm = if estado.is_empty() {
+                String::new()
+            } else {
+                format!(
+                    "---
+estado: {estado}
+---
+"
+                )
+            };
+            std::fs::write(
+                base.join(folder).join("README.md"),
+                format!(
+                    "{fm}# {folder}
+"
+                ),
+            )
+            .unwrap();
+        }
+        let wf = Workflow::preset("classic-es").unwrap();
+        let ws = Workspace::open(&base, wf.clone(), None).unwrap();
+        let items = ws.list_items().unwrap();
+        let mut cache = CacheEntry::default();
+        for id in ["111111", "222222", "333333", "444444"] {
+            cache.items.insert(
+                id.into(),
+                WorkItem { state: "Active".into(), kind: "Bug".into(), ..Default::default() },
+            );
+        }
+        let map = BTreeMap::from([("Active".to_string(), "en-curso".to_string())]);
+        let git: HashMap<String, (String, Vec<String>)> =
+            ["wi111111-a", "wi222222-b", "wi333333-c", "wi444444-d"]
+                .iter()
+                .map(|n| (n.to_string(), ("qa".to_string(), vec!["app".to_string()])))
+                .collect();
+        let out = preview(&wf, &items, &cache, &map, None, false, &git);
+        let rows: Vec<&Json> =
+            out["rows"].as_array().unwrap().iter().filter(|r| r["kind"] == "git").collect();
+        // codeado → qa avanza; prod ya está más adelante; descartado no se toca; vacío → propone qa.
+        let names: Vec<&str> = rows.iter().map(|r| r["name"].as_str().unwrap()).collect();
+        assert_eq!(names, ["wi111111-a", "wi444444-d"]);
+        assert_eq!(rows[0]["status"], "qa");
+        assert_eq!(rows[0]["key"], "wi111111-a|git");
+        assert_eq!(rows[0]["on"], false);
+        assert_eq!(rows[0]["why"], json!({"env": "qa", "repos": ["app"]}));
+        // Las filas de git van al final.
+        assert_eq!(out["rows"].as_array().unwrap().last().unwrap()["kind"], "git");
+        let _ = std::fs::remove_dir_all(&base);
+    }
 }

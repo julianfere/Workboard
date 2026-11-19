@@ -7,7 +7,7 @@ import { goView, onAction, onChange, refresh, render } from "../app";
 import { $, confirmDialog, esc, fmtDate, toast } from "../dom";
 import { errorText, label, lang, t } from "../i18n";
 import { ico } from "../icons";
-import { S, itemByName, stateDef, stateLabel, statusOf, titleOf, typeLabel, wf } from "../state";
+import { S, envLabel, itemByName, stateDef, stateLabel, statusOf, titleOf, typeLabel, wf } from "../state";
 import type { ApiError, AssignedList, Item, SyncPreview, SyncRow, TrackerConfig, TrackerItem, TrackerWorkItem } from "../types";
 
 // ---------- estado ----------
@@ -342,6 +342,7 @@ function syncView(): string {
     [
       r.status ? `<span class="chip">${stateChip(r.current)} → <span class="dot ${stateDef(r.status)?.category ?? "unknown"}"></span><b>${esc(stateLabel(r.status))}</b></span>` : "",
       r.type ? `<span class="chip">${esc(typeLabel(r.type))}</span>` : "",
+      r.why ? `<span class="muted small">${esc(t("tracker.sync.gitWhy", { env: envLabel(r.why.env), repos: r.why.repos.join(", ") }))}</span>` : "",
     ]
       .filter(Boolean)
       .join(" ");

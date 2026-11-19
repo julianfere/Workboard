@@ -368,6 +368,68 @@ impl Api {
     }
 }
 
+/// El ambiente más avanzado (de los que tienen estado en `git.envStates`) donde el trabajo de estos ids ya
+/// está en todos los repos involucrados que lo tienen configurado, con esos repos. Involucrado = tiene una
+/// rama del item o un commit que lo menciona; los repos con error o sin comparar no cuentan.
+pub(crate) fn env_reach(wf: &Workflow, ov: &Json, ids: &[String]) -> Option<(String, Vec<String>)> {
+    const OK: [&str; 4] = ["merged", "equivalent", "content", "mentioned"];
+    let branches: Vec<&Json> =
+        ids.iter().flat_map(|id| ov["byItem"][id].as_array().into_iter().flatten()).collect();
+    let mentioned = |repo: &str, env: &str| ids.iter().any(|id| !ov["mentions"][id][repo][env].is_null());
+    let involved: Vec<&str> = ov["repos"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter(|r| r["error"].is_null() && r["compare"] != json!(false))
+        .filter_map(|r| r["name"].as_str())
+        .filter(|name| {
+            branches.iter().any(|b| b["repo"] == *name)
+                || ids.iter().any(|id| ov["mentions"][id][*name].as_object().is_some_and(|m| !m.is_empty()))
+        })
+        .collect();
+    for env in wf.environments.iter().rev().filter(|e| wf.git.env_states.contains_key(&e.id)) {
+        let with_env: Vec<&str> = involved
+            .iter()
+            .copied()
+            .filter(|name| {
+                ov["repos"]
+                    .as_array()
+                    .into_iter()
+                    .flatten()
+                    .any(|r| r["name"] == *name && !r["envs"][&env.id].is_null())
+            })
+            .collect();
+        let has = |name: &str| {
+            branches.iter().any(|b| {
+                b["repo"] == name && OK.contains(&b["envs"][&env.id]["state"].as_str().unwrap_or(""))
+            }) || mentioned(name, &env.id)
+        };
+        if !with_env.is_empty() && with_env.iter().all(|n| has(n)) {
+            return Some((env.id.clone(), with_env.iter().map(|s| s.to_string()).collect()));
+        }
+    }
+    None
+}
+
+impl Api {
+    /// `env_reach` de cada item con ids, con la última vista general (si no hay repos o falla, nada).
+    pub(crate) fn git_reach(
+        &self,
+        items: &[wb_core::workspace::Item],
+    ) -> HashMap<String, (String, Vec<String>)> {
+        let Ok(wf) = self.workflow() else { return HashMap::new() };
+        if wf.git.env_states.is_empty() {
+            return HashMap::new();
+        }
+        let Ok(ov) = self.git_overview(false) else { return HashMap::new() };
+        items
+            .iter()
+            .filter(|it| !it.ids.is_empty())
+            .filter_map(|it| env_reach(&wf, &ov, &it.ids).map(|r| (it.name.clone(), r)))
+            .collect()
+    }
+}
+
 /// Nombre de modelo para `--model`: letras, números y `.-_[]`.
 fn valid_model(m: &str) -> bool {
     (2..=60).contains(&m.chars().count())
@@ -535,5 +597,36 @@ mod tests {
         assert_eq!(sess["items"], json!(["wi111111-login-con-sso"]));
         api.shutdown();
         let _ = std::fs::remove_dir_all(&base);
+    }
+
+    #[test]
+    fn env_reach_needs_every_involved_repo() {
+        let wf = wb_core::Workflow::preset("classic-es").unwrap();
+        let envs = json!({"dev": "origin/development", "qa": "origin/qa", "prod": "origin/main"});
+        let ov = json!({
+            "repos": [
+                {"name": "back", "envs": envs, "compare": true},
+                {"name": "front", "envs": envs, "compare": true},
+                {"name": "db", "envs": envs, "compare": false},
+                {"name": "other", "envs": envs, "compare": true},
+            ],
+            "byItem": {
+                "1": [
+                    {"repo": "back", "name": "f/1", "envs": {"qa": {"state": "merged"}, "prod": {"state": "merged"}}},
+                    {"repo": "front", "name": "f/1", "envs": {"qa": {"state": "equivalent"}, "prod": {"state": "pending"}}},
+                    {"repo": "db", "name": "f/1", "envs": {"qa": {"state": "pending"}, "prod": {"state": "pending"}}},
+                ],
+                "2": [{"repo": "back", "name": "f/2", "envs": {"qa": {"state": "pending"}, "prod": {"state": "pending"}}}],
+            },
+            "mentions": {"2": {"other": {"prod": {"sha": "abc"}}}},
+        });
+        // back en PROD, front solo en QA (db no se compara) → QA en los dos.
+        assert_eq!(
+            env_reach(&wf, &ov, &["1".into()]),
+            Some(("qa".into(), vec!["back".into(), "front".into()]))
+        );
+        // back no lo tiene en ningún ambiente: nada.
+        assert_eq!(env_reach(&wf, &ov, &["2".into()]), None);
+        assert_eq!(env_reach(&wf, &ov, &["9".into()]), None);
     }
 }

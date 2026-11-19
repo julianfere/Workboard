@@ -70,6 +70,7 @@
       "dev": ["origin/develop", "origin/development", "origin/dev"],
       "staging": ["origin/staging"],
       "prod": ["origin/main", "origin/master"]
-    }
+    },
+    "envStates": { "staging": "testing", "prod": "done" }
   }
 }

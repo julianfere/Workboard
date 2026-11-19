@@ -104,7 +104,7 @@ Feature/Bug de Implementar) va al plugin privado y se marca **(privado)**.
 | | Función | Fase | Golden |
 |---|---|---|---|
 | [x] | Conexión por raíz, PAT de solo lectura en el almacén de credenciales del SO; mapeo de estados con sugerencias por categoría | 7 | wb-tracker/tests, wb-api/tests/tracker |
-| [~] | Sync con previsualización (checkboxes, retrocesos destildados) ✓; fila "según git" (falta: depende de la fase 5) | 7 | wb-api/tests/tracker |
+| [x] | Sync con previsualización (checkboxes, retrocesos destildados) y fila «según git» (destildada; el estado de cada ambiente sale de `git.envStates` del preset) | 7 | wb-api tracker::tests, git::tests |
 | [x] | Campos elegibles de fecha pactada y horas; prioridad | 7 | wb-tracker (catalog) |
 | [x] | Asignados del período (WIQL) e importación | 7 | wb-api/tests/tracker |
 | [x] | Cambiar estado en Azure (PAT de escritura aparte, solo `System.State`) | 7 | wb-api/tests/tracker |
