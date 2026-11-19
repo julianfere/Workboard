@@ -21,8 +21,14 @@ pub const EDIT_TOOLS: [&str; 4] = ["Edit", "Write", "MultiEdit", "NotebookEdit"]
 /// Sin actividad hace más de esto = retomar otro día: conviene sesión nueva.
 pub const IDLE_HANDOFF: f64 = 3.0 * 3600.0;
 
+/// Variable que cambia la carpeta de transcripts (pruebas, desarrollo).
+pub const PROJECTS_ENV: &str = "WORKBOARD_CLAUDE_PROJECTS";
+
 /// Carpeta de transcripts de Claude Code.
 pub fn projects_dir() -> Option<PathBuf> {
+    if let Some(p) = std::env::var_os(PROJECTS_ENV).filter(|v| !v.is_empty()) {
+        return Some(PathBuf::from(p));
+    }
     std::env::var_os("USERPROFILE")
         .or_else(|| std::env::var_os("HOME"))
         .map(|h| PathBuf::from(h).join(".claude").join("projects"))
