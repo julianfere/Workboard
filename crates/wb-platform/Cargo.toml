@@ -1,0 +1,13 @@
+[package]
+name = "wb-platform"
+description = "Workboard OS integration: config folder, opening files, process trees"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+dirs = "6"
+
+[lints]
+workspace = true
