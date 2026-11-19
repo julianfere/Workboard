@@ -34,12 +34,11 @@ use wb_core::text::{PlanGap, plan_gaps};
 use wb_core::workspace::{Item, README};
 use wb_core::write::Change;
 use wb_core::{StateCategory, Workflow, Workspace};
-use wb_mcp::names;
 
 pub use agents::{AGENTS, CustomAgent};
 pub use pty::{PtyEvent, Sink};
 pub use registry::{Registry, Session, State};
-pub use wb_mcp::tools;
+pub use wb_mcp::{names, tools};
 
 /// Eventos de Claude Code que avisa el hook.
 pub const HOOK_EVENTS: [&str; 6] =

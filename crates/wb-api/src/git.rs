@@ -106,6 +106,7 @@ impl Api {
             "git_overview" => self.git_overview(a.bool("refresh")),
             "git_promotion" => self.git_promotion(a),
             "git_branch_diff" => self.git_branch_diff(a.str("name").unwrap_or_default()),
+            "review_item" => self.review_item(a),
             _ => return None,
         };
         Some(out)
@@ -262,6 +263,122 @@ impl Api {
         }
         Ok(Json::Array(out))
     }
+
+    /// Revisar: arma el paquete (diff de cada rama del item con git de solo lectura y el README con los
+    /// criterios) en `<config>/review/<stamp>-<id>/` y abre una sesión en modo plan, con el modelo elegido, que
+    /// deja el veredicto en una nota y los hallazgos bloqueantes como tareas.
+    fn review_item(&self, a: &Args) -> ApiResult<Json> {
+        let name = a.str("name")?;
+        let model = a.get("model").as_str().unwrap_or("").trim().to_string();
+        if !model.is_empty() && !valid_model(&model) {
+            return Err(ApiError::new("review.badModel", &[]));
+        }
+        let ws = self.workspace()?;
+        let folder = ws.folder_of(name)?;
+        let item = ws.build_item(&folder)?;
+        let Some(id) = item.ids.first().cloned().filter(|_| item.kind != wb_core::workspace::ItemKind::Group)
+        else {
+            return Err(ApiError::new("review.noId", &[]));
+        };
+        let diffs = self.git_branch_diff(&item.name)?;
+        let lang = wb_i18n::resolve_lang(self.settings().lang.as_deref().unwrap_or(wb_i18n::DEFAULT_LANG));
+        let t = |k: &str, p: &[(&str, &str)]| wb_i18n::t(lang, k, p);
+        let stamp = chrono::Local::now().format("%Y%m%d-%H%M%S");
+        let dir = self.config_dir.join("review").join(format!("{stamp}-{}", file_part(&id)));
+        std::fs::create_dir_all(&dir).map_err(wb_core::error::CoreError::from)?;
+        let readme = folder.join(wb_core::workspace::README).display().to_string();
+        let mut packet = vec![t("agent.review.packetTitle", &[("item", &item.name)]), String::new()];
+        packet.push(t("agent.review.packetReadme", &[("path", &readme)]));
+        packet.push(String::new());
+        let mut used = BTreeSet::new();
+        for d in diffs.as_array().into_iter().flatten() {
+            let repo = d["repo"].as_str().unwrap_or("");
+            let mut file = file_part(repo);
+            let mut n = 2;
+            while !used.insert(file.clone()) {
+                file = format!("{}-{n}", file_part(repo));
+                n += 1;
+            }
+            let diff_path = dir.join(format!("{file}.diff"));
+            std::fs::write(&diff_path, d["diff"]["diff"].as_str().unwrap_or(""))
+                .map_err(wb_core::error::CoreError::from)?;
+            let short = |k: &str| d["diff"][k].as_str().unwrap_or("").chars().take(10).collect::<String>();
+            let commits = d["diff"]["commits"].as_u64().unwrap_or(0).to_string();
+            packet.push(format!("## {repo} · {}", d["branch"].as_str().unwrap_or("")));
+            packet.push(String::new());
+            packet.push(t("agent.review.packetRepo", &[("path", d["path"].as_str().unwrap_or(""))]));
+            let mut line = t(
+                "agent.review.packetCommits",
+                &[("n", &commits), ("range", &format!("{}..{}", short("base"), short("tip")))],
+            );
+            if d["diff"]["cut"].as_bool().unwrap_or(false) {
+                line.push_str(&t("agent.review.packetCut", &[]));
+            }
+            packet.push(line);
+            packet.push(t("agent.review.packetDiff", &[("path", &diff_path.display().to_string())]));
+            packet.push(String::new());
+            packet.push(format!(
+                "```
+{}
+```",
+                d["diff"]["stat"].as_str().unwrap_or("").trim_end()
+            ));
+            packet.push(String::new());
+        }
+        let packet_path = dir.join("REVIEW.md");
+        std::fs::write(
+            &packet_path,
+            packet.join(
+                "
+",
+            ),
+        )
+        .map_err(wb_core::error::CoreError::from)?;
+        let title = t("agent.review.noteTitle", &[("id", &id)]);
+        let prompt = t(
+            "agent.review.prompt",
+            &[
+                ("id", &id),
+                ("packet", &packet_path.display().to_string()),
+                ("item", &item.name),
+                ("title", &title),
+                ("addNote", wb_sessions::names::ADD_NOTE),
+                ("addTask", wb_sessions::names::ADD_TASK),
+            ],
+        );
+        let session_name = if model.is_empty() {
+            t("review.sessionName", &[("id", &id)])
+        } else {
+            t("review.sessionNameModel", &[("id", &id), ("model", &model)])
+        };
+        let n = |k: &str, d: u16| a.get(k).as_u64().map_or(d, |v| v.clamp(1, 1000) as u16);
+        let agent = self.settings().agents.default_agent().to_string();
+        let sess = self.session_manager()?.create(
+            &ws,
+            std::slice::from_ref(&item.name),
+            &session_name,
+            "plan",
+            &agent,
+            false,
+            Some(&model),
+            Some(&prompt),
+            (n("cols", 120), n("rows", 30)),
+        )?;
+        Ok(json!({"session": sess, "packet": packet_path.display().to_string()}))
+    }
+}
+
+/// Nombre de modelo para `--model`: letras, números y `.-_[]`.
+fn valid_model(m: &str) -> bool {
+    (2..=60).contains(&m.chars().count())
+        && m.chars().all(|c| c.is_alphanumeric() || matches!(c, '.' | '-' | '_' | '[' | ']'))
+}
+
+/// Parte segura para un nombre de archivo.
+fn file_part(s: &str) -> String {
+    let out: String =
+        s.chars().map(|c| if c.is_alphanumeric() || matches!(c, '.' | '-') { c } else { '_' }).collect();
+    if out.is_empty() { "repo".into() } else { out }
 }
 
 #[cfg(test)]
@@ -303,8 +420,8 @@ mod tests {
     }
 
     /// `proyecto/_work` (copia del fixture) y `proyecto/app` (el repo del golden de git).
-    fn project() -> (PathBuf, PathBuf) {
-        let base = std::env::temp_dir().join(format!("wb-api-git-{}", std::process::id()));
+    fn project(tag: &str) -> (PathBuf, PathBuf) {
+        let base = std::env::temp_dir().join(format!("wb-api-git-{tag}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&base);
         let fixtures = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../tests/golden/fixtures");
         let work = base.join("proyecto/_work");
@@ -321,7 +438,7 @@ mod tests {
 
     #[test]
     fn config_overview_promotion_and_diff() {
-        let (work, base) = project();
+        let (work, base) = project("main");
         let api = Api::new(base.join("cfg"));
         api.dispatch("set_settings", &json!({"settings": {"workflow": "classic-es"}})).unwrap();
         api.dispatch("open_root", &json!({"path": work})).unwrap();
@@ -375,5 +492,48 @@ mod tests {
         let cfg = api.dispatch("set_git_config", &json!({"repos": null})).unwrap();
         assert_eq!(cfg["custom"], false);
         std::fs::remove_dir_all(&base).ok();
+    }
+
+    #[test]
+    fn review_item_writes_the_packet_and_opens_a_plan_session() {
+        let (work, base) = project("review");
+        let exe = std::env::current_exe().unwrap();
+        let api = Api::new(base.join("cfg"));
+        api.set_session_bins(exe.clone(), exe);
+        api.dispatch("set_settings", &json!({"settings": {"workflow": "classic-es", "lang": "es"}})).unwrap();
+        api.dispatch("open_root", &json!({"path": work})).unwrap();
+        let (cmd, args) =
+            if cfg!(windows) { ("cmd", "/c echo {session_id}") } else { ("sh", "-c \"echo {session_id}\"") };
+        api.dispatch("set_agents", &json!({"default": "custom", "custom": {"command": cmd, "args": args}}))
+            .unwrap();
+
+        let bad = api.dispatch("review_item", &json!({"name": "wi111111-login-con-sso", "model": "x; rm"}));
+        assert_eq!(bad.unwrap_err().code, "review.badModel");
+        api.dispatch("create_item", &json!({"folder": "fix-sin-id", "title": "Sin id"})).unwrap();
+        let no_id = api.dispatch("review_item", &json!({"name": "fix-sin-id"}));
+        assert_eq!(no_id.unwrap_err().code, "review.noId");
+
+        let out = api
+            .dispatch(
+                "review_item",
+                &json!({"name": "wi111111-login-con-sso", "model": "opus", "cols": 100, "rows": 30}),
+            )
+            .unwrap();
+        let packet = PathBuf::from(out["packet"].as_str().unwrap());
+        assert!(packet.starts_with(base.join("cfg").join("review")));
+        let text = std::fs::read_to_string(&packet).unwrap();
+        assert!(text.starts_with("# Revisión de wi111111-login-con-sso"), "{text}");
+        assert!(text.contains("## app · Feature/111111-login"), "{text}");
+        assert!(text.contains("3 commits propios"), "{text}");
+        let diff = packet.parent().unwrap().join("app.diff");
+        assert!(std::fs::read_to_string(diff).unwrap().starts_with("diff --git"));
+        let sess = &out["session"];
+        assert_eq!(sess["mode"], "plan");
+        assert_eq!(sess["plan"], false);
+        assert_eq!(sess["model"], "opus");
+        assert_eq!(sess["name"], "Revisar 111111 · opus");
+        assert_eq!(sess["items"], json!(["wi111111-login-con-sso"]));
+        api.shutdown();
+        let _ = std::fs::remove_dir_all(&base);
     }
 }

@@ -8,6 +8,7 @@ import { errorText, label, t } from "../i18n";
 import { ico } from "../icons";
 import { renderMarkdown } from "../markdown";
 import { canReflect, reflectItems } from "../reflect";
+import { canReview, openReview } from "../review";
 import { addToSessionModal, launched, loadSessions, newSessionModal, planItem, sessionById } from "../sessions";
 import { S, effectiveStatus, inSession, itemByName, metaList, metaText, stateDef, titleOf, wf } from "../state";
 import { termSize } from "../terminal";
@@ -121,6 +122,7 @@ function sessionsCard(it: Item): string {
     <div class="card-actions"><button class="btn" data-action="detail-new-session">${ico("plus")}${esc(t("session.new"))}</button>
       ${S.sessions.some((s) => s.state !== "closed" && !inSession(s, it.name)) ? `<button class="btn" data-action="detail-add-to-session">${ico("folderIn")}${esc(t("session.addTo"))}</button>` : ""}
       ${canPlan(it) ? `<button class="btn" data-action="detail-plan">${ico("plan")}${esc(t("session.plan"))}</button>` : ""}
+      ${canReview(it, effectiveStatus(it)) ? `<button class="btn" data-action="detail-review" title="${esc(t("review.hint"))}">${ico("check")}${esc(t("review.action"))}</button>` : ""}
       ${canReflect(it.name, effectiveStatus(it)) ? `<button class="btn" data-action="detail-reflect" title="${esc(t("reflect.hint"))}">${ico("sparkle")}${esc(t("reflect.action"))}</button>` : ""}</div></section>`;
 }
 
@@ -366,6 +368,7 @@ onAction("detail-plan", async () => {
   await planItem(it.name);
 });
 onAction("detail-reflect", () => reflectItems([item().name]));
+onAction("detail-review", () => openReview(item()));
 onAction("sess-remove-item", async (el, ev) => {
   ev.stopPropagation();
   const s = sessionById(el.dataset.id!);

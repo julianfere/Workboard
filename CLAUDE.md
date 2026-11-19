@@ -67,7 +67,7 @@ config real.
 - `crates/wb-api` — la API de la app: `Api::dispatch(cmd, args)` (un `match` con todos los comandos, cada uno
   un wrapper fino sobre `wb-core`), `settings.json` (idioma, tema, preset, raíz, recientes, carpeta de notas) y
   `ApiError { code, params, conflict }`. `sessions.rs`: comandos `session_*`, `plan_item`, agentes; el
-  `SessionManager` se levanta a pedido y busca `wb-mcp`/`wb-hook` junto al exe (o `WORKBOARD_MCP_BIN`/`WORKBOARD_HOOK_BIN`). `git.rs`: comandos `git_*`; repos de cada carpeta de trabajos en
+  `SessionManager` se levanta a pedido y busca `wb-mcp`/`wb-hook` junto al exe (o `WORKBOARD_MCP_BIN`/`WORKBOARD_HOOK_BIN`). `git.rs`: comandos `git_*` y `review_item` (Revisar: paquete `<config>/review/<stamp>-<id>/REVIEW.md` + un `.diff` por rama, sesión en modo plan con `--model`); repos de cada carpeta de trabajos en
   `settings.json` → `git.repos[<raíz>]` (sin entrada = repos hermanos detectados) y ramas candidatas en `git.envRefs`.
   `tracker.rs`: comandos `tracker_*`; `<config>/trackers.json` (conexión por raíz; estados, mapeo y campos por
   proyecto) y `<config>/tracker_cache.json` (última lectura por raíz, la lee el MCP); vista previa del sync en Rust
@@ -119,5 +119,5 @@ config real.
 ## Plan
 
 Fases: 0 golden ✓ · 1 spike ✓ · 2 esqueleto ✓ · 3 core + MCP ✓ · 4 UI base ✓ · 5 git ✓ ·
-6 sesiones y agentes (falta Revisar) · 7 trackers (falta la fila «según git» del sync y horas de Azure en Horas) · 8 plugins + plugin privado · 9 multiplataforma, docs y release ·
+6 sesiones y agentes ✓ · 7 trackers (falta la fila «según git» del sync y horas de Azure en Horas) · 8 plugins + plugin privado · 9 multiplataforma, docs y release ·
 10 cutover desde la v1. El checklist de paridad está en `docs/parity-checklist.md`.

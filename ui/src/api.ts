@@ -179,4 +179,6 @@ export const gitApi = {
   overview: (refresh: boolean) => call<GitOverview>("git_overview", { refresh }),
   promotion: (ids: string[], target: string) => call<Promotion>("git_promotion", { ids, target }),
   branchDiff: (name: string) => call<BranchDiff[]>("git_branch_diff", { name }),
+  review: (name: string, model: string, cols: number, rows: number) =>
+    call<{ session: Session; packet: string }>("review_item", { name, model, cols, rows }),
 };
