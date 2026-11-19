@@ -1,0 +1,13 @@
+[package]
+name = "wb-i18n"
+description = "Workboard translations (shared catalogs with the UI)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+serde_json.workspace = true
+
+[lints]
+workspace = true
