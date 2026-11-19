@@ -66,13 +66,13 @@ Feature/Bug de Implementar) va al plugin privado y se marca **(privado)**.
 
 | | Función | Fase | Golden |
 |---|---|---|---|
-| [ ] | Solo lectura (`for-each-ref`, `rev-list`, `cherry`, `merge-base`, `diff`, `log`, `status --no-optional-locks`) | 5 | — |
-| [ ] | Repos hermanos de `_work` detectados + configurados a mano; entornos por repo configurables | 5 | git |
-| [ ] | Estado por entorno de las ramas de cada WI: merged, equivalent, content, mentioned, pending | 5 | git |
-| [ ] | Rama actual, archivos sin commitear, último fetch; alertas front/back desparejos y sin commitear | 5 | git (parcial) |
-| [ ] | Caché por SHA en disco (`git_cache.json`), grafo en memoria, repos en paralelo | 5 | git (warm = cold) |
-| [ ] | Promoción: cherry-pick (dudosos destildados con motivo) o merge `--no-ff`; comandos PowerShell / Git Bash; URL de PR | 5 | git (datos; los comandos los arma la UI) |
-| [ ] | Diff de los commits propios para **Revisar** | 5 | git (branch_diff) |
+| [x] | Solo lectura (`for-each-ref`, `rev-list`, `cherry`, `merge-base`, `diff`, `log`, `status --no-optional-locks`) | 5 | — |
+| [x] | Repos hermanos de `_work` detectados + configurados a mano; entornos por repo configurables | 5 | git |
+| [x] | Estado por entorno de las ramas de cada WI: merged, equivalent, content, mentioned, pending | 5 | git |
+| [x] | Rama actual, archivos sin commitear, último fetch; alertas front/back desparejos y sin commitear | 5 | git (parcial) |
+| [x] | Caché por SHA en disco (`git_cache.json`), grafo en memoria, repos en paralelo | 5 | git (warm = cold) |
+| [x] | Promoción: cherry-pick (dudosos destildados con motivo) o merge `--no-ff`; comandos PowerShell / Git Bash; URL de PR | 5 | git (datos; los comandos los arma la UI) |
+| [x] | Diff de los commits propios para **Revisar** | 5 | git (branch_diff) |
 
 ## Sesiones y agentes
 

@@ -3,6 +3,7 @@
 //! Todo se lee en cada llamada: la carpeta de trabajos puede cambiar por fuera (agentes, el usuario).
 
 pub mod error;
+mod git;
 mod sessions;
 pub mod settings;
 mod stats;
@@ -34,6 +35,7 @@ pub struct Api {
     session_bins: Mutex<Option<(PathBuf, PathBuf)>>,
     /// Almacén de secretos y transporte HTTP de los trackers.
     tracker: tracker::TrackerDeps,
+    git: git::GitState,
 }
 
 fn to_json<T: Serialize>(v: T) -> ApiResult<Json> {
@@ -77,6 +79,7 @@ impl Api {
             sessions: OnceLock::new(),
             session_bins: Mutex::new(None),
             tracker: Default::default(),
+            git: Default::default(),
         }
     }
 
@@ -286,6 +289,7 @@ impl Api {
                 .session_command(cmd, &a)
                 .or_else(|| self.tracker_command(cmd, &a))
                 .or_else(|| self.stats_command(cmd, &a))
+                .or_else(|| self.git_command(cmd, &a))
                 .unwrap_or_else(|| Err(ApiError::new("error.unknownCommand", &[("name", cmd)]))),
         }
     }

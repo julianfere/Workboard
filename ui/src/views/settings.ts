@@ -12,6 +12,7 @@ import type { AgentsInfo } from "../types";
 import { loadInbox } from "./tasks";
 import { loadNotes } from "./notes";
 import { trackerSettingsCard } from "./tracker";
+import { gitSettingsCard } from "../git";
 
 function options(values: [string, string][], selected: string): string {
   return values.map(([v, text]) => `<option value="${esc(v)}"${v === selected ? " selected" : ""}>${esc(text)}</option>`).join("");
@@ -105,6 +106,7 @@ function renderSettings(): string {
       <div class="set-row"><label for="set-notes">${esc(t("settings.notesFolder"))}</label><input id="set-notes" data-change="set-notes" value="${esc(s.notesFolder ?? "")}" placeholder="${esc(t("settings.notesDefault"))}"></div></section>
     ${trackerSettingsCard()}
     ${agentsCard()}
+    ${gitSettingsCard()}
     ${S.info ? `<section class="card"><h2>${esc(t("settings.about"))}</h2><p class="muted">${esc(t("about.version", { version: S.info.version, os: S.info.os }))}<br><code>${esc(S.info.configDir)}</code></p></section>` : ""}
   </div>`;
 }

@@ -5123,12 +5123,14 @@ version = "0.1.0"
 dependencies = [
  "base64 0.23.1",
  "chrono",
+ "dunce",
  "indexmap 2.14.2",
  "regex",
  "serde",
  "serde_json",
  "tiny_http",
  "wb-core",
+ "wb-git",
  "wb-i18n",
  "wb-platform",
  "wb-sessions",
@@ -5150,6 +5152,20 @@ dependencies = [
  "thiserror 2.0.21",
  "unicode-normalization",
  "wb-i18n",
+]
+
+[[package]]
+name = "wb-git"
+version = "0.1.0"
+dependencies = [
+ "dunce",
+ "indexmap 2.14.2",
+ "regex",
+ "serde",
+ "serde_json",
+ "wb-core",
+ "wb-i18n",
+ "wb-platform",
 ]
 
 [[package]]

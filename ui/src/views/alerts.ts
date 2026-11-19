@@ -6,9 +6,10 @@ import { daysUntil, esc } from "../dom";
 import { t } from "../i18n";
 import { S, effectiveStatus, isClosed, metaText, titleOf, wf } from "../state";
 import type { Item } from "../types";
+import { gitAlerts } from "../git";
 
 interface Alert {
-  kind: "noReadme" | "dupes" | "plan" | "overdue";
+  kind: "noReadme" | "dupes" | "plan" | "overdue" | "gitDesync" | "gitDirty";
   item: Item;
   detail: string;
 }
@@ -32,12 +33,13 @@ function alerts(): Alert[] {
     const due = metaText(it, wf().fields.due);
     if (due && daysUntil(due) < 0 && !isClosed(status)) out.push({ kind: "overdue", item: it, detail: due });
   }
+  out.push(...gitAlerts());
   return out;
 }
 
 function renderAlerts(): string {
   const list = alerts();
-  const kinds = ["noReadme", "dupes", "plan", "overdue"] as const;
+  const kinds = ["noReadme", "dupes", "plan", "overdue", "gitDesync", "gitDirty"] as const;
   const blocks = kinds
     .map((k) => {
       const rows = list

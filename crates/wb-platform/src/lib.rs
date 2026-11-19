@@ -40,6 +40,19 @@ fn command(program: &str) -> Command {
     cmd
 }
 
+/// Sin ventana de consola en Windows para un comando que lanza la app (git y otras herramientas de
+/// línea de comandos): no hace nada en los demás sistemas.
+pub fn hide_console(cmd: &mut Command) {
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+        cmd.creation_flags(CREATE_NO_WINDOW);
+    }
+    #[cfg(not(windows))]
+    let _ = cmd;
+}
+
 /// Abre un archivo o carpeta con la aplicación predeterminada del sistema.
 pub fn open_path(path: &Path) -> io::Result<()> {
     if !path.exists() {

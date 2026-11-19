@@ -14,6 +14,7 @@ import { termSize } from "../terminal";
 import type { ApiError, FileEntry, Item } from "../types";
 import { statusChip } from "./items";
 import { trackerCard } from "./tracker";
+import { itemIds, openPromotion, renderGitTab } from "../git";
 
 const item = (): Item => S.detailData!.item;
 
@@ -184,16 +185,17 @@ function versionsTab(): string {
 
 function renderDetail(): string {
   const it = item();
-  const tabs = (["summary", "readme", "files", "versions"] as const)
+  const tabs = (["summary", "readme", "files", "versions", "git"] as const)
     .map((tab) => `<button class="tab${S.detailTab === tab ? " sel" : ""}" data-action="detail-tab" data-tab="${tab}">${esc(t(`detail.tab.${tab}`))}${tab === "files" ? ` <span class="muted">${it.files.length}</span>` : ""}</button>`)
     .join("");
-  const body = { summary: summaryTab, readme: readmeTab, files: filesTab, versions: versionsTab }[S.detailTab](it);
+  const body = { summary: summaryTab, readme: readmeTab, files: filesTab, versions: versionsTab, git: renderGitTab }[S.detailTab](it);
   const inGroup = it.group ? `<button class="btn" data-action="ungroup">${ico("folderOut")}${esc(t("detail.ungroup"))}</button>` : it.kind === "item" ? `<button class="btn" data-action="to-group">${ico("folderIn")}${esc(t("detail.toGroup"))}</button>` : "";
   return `<div class="page wide detail">
     <div class="detail-head"><button class="icon-btn" data-action="back" title="${esc(t("common.back"))}">${ico("chevronLeft")}</button>
       <div class="grow"><h1>${esc(titleOf(it))}</h1><div class="muted">${esc(it.name)}${it.ids.length ? ` · ${esc(it.ids.join(", "))}` : ""}${it.dupes?.length ? ` · <span class="warn-text">${esc(t("alerts.dupes"))}</span>` : ""}</div></div>
       <button class="btn" data-action="reveal" data-path="${esc(it.name)}">${ico("folder")}${esc(t("detail.openFolder"))}</button>
       ${inGroup}
+      ${itemIds(it).length ? `<button class="btn" data-action="promote-item" title="${esc(t("promo.buttonHint"))}">${ico("promote")}${esc(t("promo.button"))}</button>` : ""}
       <button class="btn" data-action="rename">${ico("edit")}${esc(t("detail.rename"))}</button>
       <button class="btn danger" data-action="trash-item">${ico("trash")}${esc(t("items.delete"))}</button>
     </div>
@@ -252,6 +254,7 @@ function viewer(title: string, html: string): void {
 registerDetail(renderDetail);
 
 onAction("back", () => closeDetail());
+onAction("promote-item", () => openPromotion([item().name]));
 onAction("detail-tab", (el) => {
   S.detailTab = el.dataset.tab as typeof S.detailTab;
   versions = null;
