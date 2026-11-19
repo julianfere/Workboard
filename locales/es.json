@@ -39,5 +39,15 @@
   "core.task.empty": "La tarea está vacía",
   "core.task.tooLong": "La tarea supera {max} caracteres",
   "core.task.notFound": "No existe esa tarea",
-  "core.task.changed": "La lista de pendientes cambió en disco; recargá y reintentá"
+  "core.task.changed": "La lista de pendientes cambió en disco; recargá y reintentá",
+  "core.field.notEditable": "Campo no editable: {key}",
+  "core.field.oneOf": "{key} inválido: {value}. Válidos: {valid}",
+  "core.field.environments": "{key} debe ser una lista con valores de: {valid}",
+  "core.field.itemIds": "{key} debe ser uno o más números de work item",
+  "core.field.date": "{key} debe ser una fecha AAAA-MM-DD: {value}",
+  "core.field.period": "{key} debe ser AAAA-MM (el mes en que empieza, el {day}): {value}",
+  "core.field.hours": "{key} debe ser un número entre 0 y {max}: {value}",
+  "core.field.singleLine": "{key} debe ser una sola línea",
+  "core.field.noSpaces": "{key} no puede tener espacios",
+  "core.field.tooLong": "{key} supera {max} caracteres"
 }

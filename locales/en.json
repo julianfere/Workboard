@@ -39,5 +39,15 @@
   "core.task.empty": "The task is empty",
   "core.task.tooLong": "The task is longer than {max} characters",
   "core.task.notFound": "That task does not exist",
-  "core.task.changed": "The task list changed on disk; reload and try again"
+  "core.task.changed": "The task list changed on disk; reload and try again",
+  "core.field.notEditable": "Field cannot be edited: {key}",
+  "core.field.oneOf": "Invalid {key}: {value}. Valid: {valid}",
+  "core.field.environments": "{key} must be a list with values from: {valid}",
+  "core.field.itemIds": "{key} must be one or more work item ids",
+  "core.field.date": "{key} must be a YYYY-MM-DD date: {value}",
+  "core.field.period": "{key} must be YYYY-MM (the month it starts, on day {day}): {value}",
+  "core.field.hours": "{key} must be a number between 0 and {max}: {value}",
+  "core.field.singleLine": "{key} must be a single line",
+  "core.field.noSpaces": "{key} cannot contain spaces",
+  "core.field.tooLong": "{key} is longer than {max} characters"
 }

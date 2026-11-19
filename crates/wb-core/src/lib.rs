@@ -5,6 +5,8 @@ pub mod error;
 pub mod frontmatter;
 pub mod py;
 pub mod tasks;
+pub mod text;
+pub mod validate;
 pub mod workflow;
 
 pub use workflow::{StateCategory, Workflow, WorkflowError};
