@@ -62,7 +62,7 @@ OPS = [
     ("de prod a descartado no vuelve a tocar el cuerpo", "update_meta", ["wi111111-login-con-sso", {"estado": "descartado"}]),
     ("clave inválida", "update_meta", ["wi111111-login-con-sso", {"Estado": "qa"}]),
     ("sin cambios no escribe", "update_meta", ["wi222222-333333-pagos", {"estado": "qa"}]),
-    ("README con CRLF y BOM: reescribe en LF", "update_meta", ["wi222222-333333-pagos", {"notas": "n"}]),
+    ("README con CRLF y BOM: el frontmatter queda en LF y el cuerpo conserva CRLF", "update_meta", ["wi222222-333333-pagos", {"notas": "n"}]),
     ("README cp1252: reescribe en UTF-8", "update_meta", ["wi111111-copia-vieja", {"tipo": "bug"}]),
     ("sin README: lo crea con # nombre", "add_task", ["wi777777-sin-readme", "primera tarea"]),
     ("agrega a una sección existente", "add_task", ["grp-checkout", "  otra   tarea "]),

@@ -876,7 +876,7 @@
    }
   },
   {
-   "desc": "README con CRLF y BOM: reescribe en LF",
+   "desc": "README con CRLF y BOM: el frontmatter queda en LF y el cuerpo conserva CRLF",
    "op": "update_meta",
    "args": [
     "wi222222-333333-pagos",
