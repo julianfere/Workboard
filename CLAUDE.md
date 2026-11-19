@@ -58,6 +58,16 @@ config real.
   `System.State`). El HTTP pasa por `Transport` (`UreqTransport`: ureq + rustls con certificados del sistema; los tests
   usan respuestas fijas). El cliente saca el token de todo error. Heurísticas de campos (fecha y horas pactadas) y
   `html_to_text` en `azure.rs`.
+- `crates/wb-plugins` — plugins: ejecutables aparte con `manifest.json` en `<config>/plugins/<carpeta>/` que hablan
+  JSON-RPC por stdio (protocolo en `docs/plugins.md`). `manifest` (validación, lista, habilitados en
+  `<config>/plugins.json`, presets aportados, `resolve_workflow`: el preset incluido o el de un plugin habilitado; lo
+  usan la app, las sesiones y el MCP), `rpc::call` (un proceso por paso: `initialize` + la llamada, atiende los pedidos
+  `host/…` del plugin, timeout del manifiesto y `kill_tree`) y `sdk::serve` (lado del plugin, para plugins en Rust y
+  tests). En `wb-api`, `plugins.rs`: `plugins`, `plugin_enable`, `plugin_action` (valida el paso: formulario,
+  resultado con links solo https, sesión que se abre acá, cerrar) y el `Host` con los permisos del manifiesto
+  (`items.write` pasa por `validate_fields` + `update_meta`; los campos extra son los del manifiesto; secretos con
+  prefijo `plugin:<id>:`; datos en `<config>/plugin-data/<id>.json`; stderr del plugin a `<config>/plugins.log`).
+  UI: `ui/src/plugins.ts` (botones por lugar, modal genérico, tarjeta de Ajustes). Ejemplo en `examples/plugins/hello/`.
 - `crates/wb-hook` — el hook del CLI (`wb-hook <Evento>`): postea a la app y reimprime la respuesta. Sin dependencias.
 - `crates/wb-i18n` — `t(lang, key, params)` sobre `locales/*.json` (los mismos archivos que usa la UI).
 - `crates/wb-platform` — todo lo que depende del SO (`config_dir`, `open_path`, `reveal_path`, `open_url` solo https,
@@ -119,5 +129,5 @@ config real.
 ## Plan
 
 Fases: 0 golden ✓ · 1 spike ✓ · 2 esqueleto ✓ · 3 core + MCP ✓ · 4 UI base ✓ · 5 git ✓ ·
-6 sesiones y agentes ✓ · 7 trackers ✓ · 8 plugins + plugin privado · 9 multiplataforma, docs y release ·
+6 sesiones y agentes ✓ · 7 trackers ✓ · 8 plugins + plugin privado (host ✓; plugin privado en `../workboard-private`) · 9 multiplataforma, docs y release ·
 10 cutover desde la v1. El checklist de paridad está en `docs/parity-checklist.md`.

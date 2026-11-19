@@ -1,0 +1,19 @@
+{
+  "id": "hello",
+  "name": { "en": "Hello (example)", "es": "Hola (ejemplo)" },
+  "description": { "en": "Minimal plugin: a form, a result and a session.", "es": "Plugin mínimo: un formulario, un resultado y una sesión." },
+  "version": "0.1.0",
+  "protocol": 1,
+  "command": "python",
+  "args": ["hello.py"],
+  "timeoutSeconds": 30,
+  "permissions": [],
+  "actions": [
+    {
+      "id": "greet",
+      "label": { "en": "Say hello", "es": "Saludar" },
+      "icon": "sparkle",
+      "placements": ["item", "palette"]
+    }
+  ]
+}

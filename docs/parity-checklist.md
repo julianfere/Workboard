@@ -109,3 +109,4 @@ Feature/Bug de Implementar) va al plugin privado y se marca **(privado)**.
 | [x] | Asignados del período (WIQL) e importación | 7 | wb-api/tests/tracker |
 | [x] | Cambiar estado en Azure (PAT de escritura aparte, solo `System.State`) | 7 | wb-api/tests/tracker |
 | [ ] | ReleaseManual **(privado)** | 8 | — |
+| [x] | Plugins: manifiesto, acciones con formulario genérico, presets aportados, permisos del host | 8 | wb-plugins tests/rpc, wb-api tests/plugins |
