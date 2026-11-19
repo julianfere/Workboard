@@ -19,6 +19,7 @@ import "./views/settings";
 import { loadInbox } from "./views/tasks";
 import "./views/today";
 import "./views/tools";
+import { loadPlugins } from "./plugins";
 
 installEvents();
 installTerminalPanel();
@@ -62,7 +63,7 @@ document.addEventListener("keydown", (ev) => {
 
 async function boot(): Promise<void> {
   try {
-    [S.settings, S.presets, S.info, S.workflow] = await Promise.all([api.getSettings(), api.workflowPresets(), api.appInfo(), api.workflow()]);
+    [S.settings, S.presets, S.info, S.workflow] = await Promise.all([api.getSettings(), api.workflowPresets(), api.appInfo(), api.workflow(), loadPlugins()]);
     setLang(S.settings.lang);
     applyTheme(S.settings.theme);
     if (S.settings.root) {

@@ -136,6 +136,8 @@ export interface Note {
 export interface PresetSummary {
   id: string;
   name: Labels;
+  /** Plugin que aporta el preset (los incluidos no tienen). */
+  plugin?: string;
 }
 
 export type Theme = "system" | "light" | "dark";
@@ -625,3 +627,81 @@ export interface BranchDiff {
   branch: string;
   diff: { base: string; tip: string; commits: number; stat: string; diff: string; cut: boolean };
 }
+
+// ---------- plugins ----------
+
+export interface PluginWhen {
+  kind?: "item" | "group";
+  hasIds?: boolean;
+  categories?: string[];
+}
+
+export interface PluginAction {
+  id: string;
+  label: string;
+  hint: string | null;
+  icon: string | null;
+  placements: ("item" | "items" | "palette" | "settings")[];
+  when: PluginWhen | null;
+}
+
+export interface PluginInfo {
+  id?: string;
+  folder: string;
+  name?: string;
+  description?: string | null;
+  version?: string;
+  enabled: boolean;
+  error?: string | null;
+  permissions?: string[];
+  fields?: string[];
+  presets?: string[];
+  presetErrors?: string[];
+  /** Por qué no se encuentra el ejecutable (null = se encuentra). */
+  command?: string | null;
+  actions?: PluginAction[];
+}
+
+export interface PluginList {
+  dir: string;
+  plugins: PluginInfo[];
+}
+
+export interface PluginField {
+  id?: string;
+  type: "text" | "textarea" | "number" | "password" | "select" | "checkbox" | "info";
+  label?: string;
+  text?: string;
+  value?: unknown;
+  hint?: string;
+  placeholder?: string;
+  required?: boolean;
+  wide?: boolean;
+  rows?: number;
+  refresh?: boolean;
+  options?: { value: string; label: string }[];
+}
+
+export interface PluginButton {
+  id: string;
+  label: string;
+  primary?: boolean;
+  danger?: boolean;
+  confirm?: string;
+  validate?: boolean;
+}
+
+export type PluginStep =
+  | { type: "form"; title?: string; intro?: string; error?: string; fields: PluginField[]; buttons?: PluginButton[]; state?: unknown }
+  | {
+      type: "result";
+      title?: string;
+      ok?: boolean;
+      message?: string;
+      steps?: { label: string; ok: boolean; error?: string }[];
+      links?: { label: string; url: string }[];
+      buttons?: PluginButton[];
+      state?: unknown;
+    }
+  | { type: "session"; session: Session; message?: string }
+  | { type: "close"; message?: string };

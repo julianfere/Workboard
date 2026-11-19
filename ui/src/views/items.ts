@@ -10,6 +10,7 @@ import { S, effectiveStatus, isClosed, metaText, stateDef, stateLabel, stateRank
 import type { Item, TrackerItem } from "../types";
 import { createTrackedItem, fetchTrackerItem, openAssigned, trackerBadge, trackerBulk, trackerConnected, trackerToolbar } from "./tracker";
 import { openPromotion } from "../git";
+import { pluginBulkButtons } from "../plugins";
 
 const selected = new Set<string>();
 
@@ -111,6 +112,7 @@ function bulkBar(): string {
     <select data-change="bulk-status" aria-label="${esc(t("items.setStatus"))}"><option value="">${esc(t("items.setStatus"))}</option>${states}</select>
     <button class="btn" data-action="bulk-group">${ico("layers")}${esc(t("items.group"))}</button>
     ${trackerBulk([...selected])}
+    ${pluginBulkButtons([...selected])}
     ${hasSessions([...selected]) ? `<button class="btn" data-action="bulk-reflect" title="${esc(t("reflect.hint"))}">${ico("sparkle")}${esc(t("reflect.action"))}</button>` : ""}
     <button class="btn" data-action="bulk-promote" title="${esc(t("promo.buttonHint"))}">${ico("promote")}${esc(t("promo.button"))}</button>
     <button class="btn danger" data-action="bulk-trash">${ico("trash")}${esc(t("items.delete"))}</button>

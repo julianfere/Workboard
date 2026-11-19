@@ -13,6 +13,7 @@ import { loadInbox } from "./tasks";
 import { loadNotes } from "./notes";
 import { trackerSettingsCard } from "./tracker";
 import { gitSettingsCard } from "../git";
+import { pluginsSettingsCard } from "../plugins";
 
 function options(values: [string, string][], selected: string): string {
   return values.map(([v, text]) => `<option value="${esc(v)}"${v === selected ? " selected" : ""}>${esc(text)}</option>`).join("");
@@ -86,7 +87,7 @@ function renderSettings(): string {
   const s = S.settings!;
   const langs: [string, string][] = [["", t("settings.auto")], ...LANGS.map((l): [string, string] => [l, l === "en" ? "English" : "Español"])];
   const themes: [string, string][] = (["system", "light", "dark"] as const).map((th) => [th, t(`settings.theme.${th}`)]);
-  const presets: [string, string][] = S.presets.map((p) => [p.id, label(p.name, p.id)]);
+  const presets: [string, string][] = S.presets.map((p) => [p.id, p.plugin ? t("plugin.presetFrom", { name: label(p.name, p.id), plugin: p.plugin }) : label(p.name, p.id)]);
   const w = wf();
   const chips = (items: { id: string; labels: Record<string, string>; category?: string }[]) =>
     `<div class="chips">${items.map((it) => `<span class="chip" title="${esc(it.id)}">${it.category ? `<span class="dot ${it.category}"></span>` : ""}${esc(label(it.labels, it.id))}</span>`).join("")}</div>`;
@@ -107,6 +108,7 @@ function renderSettings(): string {
     ${trackerSettingsCard()}
     ${agentsCard()}
     ${gitSettingsCard()}
+    ${pluginsSettingsCard()}
     ${S.info ? `<section class="card"><h2>${esc(t("settings.about"))}</h2><p class="muted">${esc(t("about.version", { version: S.info.version, os: S.info.os }))}<br><code>${esc(S.info.configDir)}</code></p></section>` : ""}
   </div>`;
 }

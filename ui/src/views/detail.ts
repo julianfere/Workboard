@@ -8,6 +8,7 @@ import { errorText, label, t } from "../i18n";
 import { ico } from "../icons";
 import { renderMarkdown } from "../markdown";
 import { canReflect, reflectItems } from "../reflect";
+import { pluginItemCard } from "../plugins";
 import { canReview, openReview } from "../review";
 import { addToSessionModal, launched, loadSessions, newSessionModal, planItem, sessionById } from "../sessions";
 import { S, effectiveStatus, inSession, itemByName, metaList, metaText, stateDef, titleOf, wf } from "../state";
@@ -128,7 +129,7 @@ function sessionsCard(it: Item): string {
 
 function summaryTab(it: Item): string {
   const deploy = it.deploy ? `<section class="card"><h2>${esc(t("detail.deploy"))}</h2><div class="md">${renderMarkdown(it.deploy)}</div></section>` : "";
-  return `<div class="detail-grid"><div>${tasksCard(it)}${membersCard(it)}${deploy}</div><div>${sessionsCard(it)}${trackerCard(it)}${fieldsCard(it)}</div></div>`;
+  return `<div class="detail-grid"><div>${tasksCard(it)}${membersCard(it)}${deploy}</div><div>${sessionsCard(it)}${pluginItemCard(it)}${trackerCard(it)}${fieldsCard(it)}</div></div>`;
 }
 
 function readmeTab(): string {

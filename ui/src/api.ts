@@ -25,6 +25,7 @@ import type {
 } from "./types";
 import type { AssignedList, SyncPreview, TrackerConfig, TrackerFailure, TrackerItem } from "./types";
 import type { BranchDiff, GitConfig, GitOverview, Promotion, RepoConfig } from "./types";
+import type { PluginList, PluginStep } from "./types";
 
 export const inTauri = "__TAURI_INTERNALS__" in window;
 
@@ -182,4 +183,15 @@ export const gitApi = {
   branchDiff: (name: string) => call<BranchDiff[]>("git_branch_diff", { name }),
   review: (name: string, model: string, cols: number, rows: number) =>
     call<{ session: Session; packet: string }>("review_item", { name, model, cols, rows }),
+};
+
+// ---------- plugins ----------
+
+export const pluginApi = {
+  list: () => call<PluginList>("plugins"),
+  enable: (id: string, enabled: boolean) => call<PluginList>("plugin_enable", { id, enabled }),
+  openFolder: () => call<null>("plugins_open_folder"),
+  openUrl: (url: string) => call<null>("plugin_open_url", { url }),
+  action: (args: { plugin: string; action: string; items: string[]; button?: string; values?: Record<string, unknown>; state?: unknown; cols: number; rows: number }) =>
+    call<PluginStep>("plugin_action", args),
 };

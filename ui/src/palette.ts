@@ -5,6 +5,7 @@ import { esc } from "./dom";
 import { t } from "./i18n";
 import { ico } from "./icons";
 import { S, effectiveStatus, titleOf } from "./state";
+import { pluginCommands } from "./plugins";
 import { statusChip } from "./views/items";
 
 interface Entry {
@@ -20,6 +21,7 @@ function commands(): Entry[] {
   out.push({ icon: "settings", text: t("nav.settings"), hint: "", run: () => goView("settings") });
   out.push({ icon: "plus", text: t("items.new"), hint: "", run: () => document.querySelector<HTMLElement>('[data-action="new-item"]')?.click() ?? (goView("items"), setTimeout(() => document.querySelector<HTMLElement>('[data-action="new-item"]')?.click())) });
   out.push({ icon: "folder", text: t("project.open"), hint: "", run: () => document.querySelector<HTMLElement>('[data-action="project-menu"]')?.click() });
+  out.push(...pluginCommands());
   return out;
 }
 
