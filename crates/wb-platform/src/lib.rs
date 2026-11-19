@@ -1,5 +1,8 @@
-//! Lo que depende del sistema operativo, en un solo lugar: carpeta de configuración, abrir archivos y
-//! carpetas, y terminar un árbol de procesos. El resto del código no usa `cfg(windows)`.
+//! Lo que depende del sistema operativo, en un solo lugar: carpeta de configuración, abrir archivos,
+//! carpetas y URLs, terminar un árbol de procesos y el almacén de credenciales (`secrets`). El resto del
+//! código no usa `cfg(windows)`.
+
+pub mod secrets;
 
 use std::io;
 use std::path::{Path, PathBuf};
@@ -57,6 +60,32 @@ pub fn open_path(path: &Path) -> io::Result<()> {
     cmd.spawn().map(drop)
 }
 
+/// Abre una URL `https://` en el navegador del sistema. Otros esquemas se rechazan.
+pub fn open_url(url: &str) -> io::Result<()> {
+    let ok = url.strip_prefix("https://").is_some_and(|rest| {
+        !rest.is_empty()
+            && !rest.chars().any(|c| c.is_whitespace() || c.is_control() || "\"'<>^`|".contains(c))
+    });
+    if !ok {
+        return Err(io::Error::new(io::ErrorKind::InvalidInput, "not an https URL"));
+    }
+    let mut cmd = if cfg!(windows) {
+        // Sin `cmd /C start`: el `&` de una URL se interpretaría como otro comando.
+        let mut c = command("rundll32");
+        c.args(["url.dll,FileProtocolHandler", url]);
+        c
+    } else if cfg!(target_os = "macos") {
+        let mut c = command("open");
+        c.arg(url);
+        c
+    } else {
+        let mut c = command("xdg-open");
+        c.arg(url);
+        c
+    };
+    cmd.spawn().map(drop)
+}
+
 /// Muestra el archivo seleccionado en el explorador del sistema (o abre la carpeta, en Linux).
 pub fn reveal_path(path: &Path) -> io::Result<()> {
     if !path.exists() {
@@ -101,6 +130,13 @@ mod tests {
         // No se toca la variable de entorno acá (los tests corren en paralelo): solo el caso sin ella.
         if std::env::var_os(CONFIG_DIR_ENV).is_none() {
             assert!(config_dir().ends_with(APP_DIR_NAME));
+        }
+    }
+
+    #[test]
+    fn only_https_urls_are_opened() {
+        for bad in ["http://x.com", "file:///c:/x", "https://", "https://a b", "javascript:alert(1)"] {
+            assert_eq!(open_url(bad).unwrap_err().kind(), io::ErrorKind::InvalidInput, "{bad}");
         }
     }
 

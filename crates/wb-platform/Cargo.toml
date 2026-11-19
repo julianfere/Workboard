@@ -1,6 +1,6 @@
 [package]
 name = "wb-platform"
-description = "Workboard OS integration: config folder, opening files, process trees"
+description = "Workboard OS integration: config folder, opening files and URLs, process trees, credential store"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -11,3 +11,13 @@ dirs = "6"
 
 [lints]
 workspace = true
+
+# Almacén de credenciales del sistema (secretos de los trackers).
+[target.'cfg(windows)'.dependencies]
+keyring = { version = "3.6.3", features = ["windows-native"] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+keyring = { version = "3.6.3", features = ["apple-native"] }
+
+[target.'cfg(all(unix, not(target_os = "macos")))'.dependencies]
+keyring = { version = "3.6.3", features = ["async-secret-service", "async-io", "crypto-rust"] }
