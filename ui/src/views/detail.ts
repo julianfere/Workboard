@@ -7,7 +7,9 @@ import { confirmDialog, esc, fmtAgo, fmtSize, promptDialog, toast } from "../dom
 import { errorText, label, t } from "../i18n";
 import { ico } from "../icons";
 import { renderMarkdown } from "../markdown";
-import { S, effectiveStatus, itemByName, metaList, metaText, titleOf, wf } from "../state";
+import { addToSessionModal, launched, loadSessions, newSessionModal, planItem, sessionById } from "../sessions";
+import { S, effectiveStatus, inSession, itemByName, metaList, metaText, stateDef, titleOf, wf } from "../state";
+import { termSize } from "../terminal";
 import type { ApiError, FileEntry, Item } from "../types";
 import { statusChip } from "./items";
 
@@ -85,9 +87,42 @@ function membersCard(it: Item): string {
   return `<section class="card"><h2>${esc(t("detail.members"))}</h2><ul class="list">${rows || `<li class="empty">—</li>`}</ul></section>`;
 }
 
+const SESSIONS_SHOWN = 6;
+let allSessions = false;
+
+/** Se puede planear un item que todavía no arrancó (o que ya está en planificación). */
+function canPlan(it: Item): boolean {
+  if (it.kind !== "item") return false;
+  const cat = stateDef(effectiveStatus(it))?.category ?? "unknown";
+  return ["backlog", "planned", "unknown"].includes(cat);
+}
+
+function sessionsCard(it: Item): string {
+  const list = S.sessions.filter((s) => inSession(s, it.name));
+  const shown = allSessions ? list : list.slice(0, SESSIONS_SHOWN);
+  const rows = shown
+    .map((s) => {
+      const own = s.items.includes(it.name) && s.items.length > 1;
+      const id = esc(s.id);
+      return `<li class="link-row" data-action="sess-open" data-id="${id}"><span class="sdot ${s.status}"></span>
+        <span class="grow">${esc(s.name)} <span class="muted">${esc(t(`session.status.${s.status}`))}${s.items.length > 1 ? ` · ${esc(t("session.items", { n: s.items.length }))}` : ""}</span></span>
+        ${s.state === "closed" ? `<button class="btn" data-action="sess-reopen" data-id="${id}">${esc(t("session.reopen"))}</button>` : ""}
+        ${own && s.state !== "closed" ? `<button class="icon-btn" data-action="sess-split" data-id="${id}" title="${esc(t("session.split"))}">${ico("columns")}</button>
+          <button class="icon-btn" data-action="sess-remove-item" data-id="${id}" title="${esc(t("session.removeItem"))}">${ico("minus")}</button>` : ""}
+        <button class="icon-btn" data-action="sess-rename" data-id="${id}" title="${esc(t("session.rename"))}">${ico("edit")}</button></li>`;
+    })
+    .join("");
+  const more = list.length > SESSIONS_SHOWN && !allSessions ? `<button class="link" data-action="sess-show-all">${esc(t("session.showAll", { n: list.length }))}</button>` : "";
+  return `<section class="card"><h2>${ico("terminal")}${esc(t("session.title"))}</h2>
+    ${rows ? `<ul class="list">${rows}</ul>${more}` : `<p class="empty">${esc(t("session.noneForItem"))}</p>`}
+    <div class="card-actions"><button class="btn" data-action="detail-new-session">${ico("plus")}${esc(t("session.new"))}</button>
+      ${S.sessions.some((s) => s.state !== "closed" && !inSession(s, it.name)) ? `<button class="btn" data-action="detail-add-to-session">${ico("folderIn")}${esc(t("session.addTo"))}</button>` : ""}
+      ${canPlan(it) ? `<button class="btn" data-action="detail-plan">${ico("plan")}${esc(t("session.plan"))}</button>` : ""}</div></section>`;
+}
+
 function summaryTab(it: Item): string {
   const deploy = it.deploy ? `<section class="card"><h2>${esc(t("detail.deploy"))}</h2><div class="md">${renderMarkdown(it.deploy)}</div></section>` : "";
-  return `<div class="detail-grid"><div>${tasksCard(it)}${membersCard(it)}${deploy}</div><div>${fieldsCard(it)}</div></div>`;
+  return `<div class="detail-grid"><div>${tasksCard(it)}${membersCard(it)}${deploy}</div><div>${sessionsCard(it)}${fieldsCard(it)}</div></div>`;
 }
 
 function readmeTab(): string {
@@ -309,3 +344,30 @@ onAction("to-group", async () => {
   await refresh();
 });
 
+// ---------- sesiones del item ----------
+
+onAction("sess-show-all", () => {
+  allSessions = true;
+  render();
+});
+onAction("detail-new-session", () => newSessionModal([item().name]));
+onAction("detail-add-to-session", () => addToSessionModal([item().name]));
+onAction("detail-plan", async () => {
+  const it = item();
+  if (!(await confirmDialog(t("session.planConfirm", { name: titleOf(it) }), t("session.plan")))) return;
+  await planItem(it.name);
+});
+onAction("sess-remove-item", async (el, ev) => {
+  ev.stopPropagation();
+  const s = sessionById(el.dataset.id!);
+  if (!s || !(await confirmDialog(t("session.removeConfirm", { item: item().name, name: s.name }), t("session.removeItem")))) return;
+  await api.sessionRemoveItem(s.id, item().name);
+  await loadSessions();
+});
+onAction("sess-split", async (el, ev) => {
+  ev.stopPropagation();
+  const s = sessionById(el.dataset.id!);
+  if (!s || !(await confirmDialog(t("session.splitConfirm", { item: item().name, name: s.name }), t("session.split")))) return;
+  const { cols, rows } = termSize();
+  await launched(await api.sessionSplit(s.id, item().name, cols, rows));
+});

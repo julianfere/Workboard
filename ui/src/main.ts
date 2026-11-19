@@ -6,7 +6,9 @@ import { applyTheme, closeDetail, goView, installEvents, NAV, refresh, render, s
 import { esc } from "./dom";
 import { errorText, setLang, t } from "./i18n";
 import { openPalette } from "./palette";
+import { loadSessions, startSessionPolling } from "./sessions";
 import { S } from "./state";
+import { installTerminalPanel, retheme, toggleTerminal } from "./terminal";
 import "./views/alerts";
 import "./views/detail";
 import "./views/items";
@@ -16,6 +18,9 @@ import { loadInbox } from "./views/tasks";
 import "./views/today";
 
 installEvents();
+installTerminalPanel();
+// La terminal no lee variables CSS: se le vuelve a pasar el tema cuando cambia.
+new MutationObserver(retheme).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
 
 document.addEventListener("keydown", (ev) => {
   const target = ev.target as HTMLElement;
@@ -25,6 +30,13 @@ document.addEventListener("keydown", (ev) => {
     openPalette();
     return;
   }
+  if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === "j") {
+    ev.preventDefault();
+    toggleTerminal();
+    return;
+  }
+  // Dentro de la terminal las teclas son del agente.
+  if (target.closest("#term-body")) return;
   if (document.querySelector(".modal-back")) return;
   if (ev.key === "F5") {
     ev.preventDefault();
@@ -51,7 +63,7 @@ async function boot(): Promise<void> {
     setLang(S.settings.lang);
     applyTheme(S.settings.theme);
     if (S.settings.root) {
-      await Promise.all([refresh(), loadInbox(), loadNotes()]);
+      await Promise.all([refresh(), loadInbox(), loadNotes(), loadSessions()]);
     }
   } catch (err) {
     S.loadError = errorText(err);
@@ -63,6 +75,7 @@ async function boot(): Promise<void> {
   }
   render();
   startPolling();
+  startSessionPolling();
 }
 
 boot();

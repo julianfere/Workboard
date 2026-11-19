@@ -143,6 +143,93 @@ export interface Settings {
   root: string | null;
   recents: string[];
   notesFolder: string | null;
+  agents: AgentSettings;
+}
+
+export interface CustomAgent {
+  label: string;
+  command: string;
+  args: string;
+  resumeArgs: string;
+}
+
+export interface AgentSettings {
+  default: string;
+  custom: CustomAgent;
+  planPrefix: Record<string, string>;
+}
+
+// ---------- sesiones de agentes ----------
+
+export type LiveStatus = "starting" | "working" | "needsYou" | "idle" | "ended" | "running" | "paused" | "closed";
+
+export interface Recommendation {
+  action: "new" | "handoff" | "compact";
+  reason: string;
+  /** Hay código que el README no refleja (si no, lo trabajado solo está en la conversación). */
+  code: boolean;
+  hours?: number;
+}
+
+export interface Weight {
+  ctx: number;
+  prompts: number;
+  level: "normal" | "long" | "heavy";
+  lastTs: number;
+  lastEdit: number;
+  lastReadme: number;
+  recommend?: Recommendation;
+}
+
+export interface Session {
+  id: string;
+  name: string;
+  root: string;
+  cwd: string;
+  items: string[];
+  state: "active" | "paused" | "closed";
+  mode: string;
+  agent: string;
+  plan: boolean;
+  model?: string;
+  created: string;
+  lastActivity: string;
+  forkOf: string | null;
+  repos: string[];
+  pinned: boolean;
+  keepOpen: boolean;
+  running: boolean;
+  status: LiveStatus;
+  statusDetail: string;
+  hooks: boolean;
+  weight: Weight | null;
+  otherItems: { ts: number; items: { id: string; name: string }[] } | null;
+  /** Solo en las de otros proyectos. */
+  project?: string;
+}
+
+export interface SessionList {
+  rev: number;
+  sessions: Session[];
+  others: Session[];
+  autoClosed: string[];
+}
+
+export interface AgentInfo {
+  id: string;
+  label?: string;
+  found: boolean;
+  hooks: boolean;
+  fork: boolean;
+}
+
+export interface AgentsInfo {
+  agents: AgentInfo[];
+  default: string;
+  custom: CustomAgent;
+  planPrefix: Record<string, string>;
+  placeholders: string[];
+  modes: string[];
 }
 
 export interface AppInfo {

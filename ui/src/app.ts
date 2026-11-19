@@ -36,6 +36,19 @@ export function registerProject(fn: () => string): void {
   projectView = fn;
 }
 
+let navExtra: () => string = () => `<div class="nav-spacer"></div>`;
+const afterRenders: (() => void)[] = [];
+
+/** Lo que va entre las secciones y el pie del menú (la lista de sesiones). */
+export function registerNavExtra(fn: () => string): void {
+  navExtra = fn;
+}
+
+/** Corre después de cada render (partes de la ventana que no se rearman con innerHTML, como las terminales). */
+export function onAfterRender(fn: () => void): void {
+  afterRenders.push(fn);
+}
+
 export const NAV: { id: ViewId; icon: string }[] = [
   { id: "today", icon: "sun" },
   { id: "items", icon: "list" },
@@ -142,7 +155,7 @@ function renderNav(): string {
   };
   return `<button class="brand" data-action="project-menu" title="${esc(S.root)}"><span class="brand-icon">${ico("folder")}</span><span class="brand-name">${esc(projectName)}</span>${ico("chevronDown", "chev")}</button>
     ${NAV.map((v, i) => item(v.id, v.icon, String(i + 1))).join("")}
-    <div class="nav-spacer"></div>
+    ${navExtra()}
     <button class="nav-item" data-action="palette">${ico("search")}<span>${esc(t("palette.open"))}</span><span class="nav-key">Ctrl K</span></button>
     ${item("settings", "settings", "")}`;
 }
@@ -165,6 +178,7 @@ export function render(): void {
   const badge = $("#alerts-count");
   if (badge) badge.textContent = count ? String(count) : "";
   document.title = S.root ? `${S.root.split(/[\\/]/).pop()} · ${t("app.name")}` : t("app.name");
+  for (const fn of afterRenders) fn();
 }
 
 let alertCounter: () => number = () => 0;

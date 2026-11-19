@@ -8,7 +8,7 @@ sección de checklist. La v1 sigue en uso y es la referencia de comportamiento.
 
 | Qué | Comando |
 |---|---|
-| App | `npm install` y `npm run tauri dev` |
+| App | `npm install` y `npm run tauri dev` (compila antes `wb-mcp` y `wb-hook`, que van junto al exe) |
 | UI en el navegador contra el backend real | `cargo run -p wb-api --bin wb-devserver -- <carpeta>` + `npm run dev` → `http://localhost:1420` (o `http://127.0.0.1:8766` con la UI compilada) |
 | Tests | `cargo test --workspace` |
 | Lint (lo mismo que el CI) | `cargo fmt --all --check && cargo clippy --workspace --all-targets -- -D warnings` y `npm run build` |
@@ -30,15 +30,24 @@ config real.
   sin JSON-RPC) y `main.rs` el transporte. Modos: `WORKBOARD_SESSION` (solo los items de esa sesión),
   `WORKBOARD_MCP_WRITE=1` o solo lectura. Lee `settings.json` (preset, idioma, `root`, `notesFolder`) y
   `tracker_cache.json` de la carpeta de config. Herramientas y respuestas en inglés.
+- `crates/wb-sessions` — sesiones de agentes: `registry` (`<config>/sessions/<raíz>.json`, lo lee también el MCP),
+  `agents` (línea de comando de Claude Code, Copilot CLI y el comando propio; `.cmd` de npm → `node <script>`),
+  `pty` (portable-pty/ConPTY, salida agrupada cada 8 ms, búfer de 512 KB para reconectar), `transcript` (peso de la
+  sesión y recomendación nueva / traspaso / compactar) y `SessionManager` (ciclo de vida, receptor de hooks HTTP con
+  token, contexto `<config>/ctx/<id>/AGENTS.md`, settings de Claude con hooks y permisos, `activity.jsonl`, aviso de
+  otro item en el pedido, validación del plan en `Stop`). Textos para el agente: claves `agent.*`.
+- `crates/wb-hook` — el hook del CLI (`wb-hook <Evento>`): postea a la app y reimprime la respuesta. Sin dependencias.
 - `crates/wb-i18n` — `t(lang, key, params)` sobre `locales/*.json` (los mismos archivos que usa la UI).
 - `crates/wb-platform` — todo lo que depende del SO (`config_dir`, `open_path`, `reveal_path`,
   `kill_tree`). Fuera de este crate no hay `cfg(windows)`.
 - `crates/wb-api` — la API de la app: `Api::dispatch(cmd, args)` (un `match` con todos los comandos, cada uno
   un wrapper fino sobre `wb-core`), `settings.json` (idioma, tema, preset, raíz, recientes, carpeta de notas) y
-  `ApiError { code, params, conflict }`. Binario `wb-devserver`: la misma API por HTTP (`POST /api/<cmd>`,
+  `ApiError { code, params, conflict }`. `sessions.rs`: comandos `session_*`, `plan_item`, agentes; el
+  `SessionManager` se levanta a pedido y busca `wb-mcp`/`wb-hook` junto al exe (o `WORKBOARD_MCP_BIN`/`WORKBOARD_HOOK_BIN`). Binario `wb-devserver`: la misma API por HTTP (`POST /api/<cmd>`,
   header `X-Workboard: 1`) para desarrollar la UI en el navegador contra el backend real.
-- `src-tauri/` — la ventana: un único comando `api(cmd, args)` que llama a `Api::dispatch`, más el plugin
-  de diálogo para elegir carpeta. Un comando nuevo se agrega solo en `wb-api` (y su wrapper en `ui/src/api.ts`).
+- `src-tauri/` — la ventana: un único comando `api(cmd, args)` que llama a `Api::dispatch`, `session_attach`
+  (salida de una terminal por un `Channel` de bytes) y el plugin de diálogo para elegir carpeta. Cerrar la
+  ventana mata las terminales. Un comando nuevo se agrega solo en `wb-api` (y su wrapper en `ui/src/api.ts`).
 - `ui/` — TypeScript + Vite, sin frameworks. `api.ts`: única puerta al backend (`invoke` en Tauri, `fetch` al
   devserver en el navegador). `app.ts`: carga, navegación, refresco en vivo (cada 2 s compara la firma del
   árbol, como la v1) y registro de acciones (`data-action` / `data-change` / `data-enter`). Una vista por
@@ -75,5 +84,5 @@ config real.
 ## Plan
 
 Fases: 0 golden ✓ · 1 spike ✓ · 2 esqueleto ✓ · 3 core + MCP ✓ · 4 UI base ✓ · 5 git ·
-6 sesiones y agentes · 7 trackers · 8 plugins + plugin privado · 9 multiplataforma, docs y release ·
+6 sesiones y agentes (en curso: falta horas, métricas, tools, Reflexionar/Revisar) · 7 trackers · 8 plugins + plugin privado · 9 multiplataforma, docs y release ·
 10 cutover desde la v1. El checklist de paridad está en `docs/parity-checklist.md`.

@@ -1,7 +1,7 @@
 // Estado de la UI y helpers del flujo de trabajo (qué clave del frontmatter es cada dato).
 
 import { label } from "./i18n";
-import type { AppInfo, Item, ItemDetail, MetaValue, Note, PresetSummary, Settings, StateDef, Task, Workflow } from "./types";
+import type { AppInfo, Item, ItemDetail, MetaValue, Note, PresetSummary, Session, Settings, StateDef, Task, Workflow } from "./types";
 
 export type ViewId = "today" | "items" | "tasks" | "hours" | "alerts" | "notes" | "metrics" | "tools" | "settings";
 
@@ -31,7 +31,16 @@ export const S = {
   notes: [] as Note[],
   note: null as Note | null,
   noteFilter: "",
+  /** Sesiones de la carpeta abierta y las que corren en otros proyectos. */
+  sessions: [] as Session[],
+  otherSessions: [] as Session[],
+  sessionsRev: 0,
+  /** Panel de terminales: visible, pestañas abiertas (ids) y la activa. */
+  term: { open: false, tabs: [] as string[], active: null as string | null },
 };
+
+/** ¿El item es de la sesión (o de un grupo de la sesión)? */
+export const inSession = (s: Session, name: string) => s.items.some((w) => name === w || name.startsWith(`${w}/`));
 
 export function wf(): Workflow {
   return S.workflow!;

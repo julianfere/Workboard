@@ -26,7 +26,7 @@ Feature/Bug de Implementar) va al plugin privado y se marca **(privado)**.
 | [x] | Períodos configurables (hoy del 20 al 19) | 3 | misc |
 | [x] | Categorías de archivo por prefijo/extensión; scripts "corridos en DEV/QA/PROD" (`runs.json`) | 3 | misc, mcp |
 | [x] | Mover a grupo / sacar / disolver, eliminar a `_deleted` con deshacer, restaurar, renombrar carpeta | 3 | workspace_ops |
-| [~] | Después de mover: sesiones, marcas, backups y notas siguen a la carpeta | 3 | parcial (backups) |
+| [~] | Después de mover: sesiones, marcas, backups y notas siguen a la carpeta (falta notas) | 3 / 6 | parcial (backups) |
 | [~] | Nuevo item con o sin WI (crea carpeta + README) | 3 / 7 | workspace_ops (create_folder) |
 | [x] | Plan incompleto (`plan_gaps`) | 3 | misc |
 | [x] | Bandeja de tareas sin WI (`inbox.md` en la config) | 3 | tasks (mismas funciones) |
@@ -38,7 +38,7 @@ Feature/Bug de Implementar) va al plugin privado y se marca **(privado)**.
 |---|---|---|---|
 | [x] | Modos: sesión (solo sus WI, grupos incluyen sus WI), escritura global, solo lectura | 3 | mcp |
 | [x] | `session`, `list_wis`, `get_wi`, `set_estado`, `add_task`, `complete_task`, `marcar_ejecutado`, `add_note`, `list_tools`, `run_tool` | 3 | mcp |
-| [ ] | `instructions` con la guía + contexto de la sesión | 3 | mcp |
+| [x] | `instructions` con la guía + contexto de la sesión | 3 | mcp |
 | [x] | Eventos por sesión (`<id>.events.jsonl`) o globales | 3 | mcp |
 | [x] | Planificación: prioridad, pactada, período y horas (local pisa a Azure) | 3 | mcp |
 | [x] | Nombres de herramientas y respuestas en inglés (sin alias: las sesiones de la v1 usan el MCP de la v1) | 3 | mcp |
@@ -78,15 +78,15 @@ Feature/Bug de Implementar) va al plugin privado y se marca **(privado)**.
 
 | | Función | Fase | Golden |
 |---|---|---|---|
-| [ ] | Terminal embebida (pty), pestañas, `Ctrl+J`; cerrar mata el árbol | 6 | — (spike) |
-| [ ] | Agentes: Claude Code, Copilot CLI, comando propio con placeholders | 6 | — |
-| [ ] | Contexto (`AGENTS.md`), guía, config del MCP y permisos por sesión | 6 | — |
-| [ ] | Hooks (trabajando / te necesita / reposo) y `activity.jsonl` | 6 | — |
-| [ ] | Barra lateral: fijadas, corriendo, recientes, anteriores, cerradas, otros proyectos; cierre automático | 6 | — |
-| [ ] | Renombrar, quitar WI, Separar (fork), sumar a sesión, reabrir | 6 | — |
-| [ ] | Sesión larga: peso por transcript, recomendación (nueva / traspaso / compactar) | 6 | — |
-| [ ] | Otro WI en el pedido (`UserPromptSubmit`) | 6 | — |
-| [ ] | Planear (modo plan + validación en `Stop`), Implementar **(flujo Feature/Bug: privado)** | 6 / 8 | — |
+| [x] | Terminal embebida (pty), pestañas, `Ctrl+J`; cerrar mata el árbol | 6 | wb-sessions/tests |
+| [x] | Agentes: Claude Code, Copilot CLI, comando propio con placeholders | 6 | agents (unit) |
+| [x] | Contexto (`AGENTS.md`), guía, config del MCP y permisos por sesión | 6 | wb-sessions/tests |
+| [x] | Hooks (trabajando / te necesita / reposo) y `activity.jsonl` | 6 | wb-sessions/tests |
+| [x] | Barra lateral: fijadas, corriendo, recientes, anteriores, cerradas, otros proyectos; cierre automático | 6 | — |
+| [x] | Renombrar, quitar WI, Separar (fork), sumar a sesión, reabrir | 6 | wb-sessions/tests |
+| [x] | Sesión larga: peso por transcript, recomendación (nueva / traspaso / compactar) | 6 | transcript (unit) |
+| [x] | Otro WI en el pedido (`UserPromptSubmit`) | 6 | wb-sessions/tests |
+| [~] | Planear (modo plan + validación en `Stop`) ✓; Implementar **(flujo Feature/Bug: privado)** | 6 / 8 | wb-api |
 | [ ] | Reflexionar y Revisar (sesiones en modo plan con evidencia / diff) | 6 | — |
 | [ ] | Horas trabajadas por WI y período (activity + transcript) | 6 | — |
 | [ ] | Métricas por sesión y por configuración; exportar | 6 | — |

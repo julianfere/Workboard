@@ -7,6 +7,8 @@ import { errorText, label, LANGS, setLang, t } from "../i18n";
 import { ico } from "../icons";
 import { S, wf } from "../state";
 import type { Settings, Theme } from "../types";
+import { agentLabel, agentsInfo, loadSessions } from "../sessions";
+import type { AgentsInfo } from "../types";
 import { loadInbox } from "./tasks";
 import { loadNotes } from "./notes";
 
@@ -28,6 +30,54 @@ function projectPicker(): string {
 
 function renderProject(): string {
   return `<div class="page"><h1>${esc(t("app.name"))}</h1>${S.loadError ? `<p class="error">${esc(S.loadError)}</p>` : ""}${projectPicker()}</div>`;
+}
+
+let agents: AgentsInfo | null = null;
+let agentsLoading = false;
+
+/** Agentes de las sesiones: el de por defecto, el comando propio y con qué arranca Planear. */
+function agentsCard(): string {
+  if (!agents) {
+    if (!agentsLoading) {
+      agentsLoading = true;
+      agentsInfo(true)
+        .then((a) => (agents = a))
+        .catch(() => {})
+        .finally(() => {
+          agentsLoading = false;
+          render();
+        });
+    }
+    return `<section class="card"><h2>${esc(t("settings.agents"))}</h2><p class="muted">…</p></section>`;
+  }
+  const a = agents;
+  const defaults: [string, string][] = a.agents.map((x) => [x.id, `${agentLabel(x)}${x.found ? "" : ` (${t("agent.notFound")})`}`]);
+  const c = a.custom;
+  const input = (key: string, value: string, hint = "") =>
+    `<input data-change="set-agent-custom" data-key="${key}" value="${esc(value)}" placeholder="${esc(hint)}">`;
+  const prefixes = a.agents
+    .filter((x) => x.id !== "custom")
+    .map((x) => `<div class="set-row"><label>${esc(t("settings.planPrefix", { agent: agentLabel(x) }))}</label><input data-change="set-plan-prefix" data-agent="${esc(x.id)}" value="${esc(a.planPrefix[x.id] ?? "")}" placeholder="${esc(t("settings.planPrefixHint"))}"></div>`)
+    .join("");
+  return `<section class="card"><h2>${esc(t("settings.agents"))}</h2>
+    <div class="set-row"><label for="set-agent">${esc(t("settings.defaultAgent"))}</label><select id="set-agent" data-change="set-agent-default">${options(defaults, a.default)}</select></div>
+    ${prefixes}
+    <h3>${esc(t("agent.custom"))}</h3>
+    <div class="set-row"><label>${esc(t("settings.customLabel"))}</label>${input("label", c.label)}</div>
+    <div class="set-row"><label>${esc(t("settings.customCommand"))}</label>${input("command", c.command, t("settings.customCommandHint"))}</div>
+    <div class="set-row"><label>${esc(t("settings.customArgs"))}</label>${input("args", c.args)}</div>
+    <div class="set-row"><label>${esc(t("settings.customResumeArgs"))}</label>${input("resumeArgs", c.resumeArgs)}</div>
+    <p class="muted">${esc(t("settings.placeholders"))} ${a.placeholders.map((p) => `<code>{${esc(p)}}</code>`).join(" ")}</p></section>`;
+}
+
+async function saveAgents(patch: Parameters<typeof api.setAgents>[0]): Promise<void> {
+  try {
+    agents = await api.setAgents(patch);
+    S.settings = await api.getSettings();
+  } catch (err) {
+    toast(errorText(err), undefined, "error");
+  }
+  render();
 }
 
 function renderSettings(): string {
@@ -52,6 +102,7 @@ function renderSettings(): string {
       <p class="muted">${esc(t("workflow.period", { day: w.period.startDay }))}</p></section>
     <section class="card"><h2>${esc(t("nav.notes"))}</h2>
       <div class="set-row"><label for="set-notes">${esc(t("settings.notesFolder"))}</label><input id="set-notes" data-change="set-notes" value="${esc(s.notesFolder ?? "")}" placeholder="${esc(t("settings.notesDefault"))}"></div></section>
+    ${agentsCard()}
     ${S.info ? `<section class="card"><h2>${esc(t("settings.about"))}</h2><p class="muted">${esc(t("about.version", { version: S.info.version, os: S.info.os }))}<br><code>${esc(S.info.configDir)}</code></p></section>` : ""}
   </div>`;
 }
@@ -78,6 +129,7 @@ export async function openRoot(path: string): Promise<void> {
     S.view = "items";
     await Promise.all([loadInbox(), loadNotes()]);
     await refresh();
+    await loadSessions();
   } catch (err) {
     S.loadError = errorText(err);
     render();
@@ -113,4 +165,14 @@ onAction("project-menu", () => {
   S.detail = null;
   render();
   document.querySelector<HTMLInputElement>("#root-path")?.focus();
+});
+onChange("set-agent-default", (el) => saveAgents({ default: (el as HTMLSelectElement).value }));
+onChange("set-agent-custom", (el) => {
+  const custom = { ...(agents?.custom ?? { label: "", command: "", args: "", resumeArgs: "" }) };
+  (custom as Record<string, string>)[el.dataset.key!] = (el as HTMLInputElement).value;
+  return saveAgents({ custom });
+});
+onChange("set-plan-prefix", (el) => {
+  const planPrefix = { ...(agents?.planPrefix ?? {}), [el.dataset.agent!]: (el as HTMLInputElement).value };
+  return saveAgents({ planPrefix });
 });

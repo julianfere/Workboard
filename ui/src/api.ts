@@ -3,6 +3,7 @@
 
 import { invoke } from "@tauri-apps/api/core";
 import type {
+  AgentsInfo,
   ApiError,
   AppInfo,
   DeletedEntry,
@@ -11,6 +12,8 @@ import type {
   ItemList,
   Note,
   PresetSummary,
+  Session,
+  SessionList,
   Settings,
   Task,
   Version,
@@ -90,6 +93,28 @@ export const api = {
   noteRead: (id: string) => call<Note>("note_read", { id }),
   noteSave: (id: string, body: string, mtime: number) => call<Note>("note_save", { id, body, mtime }),
   noteCreate: (title: string, items: string[]) => call<Note>("note_create", { title, items }),
+
+  sessionsRev: () => call<number>("sessions_rev"),
+  sessions: () => call<SessionList>("sessions"),
+  sessionAgents: () => call<AgentsInfo>("session_agents"),
+  setAgents: (cfg: Partial<Pick<AgentsInfo, "default" | "custom" | "planPrefix">>) => call<AgentsInfo>("set_agents", cfg),
+  sessionCreate: (opts: { items: string[]; name: string; mode: string; agent: string; model: string; cols: number; rows: number }) =>
+    call<Session>("session_create", opts),
+  sessionResume: (id: string, cols: number, rows: number) => call<Session>("session_resume", { id, cols, rows }),
+  sessionPause: (id: string) => call<null>("session_pause", { id }),
+  sessionClose: (id: string) => call<null>("session_close", { id }),
+  sessionReopen: (id: string) => call<null>("session_reopen", { id }),
+  sessionRename: (id: string, name: string) => call<string>("session_rename", { id, name }),
+  sessionPin: (id: string, pinned: boolean) => call<null>("session_pin", { id, pinned }),
+  sessionAddItems: (id: string, items: string[]) => call<Session>("session_add_items", { id, items }),
+  sessionRemoveItem: (id: string, item: string) => call<Session>("session_remove_item", { id, item }),
+  sessionSplit: (id: string, item: string, cols: number, rows: number) => call<Session>("session_split", { id, item, cols, rows }),
+  sessionContinue: (id: string, cols: number, rows: number) => call<Session>("session_continue", { id, cols, rows }),
+  sessionPrompt: (id: string, kind: "handoff" | "compact") => call<null>("session_prompt", { id, kind }),
+  sessionRead: (id: string, offset: number) => call<{ offset: number; data: string; exited: boolean; code: number | null }>("session_read", { id, offset }),
+  sessionWrite: (id: string, data: string) => call<null>("session_write", { id, data }),
+  sessionResize: (id: string, cols: number, rows: number) => call<null>("session_resize", { id, cols, rows }),
+  planItem: (name: string, cols: number, rows: number) => call<{ folder: string; session: Session }>("plan_item", { name, cols, rows }),
 };
 
 /** Elegir una carpeta: diálogo nativo en la app; en el navegador no hay (se escribe la ruta). */
