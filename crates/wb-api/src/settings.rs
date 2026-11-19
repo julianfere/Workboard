@@ -2,6 +2,7 @@
 //! recientes y carpeta de notas. El MCP lee el mismo archivo. Un archivo que no existe o no se puede leer
 //! equivale a los valores por defecto; la escritura es atómica.
 
+use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
@@ -33,6 +34,18 @@ pub struct Settings {
     pub notes_folder: Option<String>,
     /// Agentes de las sesiones: el de por defecto, el comando propio y prefijos de planificación.
     pub agents: wb_sessions::AgentSettings,
+    /// Panel Git: repos de cada carpeta de trabajos y ramas candidatas de cada ambiente.
+    pub git: GitSettings,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct GitSettings {
+    /// Repos que se revisan en cada carpeta de trabajos (clave: la carpeta). Sin entrada = los repos
+    /// hermanos detectados.
+    pub repos: BTreeMap<String, Vec<wb_git::RepoConfig>>,
+    /// Ramas remotas candidatas de cada ambiente para detectar repos (`None` = las del flujo).
+    pub env_refs: Option<BTreeMap<String, Vec<String>>>,
 }
 
 impl Default for Settings {
@@ -45,6 +58,7 @@ impl Default for Settings {
             recents: vec![],
             notes_folder: None,
             agents: Default::default(),
+            git: Default::default(),
         }
     }
 }

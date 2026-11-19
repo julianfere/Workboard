@@ -3,6 +3,7 @@
 //! Todo se lee en cada llamada: la carpeta de trabajos puede cambiar por fuera (agentes, el usuario).
 
 pub mod error;
+mod git;
 mod sessions;
 pub mod settings;
 
@@ -30,6 +31,7 @@ pub struct Api {
     sessions: OnceLock<Arc<wb_sessions::SessionManager>>,
     /// Ejecutables del MCP y del hook, si no son los que viajan junto a la app.
     session_bins: Mutex<Option<(PathBuf, PathBuf)>>,
+    git: git::GitState,
 }
 
 fn to_json<T: Serialize>(v: T) -> ApiResult<Json> {
@@ -72,6 +74,7 @@ impl Api {
             settings: Mutex::new(s),
             sessions: OnceLock::new(),
             session_bins: Mutex::new(None),
+            git: Default::default(),
         }
     }
 
@@ -279,6 +282,7 @@ impl Api {
             }
             _ => self
                 .session_command(cmd, &a)
+                .or_else(|| self.git_command(cmd, &a))
                 .unwrap_or_else(|| Err(ApiError::new("error.unknownCommand", &[("name", cmd)]))),
         }
     }

@@ -9,7 +9,9 @@ use tauri::{Manager, State};
 use wb_api::{Api, ApiResult};
 use wb_sessions::PtyEvent;
 
-#[tauri::command]
+// `async`: fuera del hilo principal. Algunos comandos tardan (la vista general de git puede llevar
+// segundos la primera vez) y no deben congelar la ventana.
+#[tauri::command(async)]
 fn api(state: State<'_, Api>, cmd: String, args: Option<Value>) -> ApiResult<Value> {
     state.dispatch(&cmd, &args.unwrap_or(Value::Null))
 }
