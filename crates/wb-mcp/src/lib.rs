@@ -22,6 +22,8 @@ use wb_core::validate::{fmt_g, parse_date, parse_hours, validate_fields};
 use wb_core::workspace::Item;
 use wb_core::{Workflow, Workspace, py};
 
+pub mod context;
+
 pub const MAX_LIST: usize = 100;
 pub const MAX_FILES: usize = 200;
 pub const TRACKER_CACHE: &str = "tracker_cache.json";
@@ -211,7 +213,7 @@ fn in_session(name: &str, items: &BTreeSet<String>) -> bool {
 }
 
 /// Ruta de un item (`grp/x`) con los separadores del sistema.
-fn item_path(root: &Path, name: &str) -> PathBuf {
+pub fn item_path(root: &Path, name: &str) -> PathBuf {
     name.split('/').fold(root.to_path_buf(), |p, part| p.join(part))
 }
 
@@ -368,29 +370,31 @@ impl<'a> Tools<'a> {
     }
 }
 
-/// Texto de `instructions` del MCP: qué es Workboard y cómo trabajar con él.
+/// Texto de la guía: qué es Workboard y cómo trabajar con él.
 pub fn guide(ctx: &Ctx) -> String {
-    let wf = ctx.workflow();
-    let lang = ctx.lang();
-    let ids = |v: Vec<&str>| v.join(", ");
-    wb_i18n::t(
-        &lang,
-        "mcp.guide",
-        &[
-            ("states", &ids(wf.state_ids().collect())),
-            ("types", &ids(wf.types.iter().map(|t| t.id.as_str()).collect())),
-            ("environments", &ids(wf.environments.iter().map(|e| e.id.as_str()).collect())),
-            ("tasks", &wf.tasks.heading),
-            ("session", names::SESSION),
-            ("get", names::GET_ITEM),
-            ("update", names::UPDATE_ITEM),
-            ("addTask", names::ADD_TASK),
-            ("completeTask", names::COMPLETE_TASK),
-            ("addNote", names::ADD_NOTE),
-            ("markRan", names::MARK_RAN),
-            ("listTools", names::LIST_TOOLS),
-            ("runTool", names::RUN_TOOL),
-        ],
+    context::guide_for(&ctx.workflow(), &ctx.lang())
+}
+
+/// `instructions` del MCP: dentro de una sesión, el mismo contexto que recibe el agente (sus items, la
+/// guía y las tools); fuera de una sesión, solo la guía.
+pub fn instructions(ctx: &Ctx) -> String {
+    let (Some(rec), Ok(ws)) = (ctx.session_record(), ctx.workspace()) else { return guide(ctx) };
+    let Ok(all) = ws.list_items() else { return guide(ctx) };
+    let items: Vec<String> = rec
+        .get("items")
+        .or_else(|| rec.get("wis"))
+        .and_then(Json::as_array)
+        .map(|l| l.iter().filter_map(|v| v.as_str().map(String::from)).collect())
+        .unwrap_or_default();
+    let name = rec["name"].as_str().or_else(|| rec["nombre"].as_str()).unwrap_or_default();
+    context::session_context(
+        ws.workflow(),
+        &ctx.lang(),
+        ws.root(),
+        name,
+        &items,
+        &all,
+        &registered_tools(ctx),
     )
 }
 
@@ -607,7 +611,7 @@ pub fn add_note(ctx: &Ctx, item: &str, title: &str, text: &str) -> ToolResult {
 }
 
 /// Tools promovidas por el usuario (`<config>/tools/<nombre>/tool.json`, formato de la v1).
-fn registered_tools(ctx: &Ctx) -> Vec<Json> {
+pub fn registered_tools(ctx: &Ctx) -> Vec<Json> {
     let mut dirs: Vec<PathBuf> = std::fs::read_dir(ctx.config_dir.join("tools"))
         .map(|rd| rd.flatten().map(|e| e.path()).filter(|p| p.join("tool.json").is_file()).collect())
         .unwrap_or_default();
