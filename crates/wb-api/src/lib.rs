@@ -5,6 +5,7 @@
 pub mod error;
 mod sessions;
 pub mod settings;
+mod stats;
 mod tracker;
 
 use std::path::{Path, PathBuf};
@@ -284,6 +285,7 @@ impl Api {
             _ => self
                 .session_command(cmd, &a)
                 .or_else(|| self.tracker_command(cmd, &a))
+                .or_else(|| self.stats_command(cmd, &a))
                 .unwrap_or_else(|| Err(ApiError::new("error.unknownCommand", &[("name", cmd)]))),
         }
     }

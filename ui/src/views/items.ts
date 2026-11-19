@@ -5,6 +5,7 @@ import { onAction, onChange, openDetail, refresh, registerView, render } from ".
 import { $, confirmDialog, daysUntil, esc, fmtAgo, promptDialog, toast } from "../dom";
 import { errorText, label, t } from "../i18n";
 import { ico } from "../icons";
+import { hasSessions, reflectItems } from "../reflect";
 import { S, effectiveStatus, isClosed, metaText, stateDef, stateLabel, stateRank, titleOf, typeLabel, wf } from "../state";
 import type { Item, TrackerItem } from "../types";
 import { createTrackedItem, fetchTrackerItem, openAssigned, trackerBadge, trackerBulk, trackerConnected, trackerToolbar } from "./tracker";
@@ -109,6 +110,7 @@ function bulkBar(): string {
     <select data-change="bulk-status" aria-label="${esc(t("items.setStatus"))}"><option value="">${esc(t("items.setStatus"))}</option>${states}</select>
     <button class="btn" data-action="bulk-group">${ico("layers")}${esc(t("items.group"))}</button>
     ${trackerBulk([...selected])}
+    ${hasSessions([...selected]) ? `<button class="btn" data-action="bulk-reflect" title="${esc(t("reflect.hint"))}">${ico("sparkle")}${esc(t("reflect.action"))}</button>` : ""}
     <button class="btn danger" data-action="bulk-trash">${ico("trash")}${esc(t("items.delete"))}</button>
     <button class="link" data-action="bulk-clear">${esc(t("items.clearSelection"))}</button></div>`;
 }
@@ -269,6 +271,7 @@ onAction("sort", (el) => {
 });
 onAction("new-item", () => newItemModal());
 onAction("show-deleted", () => deletedModal());
+onAction("bulk-reflect", () => reflectItems([...selected]));
 onAction("bulk-group", async () => {
   const title = await promptDialog(t("items.groupTitle"));
   if (!title) return;

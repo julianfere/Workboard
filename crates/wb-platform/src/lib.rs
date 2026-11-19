@@ -1,12 +1,14 @@
 //! Lo que depende del sistema operativo, en un solo lugar: carpeta de configuración, abrir archivos,
-//! carpetas y URLs, terminar un árbol de procesos y el almacén de credenciales (`secrets`). El resto del
-//! código no usa `cfg(windows)`.
+//! carpetas y URLs, terminar un árbol de procesos, buscar ejecutables, correr scripts y el almacén de
+//! credenciales (`secrets`). El resto del código no usa `cfg(windows)`.
 
 pub mod secrets;
 
-use std::io;
+use std::ffi::OsString;
+use std::io::{self, Read};
 use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::process::{Command, Stdio};
+use std::time::{Duration, Instant};
 
 /// Nombre de la carpeta de configuración. Distinto del de la v1 (`Workboard`) para que las dos
 /// versiones convivan sin pisarse; se reemplaza cuando el producto tenga nombre definitivo.
@@ -121,6 +123,120 @@ pub fn kill_tree(pid: u32) -> io::Result<()> {
     }
 }
 
+/// Separador de rutas del `PATH`.
+pub const PATH_SEP: char = if cfg!(windows) { ';' } else { ':' };
+
+/// Busca un ejecutable en `path` (con las extensiones de `PATHEXT` en Windows).
+pub fn which(cmd: &str, path: &str) -> Option<PathBuf> {
+    // En Windows un nombre sin extensión se prueba con las de PATHEXT (un archivo sin extensión, como el
+    // script de bash que deja npm, no se puede ejecutar).
+    let exts: Vec<String> = if cfg!(windows) && Path::new(cmd).extension().is_none() {
+        let pathext = std::env::var("PATHEXT").unwrap_or_else(|_| ".COM;.EXE;.BAT;.CMD".into());
+        pathext.split(';').filter(|e| !e.is_empty()).map(str::to_lowercase).collect()
+    } else {
+        vec![String::new()]
+    };
+    path.split(PATH_SEP)
+        .filter(|d| !d.is_empty())
+        .find_map(|dir| exts.iter().map(|e| Path::new(dir).join(format!("{cmd}{e}"))).find(|p| p.is_file()))
+}
+
+fn which_env(cmds: &[&str]) -> Option<PathBuf> {
+    let path = std::env::var("PATH").unwrap_or_default();
+    cmds.iter().find_map(|c| which(c, &path))
+}
+
+/// Línea de comando para correr un script con su intérprete (`python`, `powershell`, `bash`, `node`,
+/// `cmd`). `None` si el intérprete no está instalado o no existe en este sistema.
+pub fn script_command(interpreter: &str, script: &Path) -> Option<Vec<OsString>> {
+    let s = script.as_os_str().to_os_string();
+    let argv = |exe: PathBuf, pre: &[&str]| {
+        let mut v = vec![exe.into_os_string()];
+        v.extend(pre.iter().map(OsString::from));
+        v.push(s.clone());
+        v
+    };
+    match interpreter {
+        // `-I`: modo aislado (no importa módulos de la carpeta de trabajo ni del usuario).
+        "python" => {
+            let cands: &[&str] = if cfg!(windows) { &["py", "python"] } else { &["python3", "python"] };
+            which_env(cands).map(|e| argv(e, &["-I"]))
+        }
+        "powershell" => which_env(&["pwsh", "powershell"])
+            .map(|e| argv(e, &["-NoProfile", "-ExecutionPolicy", "Bypass", "-File"])),
+        "bash" => which_env(&["bash"]).map(|e| argv(e, &[])),
+        "node" => which_env(&["node"]).map(|e| argv(e, &[])),
+        "cmd" if cfg!(windows) => {
+            let exe = std::env::var_os("COMSPEC").map_or_else(|| PathBuf::from("cmd.exe"), PathBuf::from);
+            Some(argv(exe, &["/c"]))
+        }
+        _ => None,
+    }
+}
+
+/// Resultado de [`run_captured`].
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Captured {
+    /// Código de salida (`None` si se cortó por tiempo o terminó por una señal).
+    pub code: Option<i32>,
+    pub stdout: Vec<u8>,
+    pub stderr: Vec<u8>,
+    pub timed_out: bool,
+}
+
+/// Corre un programa sin ventana y sin entrada, captura su salida y lo corta (con sus hijos) si pasa
+/// `timeout`.
+pub fn run_captured(argv: &[OsString], cwd: &Path, timeout: Duration) -> io::Result<Captured> {
+    let (exe, args) = argv.split_first().ok_or_else(|| io::Error::other("empty command"))?;
+    let mut cmd = Command::new(exe);
+    cmd.args(args).current_dir(cwd).stdin(Stdio::null()).stdout(Stdio::piped()).stderr(Stdio::piped());
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+        cmd.creation_flags(CREATE_NO_WINDOW);
+    }
+    #[cfg(unix)]
+    {
+        use std::os::unix::process::CommandExt;
+        cmd.process_group(0);
+    }
+    let mut child = cmd.spawn()?;
+    let drain = |r: Option<Box<dyn Read + Send>>| {
+        std::thread::spawn(move || {
+            let mut buf = Vec::new();
+            if let Some(mut r) = r {
+                let _ = r.read_to_end(&mut buf);
+            }
+            buf
+        })
+    };
+    let out = drain(child.stdout.take().map(|r| Box::new(r) as Box<dyn Read + Send>));
+    let err = drain(child.stderr.take().map(|r| Box::new(r) as Box<dyn Read + Send>));
+    let deadline = Instant::now() + timeout;
+    let mut timed_out = false;
+    let status = loop {
+        if let Some(st) = child.try_wait()? {
+            break st;
+        }
+        if Instant::now() >= deadline {
+            timed_out = true;
+            let _ = kill_tree(child.id());
+            let _ = child.kill();
+            break child.wait()?;
+        }
+        std::thread::sleep(Duration::from_millis(30));
+    };
+    let stdout = out.join().unwrap_or_default();
+    let stderr = err.join().unwrap_or_default();
+    Ok(Captured { code: if timed_out { None } else { status.code() }, stdout, stderr, timed_out })
+}
+
+/// Carpeta de descargas del usuario (para exportar); si no hay, la carpeta personal.
+pub fn downloads_dir() -> PathBuf {
+    dirs::download_dir().or_else(dirs::home_dir).unwrap_or_else(|| PathBuf::from("."))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -159,5 +275,38 @@ mod tests {
         kill_tree(child.id()).unwrap();
         let status = child.wait().unwrap();
         assert!(!status.success());
+    }
+
+    #[test]
+    fn runs_a_command_and_captures_its_output() {
+        let dir = std::env::temp_dir();
+        #[cfg(windows)]
+        let argv: Vec<OsString> =
+            ["cmd", "/C", "echo hola& echo error 1>&2& exit 3"].map(OsString::from).to_vec();
+        #[cfg(unix)]
+        let argv: Vec<OsString> =
+            ["sh", "-c", "echo hola; echo error >&2; exit 3"].map(OsString::from).to_vec();
+        let out = run_captured(&argv, &dir, Duration::from_secs(30)).unwrap();
+        assert_eq!(out.code, Some(3));
+        assert!(String::from_utf8_lossy(&out.stdout).contains("hola"));
+        assert!(String::from_utf8_lossy(&out.stderr).contains("error"));
+        assert!(!out.timed_out);
+    }
+
+    #[test]
+    fn a_slow_command_is_cut() {
+        #[cfg(windows)]
+        let argv: Vec<OsString> = ["cmd", "/C", "ping -n 30 127.0.0.1 > NUL"].map(OsString::from).to_vec();
+        #[cfg(unix)]
+        let argv: Vec<OsString> = ["sleep", "30"].map(OsString::from).to_vec();
+        let start = Instant::now();
+        let out = run_captured(&argv, &std::env::temp_dir(), Duration::from_millis(500)).unwrap();
+        assert!(out.timed_out && out.code.is_none());
+        assert!(start.elapsed() < Duration::from_secs(20));
+    }
+
+    #[test]
+    fn unknown_interpreters_have_no_command() {
+        assert!(script_command("cobol", Path::new("x.cbl")).is_none());
     }
 }

@@ -21,9 +21,11 @@ anyhow = { version = "1", optional = true }
 chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
 indexmap = { version = "2", features = ["serde"] }
 rmcp = { version = "3.11", features = ["server", "transport-io", "macros"], optional = true }
+regex.workspace = true
 schemars = { version = "1", optional = true }
 serde.workspace = true
 serde_json.workspace = true
+sha2 = "0.10"
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "io-std"], optional = true }
 wb-core.workspace = true
 wb-i18n.workspace = true
@@ -31,7 +33,6 @@ wb-platform.workspace = true
 
 [dev-dependencies]
 dunce = "1"
-regex.workspace = true
 
 [lints]
 workspace = true

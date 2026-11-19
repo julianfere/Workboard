@@ -7,6 +7,7 @@ import { confirmDialog, esc, fmtAgo, fmtSize, promptDialog, toast } from "../dom
 import { errorText, label, t } from "../i18n";
 import { ico } from "../icons";
 import { renderMarkdown } from "../markdown";
+import { canReflect, reflectItems } from "../reflect";
 import { addToSessionModal, launched, loadSessions, newSessionModal, planItem, sessionById } from "../sessions";
 import { S, effectiveStatus, inSession, itemByName, metaList, metaText, stateDef, titleOf, wf } from "../state";
 import { termSize } from "../terminal";
@@ -118,7 +119,8 @@ function sessionsCard(it: Item): string {
     ${rows ? `<ul class="list">${rows}</ul>${more}` : `<p class="empty">${esc(t("session.noneForItem"))}</p>`}
     <div class="card-actions"><button class="btn" data-action="detail-new-session">${ico("plus")}${esc(t("session.new"))}</button>
       ${S.sessions.some((s) => s.state !== "closed" && !inSession(s, it.name)) ? `<button class="btn" data-action="detail-add-to-session">${ico("folderIn")}${esc(t("session.addTo"))}</button>` : ""}
-      ${canPlan(it) ? `<button class="btn" data-action="detail-plan">${ico("plan")}${esc(t("session.plan"))}</button>` : ""}</div></section>`;
+      ${canPlan(it) ? `<button class="btn" data-action="detail-plan">${ico("plan")}${esc(t("session.plan"))}</button>` : ""}
+      ${canReflect(it.name, effectiveStatus(it)) ? `<button class="btn" data-action="detail-reflect" title="${esc(t("reflect.hint"))}">${ico("sparkle")}${esc(t("reflect.action"))}</button>` : ""}</div></section>`;
 }
 
 function summaryTab(it: Item): string {
@@ -358,6 +360,7 @@ onAction("detail-plan", async () => {
   if (!(await confirmDialog(t("session.planConfirm", { name: titleOf(it) }), t("session.plan")))) return;
   await planItem(it.name);
 });
+onAction("detail-reflect", () => reflectItems([item().name]));
 onAction("sess-remove-item", async (el, ev) => {
   ev.stopPropagation();
   const s = sessionById(el.dataset.id!);

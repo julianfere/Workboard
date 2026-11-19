@@ -206,3 +206,63 @@ fn hook_server_requires_token() {
     assert!(post(&token).starts_with("HTTP/1.1 200"));
     std::fs::remove_dir_all(&base).ok();
 }
+
+/// Horas, métricas y Reflexionar sobre una sesión real con actividad fabricada.
+#[test]
+fn time_stats_and_reflect() {
+    let (root, base) = setup("stats");
+    let cfg = base.join("cfg");
+    let mgr = manager(&cfg);
+    let ws =
+        Workspace::open(&root, Workflow::preset("classic-es").unwrap(), Some(cfg.join("backups"))).unwrap();
+    let items = vec!["wi222222-333333-pagos".to_string()];
+    let err = mgr.reflect(&ws, &items, "custom", (80, 24)).unwrap_err();
+    assert_eq!(err.code, "reflect.noSessions");
+
+    let sess = mgr.create(&ws, &items, "Pagos", "default", "custom", false, None, None, (80, 24)).unwrap();
+    output_until_exit(&mgr, &sess.id);
+    // Un turno de 120 s que termina pidiendo permiso y otro de 170 s.
+    let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs_f64();
+    let t0 = now - 600.0;
+    let rows = [
+        json!({"ts": t0, "ev": "UserPromptSubmit", "items": items}),
+        json!({"ts": t0 + 120.0, "ev": "Notification", "items": items, "st": "needsYou"}),
+        json!({"ts": t0 + 130.0, "ev": "resume", "items": items}),
+        json!({"ts": t0 + 300.0, "ev": "Stop", "items": items}),
+    ];
+    let mut f = std::fs::OpenOptions::new().append(true).open(mgr.activity_path(&sess.id)).unwrap();
+    for r in rows {
+        writeln!(f, "{r}").unwrap();
+    }
+    drop(f);
+    ws.write_readme(&items[0], |mut meta, body| {
+        meta.insert("estado".into(), wb_core::frontmatter::Value::Text("prod".into()));
+        Ok(wb_core::write::Change::Parts(meta, body))
+    })
+    .unwrap();
+
+    let time = mgr.time_report(&root);
+    assert_eq!(time.by_item[&items[0]].sessions[&sess.id], 290);
+    assert_eq!(time.sessions[0].source, "log");
+    assert_eq!(time.sessions[0].active, 290);
+
+    let stats = mgr.stats_report(&ws);
+    let row = stats.iter().find(|r| r.id == sess.id).unwrap();
+    assert_eq!((row.prompts, row.asks), (1, 1));
+    assert!(row.tokens.is_none());
+    let out = &row.outcome[&items[0]];
+    assert_eq!(out.end.as_deref(), Some("prod"));
+    assert_eq!(out.transitions.len(), 1, "{out:?}");
+
+    let (refl, evidence) = mgr.reflect(&ws, &items, "custom", (80, 24)).unwrap();
+    assert_eq!(refl.mode, "plan");
+    assert!(!refl.plan);
+    let text = std::fs::read_to_string(&evidence).unwrap();
+    assert!(text.contains("# Evidencia para reflexionar"), "{text}");
+    assert!(text.contains(&format!("### {}", items[0])), "{text}");
+    assert!(text.contains(&format!("`{}`", sess.id)), "{text}");
+    assert!(text.contains("pedidos de permiso o respuesta: 1"), "{text}");
+    output_until_exit(&mgr, &refl.id);
+    mgr.shutdown();
+    std::fs::remove_dir_all(&base).ok();
+}

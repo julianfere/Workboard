@@ -11,11 +11,14 @@ import { S } from "./state";
 import { installTerminalPanel, retheme, toggleTerminal } from "./terminal";
 import "./views/alerts";
 import "./views/detail";
+import "./views/hours";
 import "./views/items";
+import "./views/metrics";
 import { loadNotes } from "./views/notes";
 import "./views/settings";
 import { loadInbox } from "./views/tasks";
 import "./views/today";
+import "./views/tools";
 
 installEvents();
 installTerminalPanel();

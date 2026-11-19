@@ -11,8 +11,12 @@
 //! postea a un HTTP local con token y devuelve lo que la app le contesta al CLI.
 
 pub mod agents;
+pub mod candidates;
 pub mod pty;
+pub mod reflect;
 pub mod registry;
+pub mod stats;
+pub mod timelog;
 pub mod transcript;
 
 use std::collections::{BTreeMap, HashMap};
@@ -35,6 +39,7 @@ use wb_mcp::names;
 pub use agents::{AGENTS, CustomAgent};
 pub use pty::{PtyEvent, Sink};
 pub use registry::{Registry, Session, State};
+pub use wb_mcp::tools;
 
 /// Eventos de Claude Code que avisa el hook.
 pub const HOOK_EVENTS: [&str; 6] =
@@ -395,7 +400,9 @@ impl SessionManager {
         // PostToolUse llega con cada herramienta: solo se anota si reabre trabajo (tras un permiso).
         if event != "PostToolUse" || prev != Some(Live::Working) {
             let ev = if event == "PostToolUse" { "resume" } else { event };
-            self.activity(sid, ev, None, json!({}));
+            // Las métricas cuentan los pedidos del agente (permiso o respuesta), no los avisos de reposo.
+            let extra = if status == Live::NeedsYou { json!({"st": "needsYou"}) } else { json!({}) };
+            self.activity(sid, ev, None, extra);
         }
         if (event == "UserPromptSubmit" || event == "Stop")
             && let Some(reg) = self.registry_of(sid)
@@ -709,6 +716,87 @@ impl SessionManager {
                         && r["ts"].as_f64().unwrap_or(0.0) >= since
                         && in_session(r["wi"].as_str().unwrap_or(""), &sess.items))
             })
+    }
+
+    // ---------- horas, métricas, tools y Reflexionar ----------
+
+    /// Tiempo trabajado por item y por día de las sesiones de la raíz.
+    pub fn time_report(&self, root: &Path) -> timelog::TimeReport {
+        let list: Vec<(Session, bool)> = Registry::of_root(&self.config_dir, root)
+            .load()
+            .into_iter()
+            .map(|s| {
+                let running = self.running(&s.id);
+                (s, running)
+            })
+            .collect();
+        timelog::report(&list, &self.config_dir, transcript::projects_dir().as_deref(), epoch_now())
+    }
+
+    /// Métricas por sesión de la raíz.
+    pub fn stats_report(&self, ws: &Workspace) -> Vec<stats::SessionStats> {
+        let list = Registry::of_root(&self.config_dir, ws.root()).load();
+        stats::report(ws, &list, &self.config_dir, transcript::projects_dir().as_deref())
+    }
+
+    /// Tools promovidas y scripts de las sesiones de la raíz que conviene promover.
+    pub fn tools_overview(&self, ws: &Workspace) -> (Vec<tools::Tool>, Vec<candidates::Candidate>) {
+        let promoted = tools::list(&self.config_dir);
+        let cands = candidates::candidates(&self.stats_report(ws), &promoted);
+        (promoted, cands)
+    }
+
+    /// Reflexionar: arma la evidencia de las sesiones de esos items y abre una sesión en modo plan que
+    /// propone mejoras y las deja en una nota. Nunca aplica nada. Devuelve la sesión y la evidencia.
+    pub fn reflect(
+        &self,
+        ws: &Workspace,
+        names: &[String],
+        agent: &str,
+        size: (u16, u16),
+    ) -> Result<(Session, PathBuf)> {
+        let mut items: Vec<String> = vec![];
+        for n in names {
+            let it = ws.build_item(&ws.folder_of(n)?)?;
+            if !items.contains(&it.name) {
+                items.push(it.name);
+            }
+        }
+        if items.is_empty() {
+            return Err(err(ErrorKind::Invalid, "session.noItems", vec![]));
+        }
+        let rows = self.stats_report(ws);
+        if !rows.iter().any(|r| reflect::touches(&r.items, &items)) {
+            return Err(err(ErrorKind::Invalid, "reflect.noSessions", vec![]));
+        }
+        let lang = self.env().lang;
+        let extra = reflect::instruction_paths(ws.root());
+        let text = reflect::evidence_text(ws, &items, &rows, &self.config_dir, &extra, &lang);
+        let stamp = chrono::Local::now().format("%Y%m%d-%H%M%S");
+        let path = self.config_dir.join("reflect").join(format!("{stamp}.md"));
+        std::fs::create_dir_all(path.parent().expect("parent")).map_err(io_err)?;
+        std::fs::write(&path, text).map_err(io_err)?;
+        let label = if items.len() > 3 {
+            let n = (items.len() - 3).to_string();
+            self.t(&lang, "reflect.more", &[("list", &items[..3].join(", ")), ("n", &n)])
+        } else {
+            items.join(", ")
+        };
+        let title = self.t(&lang, "agent.reflect.noteTitle", &[("label", &label)]);
+        let prompt = self.t(
+            &lang,
+            "agent.reflect.prompt",
+            &[
+                ("label", &label),
+                ("evidence", &path.display().to_string()),
+                ("item", &items[0]),
+                ("title", &title),
+                ("addNote", names::ADD_NOTE),
+            ],
+        );
+        let name = self.t(&lang, "reflect.sessionName", &[("label", &label)]);
+        let sess = self.create(ws, &items, &name, "plan", agent, false, None, Some(&prompt), size)?;
+        Ok((sess, path))
     }
 
     // ---------- lista ----------

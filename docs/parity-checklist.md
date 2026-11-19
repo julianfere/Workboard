@@ -87,10 +87,10 @@ Feature/Bug de Implementar) va al plugin privado y se marca **(privado)**.
 | [x] | Sesión larga: peso por transcript, recomendación (nueva / traspaso / compactar) | 6 | transcript (unit) |
 | [x] | Otro WI en el pedido (`UserPromptSubmit`) | 6 | wb-sessions/tests |
 | [~] | Planear (modo plan + validación en `Stop`) ✓; Implementar **(flujo Feature/Bug: privado)** | 6 / 8 | wb-api |
-| [ ] | Reflexionar y Revisar (sesiones en modo plan con evidencia / diff) | 6 | — |
-| [ ] | Horas trabajadas por WI y período (activity + transcript) | 6 | — |
-| [ ] | Métricas por sesión y por configuración; exportar | 6 | — |
-| [ ] | Tools: candidatos, promover, congeladas por hash, `run_tool` | 6 | — |
+| [~] | Reflexionar ✓ (sesión en modo plan con evidencia); Revisar **(falta: necesita el diff de git, fase 5)** | 6 | wb-sessions/tests |
+| [x] | Horas trabajadas por WI y período (activity + transcript) | 6 | timelog (unit), wb-sessions/tests |
+| [x] | Métricas por sesión y por configuración; exportar | 6 | stats (unit), wb-sessions/tests |
+| [x] | Tools: candidatos, promover, congeladas por hash, `run_tool` | 6 | wb-mcp tools (unit), candidates (unit) |
 
 ## Notas
 

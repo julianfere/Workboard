@@ -120,17 +120,7 @@ pub fn ensure_node_on_path(env: &mut BTreeMap<String, String>) {
 
 /// Busca un ejecutable en el PATH (con las extensiones de `PATHEXT` en Windows).
 pub fn which(cmd: &str, path: &str) -> Option<PathBuf> {
-    // En Windows un nombre sin extensión se prueba con las de PATHEXT (un archivo sin extensión, como el
-    // script de bash que deja npm, no se puede ejecutar).
-    let exts: Vec<String> = if cfg!(windows) && Path::new(cmd).extension().is_none() {
-        let pathext = std::env::var("PATHEXT").unwrap_or_else(|_| ".COM;.EXE;.BAT;.CMD".into());
-        pathext.split(';').filter(|e| !e.is_empty()).map(str::to_lowercase).collect()
-    } else {
-        vec![String::new()]
-    };
-    path.split(PATH_SEP)
-        .filter(|d| !d.is_empty())
-        .find_map(|dir| exts.iter().map(|e| Path::new(dir).join(format!("{cmd}{e}"))).find(|p| p.is_file()))
+    wb_platform::which(cmd, path)
 }
 
 /// argv para lanzar `cmd` en una pty. Los paquetes npm globales en Windows son un `.cmd` que la pty no
