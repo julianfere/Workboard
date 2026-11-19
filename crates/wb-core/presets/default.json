@@ -60,5 +60,15 @@
       { "id": "sql", "runnable": true, "extensions": [".sql"], "labels": { "en": "SQL", "es": "SQL" } }
     ],
     "fallbackCategory": { "id": "other", "runnable": false, "labels": { "en": "Other", "es": "Otros" } }
+  },
+  "git": {
+    "idPattern": "(?:^|[^A-Za-z0-9])#?(?P<id>[A-Za-z][A-Za-z0-9]*-\\d+|\\d{2,})(?:[^0-9]|$)",
+    "ignorePattern": "(?i)\\b(?:merged\\s+)?(?:pr|pull\\s+request)\\s*#?\\d+",
+    "promotePrefix": "promote/",
+    "envRefs": {
+      "dev": ["origin/develop", "origin/development", "origin/dev"],
+      "staging": ["origin/staging"],
+      "prod": ["origin/main", "origin/master"]
+    }
   }
 }

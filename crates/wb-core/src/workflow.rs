@@ -183,6 +183,34 @@ pub struct FileRules {
     pub fallback_category: FileCategory,
 }
 
+/// Reglas del panel Git (nada de nombres de ramas ni de remotes en el código).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct GitRules {
+    /// Regex con un grupo `id`: ids de items en nombres de rama y mensajes de commit. Lo que rodea al
+    /// grupo puede consumir un carácter de borde (la búsqueda sigue desde el final del id).
+    pub id_pattern: String,
+    /// Lo que se borra de un mensaje antes de buscar ids (el número de un PR no es un item).
+    #[serde(default)]
+    pub ignore_pattern: String,
+    /// Prefijo de las ramas que arma la promoción (copias de commits: no son trabajo de un item).
+    pub promote_prefix: String,
+    /// Ramas remotas candidatas de cada ambiente para los repos detectados: la primera que exista.
+    #[serde(default)]
+    pub env_refs: BTreeMap<String, Vec<String>>,
+}
+
+impl Default for GitRules {
+    fn default() -> Self {
+        Self {
+            id_pattern: r"(?:^|[^A-Za-z0-9])#?(?P<id>[A-Za-z][A-Za-z0-9]*-\d+|\d{2,})(?:[^0-9]|$)".into(),
+            ignore_pattern: r"(?i)\b(?:merged\s+)?(?:pr|pull\s+request)\s*#?\d+".into(),
+            promote_prefix: "promote/".into(),
+            env_refs: BTreeMap::new(),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Workflow {
@@ -203,6 +231,9 @@ pub struct Workflow {
     pub inbox_title: String,
     pub plan: PlanRules,
     pub files: FileRules,
+    /// Panel Git: cómo se reconocen los items en ramas y commits, y las ramas de cada ambiente.
+    #[serde(default)]
+    pub git: GitRules,
     #[serde(skip)]
     compiled: OnceLock<Compiled>,
 }
@@ -266,6 +297,17 @@ impl Workflow {
             if let Some(k) = c.kinds.iter().find(|k| !self.files.kinds.contains(k)) {
                 return bad(format!("category {} uses unknown kind {k}", c.id));
             }
+        }
+        let git_id = Regex::new(&self.git.id_pattern)
+            .map_err(|e| WorkflowError::Invalid(format!("{}: git.idPattern: {e}", self.id)))?;
+        if !git_id.capture_names().any(|n| n == Some("id")) {
+            return bad("git.idPattern needs a named group `id`".into());
+        }
+        if let Err(e) = Regex::new(&self.git.ignore_pattern) {
+            return bad(format!("git.ignorePattern: {e}"));
+        }
+        if let Some(env) = self.git.env_refs.keys().find(|k| !self.environments.iter().any(|e| &e.id == *k)) {
+            return bad(format!("git.envRefs uses unknown environment {env}"));
         }
         let compiled = self.compile().map_err(|e| WorkflowError::Invalid(format!("{}: {e}", self.id)))?;
         let _ = self.compiled.set(compiled);
