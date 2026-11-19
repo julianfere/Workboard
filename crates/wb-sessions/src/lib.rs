@@ -182,6 +182,17 @@ fn in_session(name: &str, items: &[String]) -> bool {
     items.iter().any(|w| name == w || name.starts_with(&format!("{w}/")))
 }
 
+/// Nombre nuevo de un item tras mover carpetas: la carpeta misma o la de su grupo.
+fn moved_name(mapping: &BTreeMap<String, String>, name: &str) -> String {
+    if let Some(n) = mapping.get(name) {
+        return n.clone();
+    }
+    mapping
+        .iter()
+        .find_map(|(old, new)| name.strip_prefix(&format!("{old}/")).map(|rest| format!("{new}/{rest}")))
+        .unwrap_or_else(|| name.to_string())
+}
+
 /// Comillas para un comando de hook: sirve en Git Bash y en cmd.
 fn quote(p: &Path) -> String {
     format!("\"{}\"", p.display().to_string().replace('\\', "/"))
@@ -1161,7 +1172,7 @@ impl SessionManager {
                 for s in ss.iter_mut() {
                     let mut new: Vec<String> = vec![];
                     for w in &s.items {
-                        let m = mapping.get(w).cloned().unwrap_or_else(|| w.clone());
+                        let m = moved_name(mapping, w);
                         if !new.contains(&m) {
                             new.push(m);
                         }
