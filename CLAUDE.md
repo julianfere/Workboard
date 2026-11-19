@@ -88,7 +88,7 @@ config real.
   el clic en el fondo de un modal se maneja con un bloque (`{ if (e.target === back) close(); }`): devolver `false`
   cancela los clics en checkboxes. Por feature: `sessions.ts` + `terminal.ts` (xterm), `git.ts` (pestaña Git,
   promoción, alertas, sondea `git_signature` cada 3 s), `views/tracker.ts`, `views/hours.ts`, `views/metrics.ts`,
-  `views/tools.ts` (datos compartidos en `stats.ts`) y `reflect.ts`.
+  `views/tools.ts` (datos compartidos en `stats.ts`; horas y fecha pactadas: las del README y, si faltan, las del tracker) y `reflect.ts`.
 - `tests/golden/` — comportamiento de la v1 capturado como JSON (ver su README y `KNOWN_ISSUES.md`).
 - `spike/` — experimentos descartables (terminal, MCP con `rmcp`, hook). No son parte del workspace.
 - `_v1/` — copia local de la v1 (ignorada por git, no se publica).
@@ -119,5 +119,5 @@ config real.
 ## Plan
 
 Fases: 0 golden ✓ · 1 spike ✓ · 2 esqueleto ✓ · 3 core + MCP ✓ · 4 UI base ✓ · 5 git ✓ ·
-6 sesiones y agentes ✓ · 7 trackers (falta horas de Azure en Horas) · 8 plugins + plugin privado · 9 multiplataforma, docs y release ·
+6 sesiones y agentes ✓ · 7 trackers ✓ · 8 plugins + plugin privado · 9 multiplataforma, docs y release ·
 10 cutover desde la v1. El checklist de paridad está en `docs/parity-checklist.md`.

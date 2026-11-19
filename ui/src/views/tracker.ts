@@ -54,6 +54,24 @@ const trackerState = (name: string) => TR.cfg?.states.find((s) => s.name === nam
 const trackerDot = (name: string) => `<span class="dot ${trackerState(name)?.suggested ?? "unknown"}"></span>`;
 const trackerItems = (it: Item): [string, TrackerWorkItem][] =>
   it.ids.map((id): [string, TrackerWorkItem | undefined] => [id, TR.cfg?.cache?.items[id]]).filter((x): x is [string, TrackerWorkItem] => !!x[1]);
+/** Horas estimadas en el tracker de unos ids (0 = sin cargar). Cada id cuenta una vez. */
+export function trackerEstimate(ids: string[]): number | null {
+  const cfg = ensureLoaded();
+  const hs = [...new Set(ids)].map((id) => cfg?.cache?.items[id]?.estimate ?? 0).filter((h) => h > 0);
+  return hs.length ? hs.reduce((a, b) => a + b, 0) : null;
+}
+
+/** La fecha pactada más temprana en el tracker de unos ids, como `AAAA-MM-DD` local ("" = ninguna). */
+export function trackerDue(ids: string[]): string {
+  const cfg = ensureLoaded();
+  const days = ids
+    .map((id) => new Date(cfg?.cache?.items[id]?.due || "x"))
+    .filter((d) => !isNaN(d.getTime()))
+    .map((d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`)
+    .sort();
+  return days[0] ?? "";
+}
+
 const fmtIso = (iso: string) => {
   const d = new Date(iso);
   return isNaN(d.getTime()) ? "" : d.toLocaleDateString(lang(), { year: "numeric", month: "short", day: "numeric" });

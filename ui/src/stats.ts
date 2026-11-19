@@ -8,6 +8,7 @@ import { errorText, lang, t } from "./i18n";
 import { S, itemByName, metaText, wf } from "./state";
 import type { Item, SessionStats, TimeReport } from "./types";
 import { periodKey } from "./views/today";
+import { trackerDue, trackerEstimate } from "./views/tracker";
 
 export const D = {
   time: null as TimeReport | null,
@@ -83,22 +84,32 @@ export function periodRange(k: string): string {
   return `${f(start, false)} – ${f(end, true)}`;
 }
 
-/** Período de un item: el propio o el de su fecha pactada ("" = sin pactar). */
+/** Período de un item: el propio o el de su fecha pactada, la del README o la del tracker ("" = sin pactar). */
 export function itemPeriod(it: Item): string {
   const own = metaText(it, wf().fields.period);
   if (own) return own;
-  const due = metaText(it, wf().fields.due);
+  const due = metaText(it, wf().fields.due) || (it.kind === "item" ? trackerDue(it.ids) : "");
   return due ? periodKey(due) : "";
 }
 
 const members = (it: Item) => (it.kind === "group" ? (it.members.map(itemByName).filter(Boolean) as Item[]) : []);
 
-/** Horas pactadas: las del README; en un grupo sin horas propias, la suma de sus items. */
+const ownHours = (it: Item): number | null => {
+  const h = parseFloat(metaText(it, wf().fields.hours).replace(",", "."));
+  return Number.isFinite(h) ? h : null;
+};
+
+/** Horas pactadas: las del README; si no, la estimación del tracker. Un grupo sin horas propias suma las de
+ *  sus items (dos carpetas con el mismo id cuentan la estimación del tracker una vez). */
 export function plannedHours(it: Item): number | null {
-  const own = parseFloat(metaText(it, wf().fields.hours).replace(",", "."));
-  if (Number.isFinite(own)) return own;
-  const sub = members(it).map(plannedHours).filter((h): h is number => h !== null);
-  return sub.length ? sub.reduce((a, b) => a + b, 0) : null;
+  const own = ownHours(it);
+  if (own !== null) return own;
+  if (it.kind !== "group") return trackerEstimate(it.ids);
+  const subs = members(it);
+  const local = subs.map(ownHours).filter((h): h is number => h !== null);
+  const tracked = trackerEstimate(subs.filter((m) => ownHours(m) === null).flatMap((m) => m.ids));
+  const all = tracked === null ? local : [...local, tracked];
+  return all.length ? all.reduce((a, b) => a + b, 0) : null;
 }
 
 /** Entradas de tiempo del item (y de sus items, si es un grupo). */
