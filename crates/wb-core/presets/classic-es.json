@@ -46,6 +46,8 @@
   },
   "tasks": { "heading": "Pendientes", "maxLen": 300 },
   "deployKeywords": ["deploy", "despleg", "promoci", "cómo correr", "como correr"],
+  "notes": {"itemsKey": "wis", "authorKey": "autor", "createdKey": "creada", "untitled": "Nota sin título"},
+  "inboxTitle": "Bandeja",
   "plan": { "heading": "Plan", "placeholder": "*(lo completa la sesión de planificación)*", "minChars": 40 },
   "files": {
     "kinds": ["ROLLBACK", "MIGRATION", "FIX", "SEED", "DIAG", "VERIF", "PLAN", "HANDOFF", "QA"],

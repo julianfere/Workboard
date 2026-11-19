@@ -69,5 +69,8 @@
   "core.folder.itemNotGroup": "An item cannot start with {prefix}",
   "core.folder.exists": "Folder {name} already exists",
   "core.version.invalid": "Invalid version",
-  "core.version.missing": "That version does not exist"
+  "core.version.missing": "That version does not exist",
+  "core.run.badEnv": "Invalid environment: {env}. Valid: {valid}",
+  "core.note.outside": "Note outside the notes folder: {id}",
+  "core.note.changed": "The note changed on disk since you opened it; reload it before saving"
 }

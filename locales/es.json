@@ -69,5 +69,8 @@
   "core.folder.itemNotGroup": "Un WI no puede empezar con {prefix}",
   "core.folder.exists": "Ya existe la carpeta {name}",
   "core.version.invalid": "Versión inválida",
-  "core.version.missing": "No existe esa versión"
+  "core.version.missing": "No existe esa versión",
+  "core.run.badEnv": "ambiente inválido: {env}. Válidos: {valid}",
+  "core.note.outside": "Nota fuera de la carpeta de notas: {id}",
+  "core.note.changed": "La nota cambió en disco desde que la abriste; recargala antes de guardar"
 }

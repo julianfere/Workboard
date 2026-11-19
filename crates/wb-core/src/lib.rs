@@ -3,7 +3,9 @@
 
 pub mod error;
 pub mod frontmatter;
+pub mod notes;
 pub mod py;
+pub mod records;
 pub mod tasks;
 pub mod text;
 pub mod validate;

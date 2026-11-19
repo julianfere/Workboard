@@ -138,6 +138,16 @@ pub struct TaskRules {
     pub max_len: usize,
 }
 
+/// Claves del frontmatter de las notas personales y el título de una nota sin título.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct NoteRules {
+    pub items_key: String,
+    pub author_key: String,
+    pub created_key: String,
+    pub untitled: String,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct PlanRules {
@@ -184,6 +194,9 @@ pub struct Workflow {
     /// Palabras (en minúsculas) que identifican la sección "cómo deployar" del README.
     #[serde(default)]
     pub deploy_keywords: Vec<String>,
+    pub notes: NoteRules,
+    /// Título del archivo de la bandeja de tareas sin item.
+    pub inbox_title: String,
     pub plan: PlanRules,
     pub files: FileRules,
     #[serde(skip)]
