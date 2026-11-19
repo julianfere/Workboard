@@ -1,6 +1,7 @@
 # Checklist de paridad con la v1
 
-Todo lo que hace la v1 (Python + pywebview) y tiene que hacer la nueva versión antes del cutover. Sale de
+Todo lo que hace la v1 (Python + pywebview) y tiene que hacer la nueva versión antes del cutover. `[x]` = hecho,
+`[~]` = hecho en parte (ver notas de la fase). Sale de
 las secciones del README de la v1. **Fase** = la del plan en que se porta. **Golden** = archivo de
 `tests/golden/cases/` que fija el comportamiento (— = se prueba a mano o con Playwright).
 
@@ -25,11 +26,11 @@ Feature/Bug de Implementar) va al plugin privado y se marca **(privado)**.
 | [x] | Períodos configurables (hoy del 20 al 19) | 3 | misc |
 | [x] | Categorías de archivo por prefijo/extensión; scripts "corridos en DEV/QA/PROD" (`runs.json`) | 3 | misc, mcp |
 | [x] | Mover a grupo / sacar / disolver, eliminar a `_deleted` con deshacer, restaurar, renombrar carpeta | 3 | workspace_ops |
-| [ ] | Después de mover: sesiones, marcas, backups y notas siguen a la carpeta | 3 | parcial (backups) |
-| [ ] | Nuevo item con o sin WI (crea carpeta + README) | 3 / 7 | workspace_ops (create_folder) |
+| [~] | Después de mover: sesiones, marcas, backups y notas siguen a la carpeta | 3 | parcial (backups) |
+| [~] | Nuevo item con o sin WI (crea carpeta + README) | 3 / 7 | workspace_ops (create_folder) |
 | [x] | Plan incompleto (`plan_gaps`) | 3 | misc |
 | [x] | Bandeja de tareas sin WI (`inbox.md` en la config) | 3 | tasks (mismas funciones) |
-| [ ] | Watcher: refresco en vivo del filesystem y de `.git` de los repos | 4 | — |
+| [~] | Watcher: refresco en vivo del filesystem y de `.git` de los repos | 4 | — |
 
 ## MCP `workboard`
 
@@ -46,19 +47,19 @@ Feature/Bug de Implementar) va al plugin privado y se marca **(privado)**.
 
 | | Función | Fase | Golden |
 |---|---|---|---|
-| [ ] | Vistas: Hoy, Trabajos, Pendientes, Horas, Alertas, Notas, Métricas, Tools, Ajustes | 4 | — |
-| [ ] | Paleta `Ctrl+K` (buscar trabajos, tareas, archivos; comandos; acciones del trabajo de arriba) | 4 | — |
+| [~] | Vistas: Hoy, Trabajos, Pendientes, Horas, Alertas, Notas, Métricas, Tools, Ajustes | 4 | — |
+| [~] | Paleta `Ctrl+K` (buscar trabajos, tareas, archivos; comandos; acciones del trabajo de arriba) | 4 | — |
 | [ ] | Atajos (`Ctrl+J`, `/`, `1`…`6`, `Ctrl+S`, `Esc`, `F5`, `Supr`, `Alt+1`…`9`) | 4 | — |
 | [ ] | Selección múltiple, barra y menú contextual en bulk; deshacer de 12 s | 4 | — |
 | [ ] | Grilla: columnas configurables, orden, ancho, agrupar hasta 3 niveles, filtros con chips, densidad | 4 | — |
 | [ ] | Vistas guardadas (pestañas) con Guardar / Descartar | 4 | — |
 | [ ] | Exportar CSV (`;`, BOM) | 4 | — |
-| [ ] | Detalle a página completa: pasos de estado, guardado automático solo de lo tocado, conflicto con disco | 4 | — |
-| [ ] | Pestañas del detalle: Resumen, README, Archivos, Git, Cómo deployar, Notas | 4 | — |
+| [~] | Detalle a página completa: pasos de estado, guardado automático solo de lo tocado, conflicto con disco | 4 | — |
+| [~] | Pestañas del detalle: Resumen, README, Archivos, Git, Cómo deployar, Notas | 4 | — |
 | [ ] | Visor: SQL coloreado, Markdown, imágenes, PDF, draw.io (visor local), Mermaid; offline | 4 | — |
 | [ ] | Alertas desestimables (sin README, número sin prefijo, duplicados, plan incompleto, git) | 4 | — |
-| [ ] | Proyectos recientes con alias; cambiar de proyecto | 4 | — |
-| [ ] | Tema claro / oscuro / sistema; variables de color; i18n en / es | 2 / 4 | — |
+| [~] | Proyectos recientes con alias; cambiar de proyecto | 4 | — |
+| [~] | Tema claro / oscuro / sistema; variables de color; i18n en / es | 2 / 4 | — |
 | [ ] | Prioridad, pactada, vencidas, agrupar por período, planificación local con marca **local** | 4 | misc (períodos) |
 
 ## Git

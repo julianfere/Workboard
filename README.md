@@ -25,7 +25,7 @@ Requirements: Rust (stable), Node 22, and on Linux the WebKitGTK dev packages.
 | What | Command |
 |---|---|
 | Run the app | `npm install` then `npm run tauri dev` |
-| UI only, in a browser (mocked backend) | `npm run dev` → <http://localhost:1420> |
+| UI in a browser against the real backend | `cargo run -p wb-api --bin wb-devserver -- <folder>` and `npm run dev` → <http://localhost:1420> |
 | Tests | `cargo test --workspace` |
 | Lint | `cargo fmt --all --check && cargo clippy --workspace --all-targets -- -D warnings` |
 | Regenerate golden files (needs the v1) | `py tests/golden/gen/gen_all.py` |
@@ -37,6 +37,7 @@ Set `WORKBOARD_CONFIG_DIR` to a temporary folder when testing, so you don't touc
 ```
 crates/wb-core      workflow presets, work folders, frontmatter, tasks, safe README writes
 crates/wb-mcp       the `workboard` MCP server agents use
+crates/wb-api       the app API (used by the window and by the dev server)
 crates/wb-i18n      translations, shared with the UI (locales/*.json)
 crates/wb-platform  config folder, opening files, process trees
 src-tauri/          the desktop app and its commands

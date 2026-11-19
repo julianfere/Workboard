@@ -9,7 +9,7 @@ sección de checklist. La v1 sigue en uso y es la referencia de comportamiento.
 | Qué | Comando |
 |---|---|
 | App | `npm install` y `npm run tauri dev` |
-| Solo UI en el navegador (backend mock) | `npm run dev` → `http://localhost:1420` (Playwright) |
+| UI en el navegador contra el backend real | `cargo run -p wb-api --bin wb-devserver -- <carpeta>` + `npm run dev` → `http://localhost:1420` (o `http://127.0.0.1:8766` con la UI compilada) |
 | Tests | `cargo test --workspace` |
 | Lint (lo mismo que el CI) | `cargo fmt --all --check && cargo clippy --workspace --all-targets -- -D warnings` y `npm run build` |
 | Golden files | `py tests/golden/gen/gen_all.py` (necesita la v1 en `_v1/` o `WORKBOARD_V1`) |
@@ -33,10 +33,18 @@ config real.
 - `crates/wb-i18n` — `t(lang, key, params)` sobre `locales/*.json` (los mismos archivos que usa la UI).
 - `crates/wb-platform` — todo lo que depende del SO (`config_dir`, `open_path`, `reveal_path`,
   `kill_tree`). Fuera de este crate no hay `cfg(windows)`.
-- `src-tauri/` — la app. Cada `#[tauri::command]` es un wrapper fino sobre los crates y devuelve
-  `ApiResult<T>`; los errores son `ApiError { code, params }` (code = clave de traducción).
-- `ui/` — TypeScript + Vite, sin frameworks. `ui/src/api.ts` es la única puerta al backend: dentro de
-  Tauri usa `invoke`, en el navegador un mock con los mismos presets (agregar cada comando nuevo a los dos).
+- `crates/wb-api` — la API de la app: `Api::dispatch(cmd, args)` (un `match` con todos los comandos, cada uno
+  un wrapper fino sobre `wb-core`), `settings.json` (idioma, tema, preset, raíz, recientes, carpeta de notas) y
+  `ApiError { code, params, conflict }`. Binario `wb-devserver`: la misma API por HTTP (`POST /api/<cmd>`,
+  header `X-Workboard: 1`) para desarrollar la UI en el navegador contra el backend real.
+- `src-tauri/` — la ventana: un único comando `api(cmd, args)` que llama a `Api::dispatch`, más el plugin
+  de diálogo para elegir carpeta. Un comando nuevo se agrega solo en `wb-api` (y su wrapper en `ui/src/api.ts`).
+- `ui/` — TypeScript + Vite, sin frameworks. `api.ts`: única puerta al backend (`invoke` en Tauri, `fetch` al
+  devserver en el navegador). `app.ts`: carga, navegación, refresco en vivo (cada 2 s compara la firma del
+  árbol, como la v1) y registro de acciones (`data-action` / `data-change` / `data-enter`). Una vista por
+  archivo en `ui/src/views/` (`render()` + sus acciones). `state.ts`: estado global y helpers del flujo
+  (`metaText(item, wf().fields.status)`…: nunca claves del frontmatter escritas a mano). `markdown.ts`:
+  renderer propio que escapa todo el HTML. Diálogos propios (`confirmDialog`, `promptDialog`), no los del navegador.
 - `tests/golden/` — comportamiento de la v1 capturado como JSON (ver su README y `KNOWN_ISSUES.md`).
 - `spike/` — experimentos descartables (terminal, MCP con `rmcp`, hook). No son parte del workspace.
 - `_v1/` — copia local de la v1 (ignorada por git, no se publica).
@@ -66,6 +74,6 @@ config real.
 
 ## Plan
 
-Fases: 0 golden ✓ · 1 spike ✓ · 2 esqueleto ✓ · 3 core + MCP ✓ · 4 UI base · 5 git ·
+Fases: 0 golden ✓ · 1 spike ✓ · 2 esqueleto ✓ · 3 core + MCP ✓ · 4 UI base ✓ · 5 git ·
 6 sesiones y agentes · 7 trackers · 8 plugins + plugin privado · 9 multiplataforma, docs y release ·
 10 cutover desde la v1. El checklist de paridad está en `docs/parity-checklist.md`.
