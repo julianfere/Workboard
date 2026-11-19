@@ -25,6 +25,7 @@
   "folders": {
     "itemPattern": "^(?P<id>[A-Za-z][A-Za-z0-9]*-\\d+|\\d+)(?:-|$)",
     "itemIdPattern": "^([A-Za-z][A-Za-z0-9]*-\\d+|\\d+)$",
+    "newItemTemplate": "{id}-{slug}",
     "groupPrefix": "grp-",
     "deletedDir": "_deleted",
     "ignorePrefixes": ["_", "."]

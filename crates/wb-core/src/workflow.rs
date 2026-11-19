@@ -76,6 +76,8 @@ pub struct FolderRules {
     pub item_pattern: String,
     /// Regex que tiene que cumplir cada id cargado a mano en el frontmatter.
     pub item_id_pattern: String,
+    /// Nombre sugerido para la carpeta de un item nuevo: `{id}` y `{slug}` (del título).
+    pub new_item_template: String,
     pub group_prefix: String,
     pub deleted_dir: String,
     /// Carpetas que no se escanean.

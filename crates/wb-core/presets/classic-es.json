@@ -27,6 +27,7 @@
   "folders": {
     "itemPattern": "(?i)^(?:wi)?(?P<id>\\d{6})(?:-(?P<id2>\\d{6}))?(?:-|$)",
     "itemIdPattern": "^\\d{4,7}$",
+    "newItemTemplate": "wi{id}-{slug}",
     "groupPrefix": "grp-",
     "deletedDir": "_deleted",
     "ignorePrefixes": ["_", "."]
