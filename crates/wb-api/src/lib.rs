@@ -414,6 +414,36 @@ mod tests {
     }
 
     #[test]
+    fn apply_learnings_opens_a_session_on_the_note_items() {
+        let (root, base) = fixture_copy("learn");
+        let exe = std::env::current_exe().unwrap();
+        let api = Api::new(base.join("cfg"));
+        api.set_session_bins(exe.clone(), exe);
+        api.dispatch("set_settings", &json!({"settings": {"workflow": "classic-es", "lang": "es"}})).unwrap();
+        api.dispatch("open_root", &json!({"path": root})).unwrap();
+        let (cmd, args) =
+            if cfg!(windows) { ("cmd", "/c echo {session_id}") } else { ("sh", "-c \"echo {session_id}\"") };
+        api.dispatch("set_agents", &json!({"default": "custom", "custom": {"command": cmd, "args": args}}))
+            .unwrap();
+
+        let loose = api.dispatch("note_create", &json!({"title": "Aprendizajes · nada"})).unwrap();
+        let err = api.dispatch("apply_learnings", &json!({"id": loose["id"]})).unwrap_err();
+        assert_eq!(err.code, "learn.noItems");
+
+        let note = api
+            .dispatch("note_create", &json!({"title": "Aprendizajes · 111111", "items": ["111111", "nope"]}))
+            .unwrap();
+        let out = api.dispatch("apply_learnings", &json!({"id": note["id"], "which": " 1,  3 "})).unwrap();
+        let sess = &out["session"];
+        assert_eq!(sess["mode"], "default");
+        assert_eq!(sess["name"], "Aplicar aprendizajes · Aprendizajes · 111111");
+        // 111111 está en dos carpetas: la primera que lo tiene.
+        assert_eq!(sess["items"].as_array().unwrap().len(), 1);
+        api.shutdown();
+        let _ = std::fs::remove_dir_all(&base);
+    }
+
+    #[test]
     fn sessions_plan_and_agents() {
         let (root, base) = fixture_copy("sessions");
         // Este agente no lanza el MCP ni el hook: cualquier archivo existente sirve de binario.

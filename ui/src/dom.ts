@@ -92,8 +92,9 @@ export function confirmDialog(text: string, okLabel = t("common.ok")): Promise<b
   });
 }
 
-/** Pide un texto en un diálogo propio (`window.prompt` no es confiable dentro del WebView). */
-export function promptDialog(text: string, value = ""): Promise<string | null> {
+/** Pide un texto en un diálogo propio (`window.prompt` no es confiable dentro del WebView). `null` = cancelado;
+ *  con `allowEmpty`, aceptar sin texto devuelve "". */
+export function promptDialog(text: string, value = "", allowEmpty = false): Promise<string | null> {
   return new Promise((resolve) => {
     const back = document.createElement("div");
     back.className = "modal-back";
@@ -104,7 +105,7 @@ export function promptDialog(text: string, value = ""): Promise<string | null> {
     const form = back.querySelector("form")!;
     const input = form.elements.namedItem("v") as HTMLInputElement;
     const done = (v: string | null) => { back.remove(); resolve(v); };
-    form.onsubmit = (e) => { e.preventDefault(); done(input.value.trim() || null); };
+    form.onsubmit = (e) => { e.preventDefault(); done(input.value.trim() || (allowEmpty ? "" : null)); };
     $("[data-no]", back)!.onclick = () => done(null);
     back.addEventListener("keydown", (e) => e.key === "Escape" && done(null));
     input.focus();

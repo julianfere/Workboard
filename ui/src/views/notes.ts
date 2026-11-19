@@ -7,7 +7,12 @@ import { errorText, t } from "../i18n";
 import { ico } from "../icons";
 import { renderMarkdown } from "../markdown";
 import { S } from "../state";
-import type { ApiError } from "../types";
+import { launched } from "../sessions";
+import { termSize } from "../terminal";
+import type { ApiError, Note } from "../types";
+
+/** Nota de Reflexionar (por el título que le pide al agente) vinculada a algún item. */
+const isLearnings = (n: Note) => n.items.length > 0 && n.title.startsWith(t("agent.reflect.noteTitle", { label: "" }).trim());
 
 let editing = false;
 
@@ -34,7 +39,7 @@ function renderNotes(): string {
     ? `<section class="card note-editor"><div class="toolbar"><h2 class="grow">${esc(note.title)}</h2>
         ${editing
           ? `<button class="btn primary" data-action="note-save">${esc(t("common.save"))}</button><button class="btn" data-action="note-cancel">${esc(t("common.cancel"))}</button>`
-          : `<button class="btn" data-action="note-edit">${ico("edit")}${esc(t("common.edit"))}</button>`}</div>
+          : `${isLearnings(note) ? `<button class="btn" data-action="note-apply" title="${esc(t("learn.hint"))}">${ico("sparkle")}${esc(t("learn.action"))}</button>` : ""}<button class="btn" data-action="note-edit">${ico("edit")}${esc(t("common.edit"))}</button>`}</div>
         ${editing ? `<textarea id="note-body" spellcheck="true">${esc(note.body ?? "")}</textarea>` : `<div class="md">${renderMarkdown(note.body ?? "")}</div>`}</section>`
     : `<p class="empty">${esc(t("notes.pick"))}</p>`;
   return `<div class="page wide"><div class="toolbar"><h1>${esc(t("nav.notes"))}</h1>
@@ -65,6 +70,20 @@ async function open(id: string): Promise<void> {
 registerView("notes", renderNotes);
 
 onAction("note-open", (el) => open(el.dataset.id!));
+onAction("note-apply", async () => {
+  const note = S.note;
+  if (!note) return;
+  const which = await promptDialog(t("learn.which"), "", true);
+  if (which === null) return;
+  try {
+    const { cols, rows } = termSize();
+    const out = await api.applyLearnings(note.id, which, cols, rows);
+    await launched(out.session);
+    toast(t("learn.started"));
+  } catch (err) {
+    toast(errorText(err as ApiError), undefined, "error");
+  }
+});
 onAction("note-edit", () => {
   editing = true;
   render();

@@ -865,5 +865,13 @@
   "agent.review.packetCut": " (diff recortado)",
   "agent.review.packetDiff": "- Diff completo: `{path}`",
   "agent.review.noteTitle": "Revisión · {id}",
-  "agent.review.prompt": "Revisá el trabajo del WI {id} como revisor independiente: no escribiste este código. Esta sesión es de solo lectura: no modifiques archivos. Empezá por {packet} (ramas, diffs y el README con los criterios). Leé los diffs y, cuando haga falta, el código alrededor en el repo. Buscá: criterios de aceptación no cumplidos, bugs, casos borde, regresiones, cambios fuera de alcance y tests faltantes. Cada hallazgo cita `ruta:línea` que hayas leído vos; no cites líneas que no abriste. Guardá el resultado con {addNote} en {item}, título «{title}», con este formato:\n\n## Veredicto\naprobar | cambios | bloqueado — una línea de por qué\n\n## Verificación\n- C1: cumple | no cumple | no verificable — `ruta:línea` que lo muestra (una línea por criterio)\n\n## Hallazgos\n- [bloqueante | menor] `ruta:línea` — qué pasa y por qué importa\n\nDespués cargá cada hallazgo bloqueante como pendiente con {addTask} (texto: «Revisión: …»)."
+  "agent.review.prompt": "Revisá el trabajo del WI {id} como revisor independiente: no escribiste este código. Esta sesión es de solo lectura: no modifiques archivos. Empezá por {packet} (ramas, diffs y el README con los criterios). Leé los diffs y, cuando haga falta, el código alrededor en el repo. Buscá: criterios de aceptación no cumplidos, bugs, casos borde, regresiones, cambios fuera de alcance y tests faltantes. Cada hallazgo cita `ruta:línea` que hayas leído vos; no cites líneas que no abriste. Guardá el resultado con {addNote} en {item}, título «{title}», con este formato:\n\n## Veredicto\naprobar | cambios | bloqueado — una línea de por qué\n\n## Verificación\n- C1: cumple | no cumple | no verificable — `ruta:línea` que lo muestra (una línea por criterio)\n\n## Hallazgos\n- [bloqueante | menor] `ruta:línea` — qué pasa y por qué importa\n\nDespués cargá cada hallazgo bloqueante como pendiente con {addTask} (texto: «Revisión: …»).",
+  "learn.action": "Aplicar candidatos…",
+  "learn.hint": "Abre una sesión que aplica los candidatos que elijas",
+  "learn.which": "Cuáles (por número, por ejemplo «1, 3»). Vacío = los marcados como aceptar",
+  "learn.started": "Sesión abierta: va a pedir permiso para cada cambio",
+  "learn.noItems": "La nota no está vinculada a ningún WI de esta carpeta",
+  "learn.sessionName": "Aplicar aprendizajes · {title}",
+  "agent.learn.accepted": "los marcados como aceptar",
+  "agent.learn.prompt": "Aplicá los candidatos {which} de la nota de aprendizajes «{title}» ({path}). Leela primero. Para cada uno, hacé el cambio en el lugar que dice **Dónde**, lo más chico posible, y respetá el contraejemplo. Si un candidato pide un cambio en el código de la app Workboard, no lo hagas: dejalo como pendiente con {addTask}. Al terminar, resumí qué cambiaste y en qué archivos."
 }

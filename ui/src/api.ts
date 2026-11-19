@@ -132,6 +132,7 @@ export const api = {
   toolUpdate: (name: string, description: string, usage: string) => call<ToolInfo>("tool_update", { name, description, usage }),
   toolRemove: (name: string) => call<null>("tool_remove", { name }),
   reflectItems: (names: string[], cols: number, rows: number) => call<{ session: Session; evidence: string }>("reflect_items", { names, cols, rows }),
+  applyLearnings: (id: string, which: string, cols: number, rows: number) => call<{ session: Session }>("apply_learnings", { id, which, cols, rows }),
   saveExport: (name: string, text: string) => call<string>("save_export", { name, text }),
   revealExport: (path: string) => call<null>("reveal_export", { path }),
 };

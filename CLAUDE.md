@@ -72,7 +72,7 @@ config real.
   `tracker.rs`: comandos `tracker_*`; `<config>/trackers.json` (conexión por raíz; estados, mapeo y campos por
   proyecto) y `<config>/tracker_cache.json` (última lectura por raíz, la lee el MCP); vista previa del sync en Rust
   (completar / tipo / avanza / retrocede; retroceder = categoría menor o antes en el preset), aplicar escribe solo
-  estado y tipo; la fila «según git» (`git::env_reach`) propone el estado de `Workflow.git.envStates` cuando el trabajo ya está en ese ambiente en todos los repos del item. `stats.rs`: `time_report`, `stats_report`, `tool_*`, `reflect_items`, `save_export`/`reveal_export`
+  estado y tipo; la fila «según git» (`git::env_reach`) propone el estado de `Workflow.git.envStates` cuando el trabajo ya está en ese ambiente en todos los repos del item. `stats.rs`: `time_report`, `stats_report`, `tool_*`, `reflect_items`, `apply_learnings` (sesión normal que aplica candidatos de una nota de aprendizajes), `save_export`/`reveal_export`
   (CSV a Descargas con BOM). Los `*_command` se encadenan en el fallback de `dispatch`. Binario `wb-devserver`: la misma API por HTTP (`POST /api/<cmd>`,
   header `X-Workboard: 1`) para desarrollar la UI en el navegador contra el backend real; `--fake-tracker <archivo.json>`
   responde las llamadas al tracker sin red.

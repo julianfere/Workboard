@@ -46,6 +46,7 @@ impl Api {
             })(),
             "tool_remove" => a.str("name").and_then(|n| to_json(tools::remove(&self.config_dir, n)?)),
             "reflect_items" => self.reflect_items(a),
+            "apply_learnings" => self.apply_learnings(a),
             "save_export" => a.str("name").and_then(|n| self.save_export(n, a.str("text")?)),
             "reveal_export" => a.str("path").and_then(reveal_export),
             _ => return None,
@@ -137,6 +138,57 @@ impl Api {
         let (sess, evidence) =
             m.reflect(&ws, &str_list(a.get("names")), &agent, (n("cols", 120), n("rows", 30)))?;
         Ok(json!({"session": sess, "evidence": evidence.display().to_string()}))
+    }
+
+    /// Aplicar aprendizajes: abre una sesión normal (pide permiso para cada cambio) que aplica los candidatos
+    /// elegidos de una nota de Reflexionar. Los items de la sesión son los vinculados a la nota.
+    fn apply_learnings(&self, a: &Args) -> ApiResult<Json> {
+        let ws = self.workspace()?;
+        let notes = self.notes()?;
+        let note = notes.read(a.str("id")?)?;
+        let items = ws.list_items()?;
+        let mut names: Vec<String> = vec![];
+        for key in &note.items {
+            if let Some(it) = items.iter().find(|i| &i.name == key || i.ids.contains(key))
+                && !names.contains(&it.name)
+            {
+                names.push(it.name.clone());
+            }
+        }
+        if names.is_empty() {
+            return Err(ApiError::new("learn.noItems", &[]));
+        }
+        let lang = wb_i18n::resolve_lang(self.settings().lang.as_deref().unwrap_or(wb_i18n::DEFAULT_LANG));
+        let which =
+            wb_core::py::split_ws(a.get("which").as_str().unwrap_or("")).collect::<Vec<_>>().join(" ");
+        let which = if which.is_empty() { wb_i18n::t(lang, "agent.learn.accepted", &[]) } else { which };
+        let path = notes.folder().join(&note.id).display().to_string();
+        let prompt = wb_i18n::t(
+            lang,
+            "agent.learn.prompt",
+            &[
+                ("which", &which),
+                ("title", &note.title),
+                ("path", &path),
+                ("addTask", wb_sessions::names::ADD_TASK),
+            ],
+        );
+        let short: String = note.title.chars().take(40).collect();
+        let name = wb_i18n::t(lang, "learn.sessionName", &[("title", &short)]);
+        let n = |k: &str, d: u16| a.get(k).as_u64().map_or(d, |v| v.clamp(1, 1000) as u16);
+        let agent = self.settings().agents.default_agent().to_string();
+        let sess = self.session_manager()?.create(
+            &ws,
+            &names,
+            &name,
+            "default",
+            &agent,
+            false,
+            None,
+            Some(&prompt),
+            (n("cols", 120), n("rows", 30)),
+        )?;
+        Ok(json!({"session": sess}))
     }
 
     /// Exportar: el texto va a la carpeta de descargas, con BOM para que Excel lea bien los acentos.

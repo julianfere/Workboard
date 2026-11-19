@@ -865,5 +865,13 @@
   "agent.review.packetCut": " (diff truncated)",
   "agent.review.packetDiff": "- Full diff: `{path}`",
   "agent.review.noteTitle": "Review · {id}",
-  "agent.review.prompt": "Review the work on item {id} as an independent reviewer: you did not write this code. This session is read only: do not modify files. Start with {packet} (branches, diffs and the README with the criteria). Read the diffs and, when needed, the surrounding code in the repository. Look for: unmet acceptance criteria, bugs, edge cases, regressions, out-of-scope changes and missing tests. Every finding cites a `path:line` you read yourself; do not cite lines you did not open. Save the result with {addNote} on {item}, titled «{title}», in this format:\n\n## Verdict\napprove | changes | blocked — one line on why\n\n## Verification\n- C1: met | not met | not verifiable — `path:line` that shows it (one line per criterion)\n\n## Findings\n- [blocking | minor] `path:line` — what happens and why it matters\n\nThen add each blocking finding as a task with {addTask} (text: «Review: …»)."
+  "agent.review.prompt": "Review the work on item {id} as an independent reviewer: you did not write this code. This session is read only: do not modify files. Start with {packet} (branches, diffs and the README with the criteria). Read the diffs and, when needed, the surrounding code in the repository. Look for: unmet acceptance criteria, bugs, edge cases, regressions, out-of-scope changes and missing tests. Every finding cites a `path:line` you read yourself; do not cite lines you did not open. Save the result with {addNote} on {item}, titled «{title}», in this format:\n\n## Verdict\napprove | changes | blocked — one line on why\n\n## Verification\n- C1: met | not met | not verifiable — `path:line` that shows it (one line per criterion)\n\n## Findings\n- [blocking | minor] `path:line` — what happens and why it matters\n\nThen add each blocking finding as a task with {addTask} (text: «Review: …»).",
+  "learn.action": "Apply candidates…",
+  "learn.hint": "Opens a session that applies the candidates you pick",
+  "learn.which": "Which ones (by number, e.g. «1, 3»). Empty = the ones marked accept",
+  "learn.started": "Session opened: it asks permission for every change",
+  "learn.noItems": "The note is not linked to any item in this folder",
+  "learn.sessionName": "Apply learnings · {title}",
+  "agent.learn.accepted": "the ones marked accept",
+  "agent.learn.prompt": "Apply candidates {which} from the learnings note «{title}» ({path}). Read it first. For each one, make the change in the place given under **Where**, as small as possible, and respect the counterexample. If a candidate asks for a change to the Workboard app's code, do not make it: add it as a task with {addTask}. When done, summarize what you changed and in which files."
 }
