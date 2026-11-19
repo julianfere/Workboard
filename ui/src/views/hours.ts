@@ -217,7 +217,9 @@ onAction("hours-item", (el) => {
     close();
     void openDetail(it.name);
   };
-  back.onclick = (e) => e.target === back && close();
+  back.onclick = (e) => {
+    if (e.target === back) close();
+  };
   back.addEventListener("keydown", (e) => e.key === "Escape" && close());
   back.querySelector<HTMLElement>("[data-close]")!.focus();
 });

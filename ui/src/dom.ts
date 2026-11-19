@@ -85,7 +85,9 @@ export function confirmDialog(text: string, okLabel = t("common.ok")): Promise<b
     document.addEventListener("keydown", onKey, true);
     $("[data-yes]", back)!.onclick = () => done(true);
     $("[data-no]", back)!.onclick = () => done(false);
-    back.onclick = (e) => e.target === back && done(false);
+    back.onclick = (e) => {
+      if (e.target === back) done(false);
+    };
     $<HTMLButtonElement>("[data-yes]", back)!.focus();
   });
 }

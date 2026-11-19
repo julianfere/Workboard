@@ -74,7 +74,9 @@ export function openPalette(): void {
     const li = (e.target as HTMLElement).closest<HTMLElement>("[data-i]");
     if (li) pick(Number(li.dataset.i));
   };
-  back.onclick = (e) => e.target === back && close();
+  back.onclick = (e) => {
+    if (e.target === back) close();
+  };
   draw();
   input.focus();
 }

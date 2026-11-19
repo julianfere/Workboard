@@ -245,7 +245,9 @@ function viewer(title: string, html: string): void {
   document.body.append(back);
   const close = () => back.remove();
   back.querySelector<HTMLElement>("[data-close]")!.onclick = close;
-  back.onclick = (e) => e.target === back && close();
+  back.onclick = (e) => {
+    if (e.target === back) close();
+  };
   back.tabIndex = -1;
   back.focus();
   back.addEventListener("keydown", (e) => e.key === "Escape" && close());
