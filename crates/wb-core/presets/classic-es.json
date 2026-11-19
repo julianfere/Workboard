@@ -14,8 +14,8 @@
   ],
   "types": [
     { "id": "bug", "labels": { "en": "Bug", "es": "Bug" } },
-    { "id": "us", "labels": { "en": "User story", "es": "User story" } },
-    { "id": "task", "labels": { "en": "Task", "es": "Task" } },
+    { "id": "us", "labels": { "en": "User story", "es": "User story" }, "aliases": ["product backlog item", "feature", "epic"] },
+    { "id": "task", "labels": { "en": "Task", "es": "Task" }, "aliases": ["issue", "impediment"] },
     { "id": "fix", "labels": { "en": "Fix (no work item)", "es": "Arreglo (sin WI)" } }
   ],
   "environments": [
@@ -51,6 +51,7 @@
   "notes": {"itemsKey": "wis", "authorKey": "autor", "createdKey": "creada", "untitled": "Nota sin título"},
   "inboxTitle": "Bandeja",
   "plan": { "heading": "Plan", "placeholder": "*(lo completa la sesión de planificación)*", "minChars": 40 },
+  "sections": { "description": "Descripción", "criteria": "Criterios de aceptación" },
   "files": {
     "kinds": ["ROLLBACK", "MIGRATION", "FIX", "SEED", "DIAG", "VERIF", "PLAN", "HANDOFF", "QA"],
     "categories": [
