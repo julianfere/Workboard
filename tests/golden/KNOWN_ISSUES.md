@@ -20,4 +20,5 @@ esperada y lo explica.
 - **Qué pasa**: `_session_wis()` devuelve un `set` y el código hace `wis[0]`.
 - **Efecto**: `'set' object is not subscriptable` en vez de correr la tool en la carpeta del primer WI de
   la sesión. Ver `mcp.json` → `session`, última llamada.
-- **Decisión**: pendiente.
+- **Decisión**: corregido en el port (Fase 3). Sin `item`, `workboard_run_tool` usa el primer item de la
+  sesión; el test del MCP espera ese comportamiento en vez del error de la v1.
