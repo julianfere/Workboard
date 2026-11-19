@@ -4,6 +4,7 @@
 
 pub mod error;
 mod git;
+mod plugins;
 mod sessions;
 pub mod settings;
 mod stats;
@@ -70,7 +71,7 @@ impl Args<'_> {
 impl Api {
     pub fn new(config_dir: PathBuf) -> Self {
         let mut s = settings::load(&settings::path_in(&config_dir));
-        if Workflow::preset(&s.workflow).is_err() {
+        if wb_plugins::resolve_workflow(&config_dir, &s.workflow).is_err() {
             s.workflow = Settings::default().workflow;
         }
         Self {
@@ -94,7 +95,7 @@ impl Api {
     }
 
     fn workflow(&self) -> ApiResult<Workflow> {
-        Ok(Workflow::preset(&self.settings().workflow)?)
+        Ok(wb_plugins::resolve_workflow(&self.config_dir, &self.settings().workflow)?)
     }
 
     fn workspace(&self) -> ApiResult<Workspace> {
@@ -130,15 +131,19 @@ impl Api {
                 let presets: ApiResult<Vec<Json>> = Workflow::preset_ids()
                     .map(|id| Ok(json!({"id": id, "name": Workflow::preset(id)?.name})))
                     .collect();
-                Ok(Json::Array(presets?))
+                let mut presets = presets?;
+                for (plugin, w) in wb_plugins::Plugins::load(&self.config_dir).presets() {
+                    presets.push(json!({"id": w.id, "name": w.name, "plugin": plugin}));
+                }
+                Ok(Json::Array(presets))
             }
-            "workflow_preset" => to_json(Workflow::preset(a.str("id")?)?),
+            "workflow_preset" => to_json(wb_plugins::resolve_workflow(&self.config_dir, a.str("id")?)?),
             "workflow" => to_json(self.workflow()?),
             "get_settings" => to_json(self.settings()),
             "set_settings" => {
                 let s: Settings =
                     serde_json::from_value(a.get("settings").clone()).map_err(ApiError::generic)?;
-                Workflow::preset(&s.workflow)?;
+                wb_plugins::resolve_workflow(&self.config_dir, &s.workflow)?;
                 if let Some(lang) = &s.lang
                     && !wb_i18n::LANGS.contains(&lang.as_str())
                 {
@@ -288,6 +293,7 @@ impl Api {
             _ => self
                 .session_command(cmd, &a)
                 .or_else(|| self.tracker_command(cmd, &a))
+                .or_else(|| self.plugin_command(cmd, &a))
                 .or_else(|| self.stats_command(cmd, &a))
                 .or_else(|| self.git_command(cmd, &a))
                 .unwrap_or_else(|| Err(ApiError::new("error.unknownCommand", &[("name", cmd)]))),

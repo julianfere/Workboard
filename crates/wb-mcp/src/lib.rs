@@ -104,7 +104,8 @@ impl Ctx {
 
     pub fn workflow(&self) -> Workflow {
         let id = self.settings()["workflow"].as_str().unwrap_or("default").to_string();
-        Workflow::preset(&id).unwrap_or_else(|_| Workflow::preset("default").expect("default preset"))
+        wb_plugins::resolve_workflow(&self.config_dir, &id)
+            .unwrap_or_else(|_| Workflow::preset("default").expect("default preset"))
     }
 
     fn workspace(&self) -> Result<Workspace, ToolError> {

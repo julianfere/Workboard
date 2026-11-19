@@ -5133,6 +5133,7 @@ dependencies = [
  "wb-git",
  "wb-i18n",
  "wb-platform",
+ "wb-plugins",
  "wb-sessions",
  "wb-tracker",
 ]
@@ -5197,6 +5198,7 @@ dependencies = [
  "wb-core",
  "wb-i18n",
  "wb-platform",
+ "wb-plugins",
 ]
 
 [[package]]
@@ -5205,6 +5207,17 @@ version = "0.1.0"
 dependencies = [
  "dirs 6.0.0",
  "keyring",
+]
+
+[[package]]
+name = "wb-plugins"
+version = "0.1.0"
+dependencies = [
+ "regex",
+ "serde",
+ "serde_json",
+ "wb-core",
+ "wb-platform",
 ]
 
 [[package]]

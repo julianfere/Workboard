@@ -426,7 +426,7 @@ impl Api {
         self.tracker.lock.lock().unwrap_or_else(|e| e.into_inner())
     }
 
-    fn secrets(&self) -> Arc<dyn SecretStore> {
+    pub(crate) fn secrets(&self) -> Arc<dyn SecretStore> {
         self.tracker
             .secrets
             .lock()
@@ -541,6 +541,16 @@ impl Api {
             "localTypes": local_types,
             "cache": if cache.source.is_empty() { Json::Null } else { to_json(&cache)? },
         }))
+    }
+
+    /// La conexión de la carpeta abierta, sin secretos (para los plugins).
+    pub(crate) fn tracker_info(&self) -> ApiResult<Json> {
+        let _guard = self.tracker_lock();
+        let ctx = self.tracker_ctx()?;
+        Ok(ctx.conn.as_ref().map_or(
+            Json::Null,
+            |c| json!({"kind": c.kind, "source": c.source(), "org": c.org, "project": c.project}),
+        ))
     }
 
     pub(crate) fn tracker_command(&self, cmd: &str, a: &Args) -> Option<ApiResult<Json>> {

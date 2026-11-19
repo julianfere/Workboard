@@ -56,7 +56,7 @@ impl Api {
             hook_bin,
             env: Box::new(move || {
                 let s = settings::load(&settings::path_in(&config_dir));
-                let workflow = wb_core::Workflow::preset(&s.workflow)
+                let workflow = wb_plugins::resolve_workflow(&config_dir, &s.workflow)
                     .unwrap_or_else(|_| wb_core::Workflow::preset("default").expect("default preset"));
                 let lang =
                     wb_i18n::resolve_lang(s.lang.as_deref().unwrap_or(wb_i18n::DEFAULT_LANG)).to_string();

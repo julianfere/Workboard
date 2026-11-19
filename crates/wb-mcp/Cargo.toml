@@ -30,6 +30,7 @@ tokio = { version = "1", features = ["macros", "rt-multi-thread", "io-std"], opt
 wb-core.workspace = true
 wb-i18n.workspace = true
 wb-platform.workspace = true
+wb-plugins.workspace = true
 
 [dev-dependencies]
 dunce = "1"

@@ -22,11 +22,16 @@ wb-core.workspace = true
 wb-git.workspace = true
 wb-i18n.workspace = true
 wb-platform.workspace = true
+wb-plugins.workspace = true
 wb-sessions.workspace = true
 wb-tracker.workspace = true
 
 [dev-dependencies]
 base64 = "0.23.1"
+
+[[test]]
+name = "plugins"
+harness = false
 
 [lints]
 workspace = true
