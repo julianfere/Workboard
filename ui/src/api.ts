@@ -19,6 +19,7 @@ import type {
   Version,
   Workflow,
 } from "./types";
+import type { AssignedList, SyncPreview, TrackerConfig, TrackerFailure, TrackerItem } from "./types";
 
 export const inTauri = "__TAURI_INTERNALS__" in window;
 
@@ -124,3 +125,27 @@ export async function pickFolder(): Promise<string | null> {
   const res = await open({ directory: true, multiple: false });
   return typeof res === "string" ? res : null;
 }
+
+// ---------- trackers (Azure DevOps): comandos `tracker_*` ----------
+
+export const trackerApi = {
+  config: () => call<TrackerConfig>("tracker_config"),
+  connect: (kind: string, org: string, project: string, secret: string) => call<TrackerConfig>("tracker_connect", { kind, org, project, secret }),
+  fetch: () => call<TrackerConfig>("tracker_fetch"),
+  setMap: (map: Record<string, string>) => call<TrackerConfig>("tracker_set_map", { map }),
+  setField: (which: "due" | "hours", ref: string) => call<TrackerConfig>("tracker_set_field", { which, ref }),
+  clearSecret: (write: boolean) => call<TrackerConfig>("tracker_clear_secret", { write }),
+  disconnect: () => call<TrackerConfig>("tracker_disconnect"),
+  sync: () => call<TrackerConfig>("tracker_sync"),
+  preview: (includeDiffer: boolean, only: string[] | null) => call<SyncPreview>("tracker_preview", { includeDiffer, only }),
+  apply: (changes: { name: string; status: string | null; type: string | null }[]) =>
+    call<{ done: string[]; errors: TrackerFailure[] }>("tracker_apply", { changes }),
+  assigned: (period: string) => call<AssignedList>("tracker_assigned", { period }),
+  importItems: (ids: string[]) => call<{ done: string[]; skipped: string[]; errors: TrackerFailure[] }>("tracker_import", { ids }),
+  item: (id: string) => call<TrackerItem>("tracker_item", { id }),
+  createItem: (data: { id: string; title: string; type: string; folder: string; description: string; criteria: string; trackerType: string; trackerState: string }) =>
+    call<Item>("tracker_create_item", data),
+  pushStates: (changes: { id: string; state: string }[], secret: string | null) =>
+    call<{ done: { id: string; state: string }[]; errors: TrackerFailure[] }>("tracker_push_states", { changes, secret }),
+  open: (id: string) => call<null>("tracker_open", { id }),
+};

@@ -13,6 +13,8 @@ export interface StateDef {
 export interface Choice {
   id: string;
   labels: Labels;
+  /** Otros nombres (por ejemplo, tipos de un tracker que corresponden a este). */
+  aliases?: string[];
 }
 
 export interface FileCategory {
@@ -49,6 +51,8 @@ export interface Workflow {
   fields: FieldKeys;
   tasks: { heading: string; maxLen: number };
   plan: { heading: string; placeholder: string; minChars: number };
+  /** Títulos de las secciones que se completan al crear un item desde un tracker. */
+  sections: { description: string; criteria: string };
   files: { kinds: string[]; categories: FileCategory[]; fallbackCategory: FileCategory };
 }
 
@@ -243,4 +247,129 @@ export interface ApiError {
   code: string;
   params: Record<string, string>;
   conflict?: boolean;
+}
+
+// ---------- trackers (Azure DevOps) ----------
+
+export interface TrackerState {
+  name: string;
+  color: string;
+  /** Categoría propia del tracker (Proposed, InProgress…). */
+  category: string;
+  types: string[];
+  /** Categoría del flujo que le corresponde. */
+  suggested: StateCategory | null;
+}
+
+export interface TrackerField {
+  ref: string;
+  name: string;
+}
+
+export interface TrackerWorkItem {
+  state: string;
+  title: string;
+  type: string;
+  assigned: string;
+  changed: string;
+  priority: number | null;
+  due: string;
+  estimate: number | null;
+  completed: number | null;
+}
+
+export interface TrackerCache {
+  source: string;
+  kind: string;
+  org: string;
+  project: string;
+  syncedAt: number | null;
+  requested: string[];
+  items: Record<string, TrackerWorkItem>;
+}
+
+export interface TrackerConfig {
+  kinds: string[];
+  connected: boolean;
+  kind: string;
+  source: string;
+  org: string;
+  project: string;
+  hasSecret: boolean;
+  hasWriteSecret: boolean;
+  states: TrackerState[];
+  statesFetchedAt: number | null;
+  /** Estado del tracker → id de estado del flujo. */
+  map: Record<string, string>;
+  mapSaved: boolean;
+  suggested: Record<string, string>;
+  fieldsFetched: boolean;
+  dateFields: TrackerField[];
+  numFields: TrackerField[];
+  hasPriority: boolean;
+  hasEffort: boolean;
+  dueField: string;
+  hoursField: string;
+  /** Tipo del tracker → tipo del flujo. */
+  localTypes: Record<string, string>;
+  cache: TrackerCache | null;
+}
+
+export interface SyncRow {
+  key: string;
+  name: string;
+  ids: string[];
+  tracker: { id: string; state: string; title: string; type: string };
+  current: string;
+  status: string;
+  type: string;
+  kind: "fill" | "type" | "differ" | "back";
+  on: boolean;
+}
+
+export interface SyncPreview {
+  rows: SyncRow[];
+  unmapped: { state: string; items: string[] }[];
+  notFound: string[];
+  equal: number;
+  differ: number;
+  fill: number;
+  types: number;
+  read: number;
+  requested: number;
+  syncedAt: number | null;
+}
+
+export interface AssignedRow extends TrackerWorkItem {
+  id: string;
+  localType: string;
+  existing: string[];
+}
+
+export interface AssignedList {
+  period: string;
+  start: string;
+  end: string;
+  field: string;
+  items: AssignedRow[];
+}
+
+export interface TrackerItem {
+  id: string;
+  title: string;
+  type: string;
+  localType: string;
+  state: string;
+  description: string;
+  criteria: string;
+  folder: string;
+  existing: string[];
+  fromTracker: boolean;
+  source: string;
+}
+
+export interface TrackerFailure {
+  id?: string;
+  name?: string;
+  error: ApiError;
 }
