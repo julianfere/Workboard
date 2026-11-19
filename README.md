@@ -16,8 +16,13 @@ editor all work on plain files.
 
 ## Screenshots
 
-Screenshots live in [`docs/screenshots/`](docs/screenshots/) (Today, Work, an item's detail, a session,
-the Git panel and the tracker sync).
+All taken with [`examples/demo-work`](examples/demo-work).
+
+| Today | Work |
+|---|---|
+| ![Today: open, in progress and overdue counts, agreed dates and next tasks](docs/screenshots/today.png) | ![Work: every item with status, id, type, title, summary and tasks](docs/screenshots/work.png) |
+| **Item detail** | **Dark theme** |
+| ![An item's detail: status steps, tasks, deploy notes, sessions and fields](docs/screenshots/detail.png) | ![The same item's detail in the dark theme](docs/screenshots/detail-dark.png) |
 
 ## Features
 
