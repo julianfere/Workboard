@@ -44,7 +44,7 @@ Which plugins are enabled is stored in `<config>/plugins.json`.
 - `id`: lowercase letters, digits and `-`, unique. It namespaces the plugin's secrets and data.
 - `name`, `label`, `hint`: a string or `{ "en": …, "es": … }`.
 - `command`: path relative to the plugin folder (on Windows `.exe` is added when missing), or a program on
-  the `PATH` (`python`, `node`…) followed by `args`. It runs with the plugin folder as working directory.
+  the `PATH` (`python`, `node`…) followed by `args`. It runs with the plugin folder as working directory. Workboard sets `WORKBOARD_PLUGIN_PROTOCOL` (the protocol version) in its environment.
 - `timeoutSeconds`: per call, 5 to 600 (default 120). Past it the process tree is killed.
 - `permissions`: what the plugin may ask Workboard (see *Host methods*). Anything else is refused.
 - `fields`: extra frontmatter keys the plugin may write with `host/updateItem` (single-line text). The
