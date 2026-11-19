@@ -3733,10 +3733,12 @@ dependencies = [
 name = "wb-core"
 version = "0.1.0"
 dependencies = [
+ "indexmap 2.14.2",
  "regex",
  "serde",
  "serde_json",
  "thiserror 2.0.21",
+ "wb-i18n",
 ]
 
 [[package]]
