@@ -192,6 +192,6 @@ export const pluginApi = {
   enable: (id: string, enabled: boolean) => call<PluginList>("plugin_enable", { id, enabled }),
   openFolder: () => call<null>("plugins_open_folder"),
   openUrl: (url: string) => call<null>("plugin_open_url", { url }),
-  action: (args: { plugin: string; action: string; items: string[]; button?: string; values?: Record<string, unknown>; state?: unknown; cols: number; rows: number }) =>
+  action: (args: { plugin: string; action: string; items: string[]; placement: string; button?: string; values?: Record<string, unknown>; state?: unknown; cols: number; rows: number }) =>
     call<PluginStep>("plugin_action", args),
 };

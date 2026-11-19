@@ -41,20 +41,20 @@ function matches(action: PluginAction, it: Item): boolean {
   const w = action.when;
   if (!w) return true;
   if (w.kind && it.kind !== w.kind) return false;
-  if (w.hasIds !== undefined && it.ids.length > 0 !== w.hasIds) return false;
+  if (w.hasIds != null && it.ids.length > 0 !== w.hasIds) return false;
   if (w.categories?.length && !w.categories.includes(stateDef(statusOf(it))?.category ?? "")) return false;
   return true;
 }
 
-function button(plugin: PluginInfo, action: PluginAction, items: string[]): string {
+function button(plugin: PluginInfo, action: PluginAction, items: string[], placement: string): string {
   const title = action.hint ? `${action.hint} · ${plugin.name}` : (plugin.name ?? "");
-  return `<button class="btn" data-action="plugin-run" data-plugin="${esc(plugin.id!)}" data-act="${esc(action.id)}" data-items="${esc(JSON.stringify(items))}" title="${esc(title)}">${ico(action.icon ?? "puzzle") || ico("puzzle")}${esc(action.label)}</button>`;
+  return `<button class="btn" data-action="plugin-run" data-plugin="${esc(plugin.id!)}" data-act="${esc(action.id)}" data-placement="${placement}" data-items="${esc(JSON.stringify(items))}" title="${esc(title)}">${ico(action.icon ?? "puzzle") || ico("puzzle")}${esc(action.label)}</button>`;
 }
 
 /** Botones para la barra de selección. */
 export function pluginBulkButtons(names: string[]): string {
   const items = names.map(itemByName).filter((x): x is Item => !!x);
-  return pluginActions("items", items).map(({ plugin, action }) => button(plugin, action, names)).join("");
+  return pluginActions("items", items).map(({ plugin, action }) => button(plugin, action, names, "items")).join("");
 }
 
 /** Tarjeta del detalle con las acciones de los plugins (nada si no hay). */
@@ -62,7 +62,7 @@ export function pluginItemCard(it: Item): string {
   const list = pluginActions("item", [it]);
   if (!list.length) return "";
   return `<section class="card"><h2>${ico("puzzle")}${esc(t("plugin.actions"))}</h2>
-    <div class="card-actions">${list.map(({ plugin, action }) => button(plugin, action, [it.name])).join("")}</div></section>`;
+    <div class="card-actions">${list.map(({ plugin, action }) => button(plugin, action, [it.name], "item")).join("")}</div></section>`;
 }
 
 /** Comandos para la paleta. */
@@ -71,7 +71,7 @@ export function pluginCommands(): { icon: string; text: string; hint: string; ru
     icon: action.icon && ico(action.icon) ? action.icon : "puzzle",
     text: action.label,
     hint: plugin.name ?? "",
-    run: () => runAction(plugin.id!, action.id, []),
+    run: () => runAction(plugin.id!, action.id, [], "palette"),
   }));
 }
 
@@ -95,7 +95,7 @@ export function pluginsSettingsCard(): string {
         return `<li><span class="grow"><b>${esc(p.folder)}</b> <span class="flag">${esc(t("plugin.invalid", { error: p.error ?? "" }))}</span></span></li>`;
       }
       const perms = (p.permissions ?? []).map((x) => t(PERMISSION_KEYS[x] ?? x));
-      const settings = p.enabled ? (p.actions ?? []).filter((a) => a.placements.includes("settings")).map((a) => button(p, a, [])).join("") : "";
+      const settings = p.enabled ? (p.actions ?? []).filter((a) => a.placements.includes("settings")).map((a) => button(p, a, [], "settings")).join("") : "";
       const problems = [p.command ? t("plugin.noCommand", { detail: p.command }) : "", ...(p.presetErrors ?? [])].filter(Boolean);
       return `<li class="plugin-row"><div class="grow">
           <div><b>${esc(p.name ?? p.id)}</b> <span class="muted">${esc(p.version ?? "")} · ${esc(p.folder)}</span></div>
@@ -134,6 +134,7 @@ interface Run {
   plugin: string;
   action: string;
   items: string[];
+  placement: string;
   step: PluginStep | null;
   back: HTMLElement;
   busy: boolean;
@@ -141,7 +142,7 @@ interface Run {
 
 let run: Run | null = null;
 
-export async function runAction(plugin: string, action: string, items: string[]): Promise<void> {
+export async function runAction(plugin: string, action: string, items: string[], placement: string): Promise<void> {
   closeRun();
   const back = document.createElement("div");
   back.className = "modal-back";
@@ -150,7 +151,7 @@ export async function runAction(plugin: string, action: string, items: string[])
   back.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && !run?.busy) closeRun();
   });
-  run = { plugin, action, items, step: null, back, busy: false };
+  run = { plugin, action, items, placement, step: null, back, busy: false };
   await step(null);
 }
 
@@ -169,7 +170,7 @@ async function step(buttonId: string | null, values: Record<string, unknown> = {
   try {
     const { cols, rows } = termSize();
     const out = await pluginApi.action({
-      plugin: r.plugin, action: r.action, items: r.items, cols, rows,
+      plugin: r.plugin, action: r.action, items: r.items, placement: r.placement, cols, rows,
       ...(buttonId === null ? {} : { button: buttonId, values, state: state ?? null }),
     });
     if (run !== r) return;
@@ -298,7 +299,7 @@ async function press(modal: HTMLElement, b: PluginButton, fields: PluginField[])
   await step(b.id, v);
 }
 
-onAction("plugin-run", (el) => runAction(el.dataset.plugin!, el.dataset.act!, JSON.parse(el.dataset.items || "[]") as string[]));
+onAction("plugin-run", (el) => runAction(el.dataset.plugin!, el.dataset.act!, JSON.parse(el.dataset.items || "[]") as string[], el.dataset.placement ?? "item"));
 onChange("plugin-enable", async (el) => {
   await setPluginEnabled(el.dataset.id!, (el as HTMLInputElement).checked);
   // Un plugin aporta (o deja de aportar) presets de flujo.

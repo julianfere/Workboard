@@ -140,6 +140,9 @@ fn main() {
         &list,
     );
     check("labels follow the app language", list["plugins"][1]["name"] == "Plugin de prueba", &list);
+    let when = &list["plugins"][1]["actions"][0]["when"];
+    check("when is listed without nulls", *when == json!({"kind": "item", "hasIds": true}), when);
+    check("actions without when list null", list["plugins"][1]["actions"][1]["when"].is_null(), &list);
     let run = |plugin: &str, action: &str, items: Json, button: Option<&str>| {
         let mut args = json!({"plugin": plugin, "action": action, "items": items, "cols": 100, "rows": 30});
         if let Some(b) = button {

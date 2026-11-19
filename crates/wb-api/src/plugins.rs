@@ -303,7 +303,11 @@ impl Api {
         }
         let lang = self.lang();
         let root = ws.as_ref().map(|w| w.root().display().to_string());
-        let context = json!({"lang": lang, "root": root, "items": items});
+        let placement = a.opt_str("placement").filter(|p| wb_plugins::PLACEMENTS.contains(p));
+        if placement.is_some_and(|p| !action.placements.iter().any(|x| x == p)) {
+            return Err(ApiError::new("plugin.noAction", &[("id", action_id)]));
+        }
+        let context = json!({"lang": lang, "root": root, "items": items, "placement": placement});
         let (method, params) = match a.opt_str("button") {
             None => ("action/open", json!({"action": action_id, "context": context})),
             Some(button) => (

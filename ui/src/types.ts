@@ -631,8 +631,8 @@ export interface BranchDiff {
 // ---------- plugins ----------
 
 export interface PluginWhen {
-  kind?: "item" | "group";
-  hasIds?: boolean;
+  kind?: "item" | "group" | null;
+  hasIds?: boolean | null;
   categories?: string[];
 }
 

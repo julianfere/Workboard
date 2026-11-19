@@ -87,8 +87,9 @@ Answer with any object (`{}`). If `protocol` is newer than the plugin understand
 {"method":"action/submit","params":{"action":"hello","context":{…},"button":"save","values":{"name":"Ana"},"state":{…}}}
 ```
 
-`context` is `{ "lang", "root", "items": [ItemRef…] }`: the items the action was started on (none from the
-palette or Settings). An `ItemRef` is `{ "name", "title", "ids", "kind", "type", "status", "folder" }`;
+`context` is `{ "lang", "root", "placement", "items": [ItemRef…] }`: where the action was started from
+(`item`, `items`, `palette` or `settings`) and the items it was started on (none from the palette or
+Settings). An `ItemRef` is `{ "name", "title", "ids", "kind", "type", "status", "folder" }`;
 `folder` is the absolute path, `name` the path relative to the root (`grp-x/wi1-foo`).
 
 `action/submit` is sent when the user presses one of the form's buttons, or changes a field marked
