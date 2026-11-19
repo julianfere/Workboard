@@ -1,9 +1,12 @@
-//! Preferencias de la app (`<config>/settings.json`): idioma, tema y preset de flujo. Un archivo que no
-//! existe o no se puede leer equivale a los valores por defecto; la escritura es atómica.
+//! Preferencias de la app (`<config>/settings.json`): idioma, tema, preset de flujo, carpeta abierta,
+//! recientes y carpeta de notas. El MCP lee el mismo archivo. Un archivo que no existe o no se puede leer
+//! equivale a los valores por defecto; la escritura es atómica.
 
 use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
+
+pub const MAX_RECENTS: usize = 12;
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -22,11 +25,34 @@ pub struct Settings {
     pub theme: Theme,
     /// Id del preset de flujo.
     pub workflow: String,
+    /// Carpeta de trabajos abierta.
+    pub root: Option<String>,
+    /// Carpetas abiertas antes, la más reciente primero.
+    pub recents: Vec<String>,
+    /// Carpeta de notas (`None` = `<config>/notes`).
+    pub notes_folder: Option<String>,
 }
 
 impl Default for Settings {
     fn default() -> Self {
-        Self { lang: None, theme: Theme::System, workflow: "default".into() }
+        Self {
+            lang: None,
+            theme: Theme::System,
+            workflow: "default".into(),
+            root: None,
+            recents: vec![],
+            notes_folder: None,
+        }
+    }
+}
+
+impl Settings {
+    /// Deja `root` como carpeta abierta y primera de los recientes.
+    pub fn open_root(&mut self, root: &str) {
+        self.recents.retain(|r| !r.eq_ignore_ascii_case(root));
+        self.recents.insert(0, root.to_string());
+        self.recents.truncate(MAX_RECENTS);
+        self.root = Some(root.to_string());
     }
 }
 
@@ -71,10 +97,19 @@ mod tests {
     }
 
     #[test]
-    fn roundtrip() {
+    fn roundtrip_and_recents() {
         let dir = temp_dir("roundtrip");
         let path = path_in(&dir);
-        let s = Settings { lang: Some("es".into()), theme: Theme::Light, workflow: "classic-es".into() };
+        let mut s = Settings {
+            lang: Some("es".into()),
+            theme: Theme::Light,
+            workflow: "classic-es".into(),
+            ..Default::default()
+        };
+        s.open_root("C:/a");
+        s.open_root("C:/b");
+        s.open_root("c:/A");
+        assert_eq!(s.recents, ["c:/A", "C:/b"]);
         save(&path, &s).unwrap();
         assert_eq!(load(&path), s);
         assert!(!path.with_extension("json.tmp").exists());

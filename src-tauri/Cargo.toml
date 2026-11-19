@@ -11,9 +11,9 @@ default-run = "workboard"
 tauri = { version = "2", features = [] }
 serde.workspace = true
 serde_json.workspace = true
-wb-core.workspace = true
-wb-i18n.workspace = true
 wb-platform.workspace = true
+tauri-plugin-dialog = "2"
+wb-api = { version = "0.1.0", path = "../crates/wb-api" }
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
