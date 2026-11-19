@@ -9,6 +9,7 @@ pub mod text;
 pub mod validate;
 pub mod workflow;
 pub mod workspace;
+pub mod write;
 
 pub use workflow::{StateCategory, Workflow, WorkflowError};
 pub use workspace::Workspace;

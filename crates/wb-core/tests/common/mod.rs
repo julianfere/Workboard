@@ -18,6 +18,74 @@ pub fn fixtures() -> PathBuf {
     repo_root().join("tests/golden/fixtures")
 }
 
+/// Carpeta temporal propia de un test (se borra al soltarla).
+pub struct TempDir(pub PathBuf);
+
+impl TempDir {
+    pub fn new(tag: &str) -> Self {
+        use std::sync::atomic::{AtomicU32, Ordering};
+        static N: AtomicU32 = AtomicU32::new(0);
+        let dir = std::env::temp_dir().join(format!(
+            "wb-test-{tag}-{}-{}",
+            std::process::id(),
+            N.fetch_add(1, Ordering::SeqCst)
+        ));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        Self(dunce::canonicalize(&dir).unwrap())
+    }
+
+    /// Copia de un fixture adentro de esta carpeta.
+    pub fn copy_of(&self, src: &std::path::Path) -> PathBuf {
+        let dest = self.0.join(src.file_name().unwrap());
+        copy_dir(src, &dest);
+        dest
+    }
+}
+
+impl Drop for TempDir {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_dir_all(&self.0);
+    }
+}
+
+fn copy_dir(src: &std::path::Path, dest: &std::path::Path) {
+    std::fs::create_dir_all(dest).unwrap();
+    for e in std::fs::read_dir(src).unwrap().flatten() {
+        let p = e.path();
+        if p.is_dir() {
+            copy_dir(&p, &dest.join(e.file_name()));
+        } else {
+            std::fs::copy(&p, dest.join(e.file_name())).unwrap();
+        }
+    }
+}
+
+/// Archivos del árbol como `os.walk` ordenado de la v1: los archivos de cada carpeta y después sus
+/// subcarpetas, todo en orden.
+pub fn tree(root: &std::path::Path) -> Vec<String> {
+    fn walk(root: &std::path::Path, dir: &std::path::Path, out: &mut Vec<String>) {
+        let mut files = vec![];
+        let mut dirs = vec![];
+        for e in std::fs::read_dir(dir).unwrap().flatten() {
+            let name = e.file_name().to_string_lossy().into_owned();
+            if e.path().is_dir() { dirs.push(name) } else { files.push(name) }
+        }
+        files.sort();
+        dirs.sort();
+        let prefix = dir.strip_prefix(root).unwrap().to_string_lossy().replace('\\', "/");
+        for f in files {
+            out.push(if prefix.is_empty() { f } else { format!("{prefix}/{f}") });
+        }
+        for d in dirs {
+            walk(root, &dir.join(d), out);
+        }
+    }
+    let mut out = vec![];
+    walk(root, root, &mut out);
+    out
+}
+
 pub fn arr(v: &Value) -> &Vec<Value> {
     v.as_array().unwrap_or_else(|| panic!("expected array, got {v}"))
 }
@@ -41,6 +109,48 @@ pub fn py_str(v: &Value) -> String {
         }
         Value::String(s) => s.clone(),
         other => other.to_string(),
+    }
+}
+
+/// Pasa la salida del port (nombres genéricos) a la forma de la v1 que tienen los golden: `ids`→`wis`,
+/// `type`→`tipo`, `status`→`estado`, kind `item`→`wi`, gap `tasks`→`pendientes`, y saca los campos de
+/// tiempo (`created`, `last`, `mtime`, `deleted`, `ts`).
+pub fn to_v1(v: Value) -> Value {
+    match v {
+        Value::Array(items) => Value::Array(items.into_iter().map(to_v1).collect()),
+        Value::Object(map) => {
+            let mut out = serde_json::Map::new();
+            let is_item = map.contains_key("hasReadme");
+            for (k, v) in map {
+                if ["created", "last", "mtime", "deleted", "ts"].contains(&k.as_str()) {
+                    continue;
+                }
+                let (k, v) = match k.as_str() {
+                    "ids" => ("wis".to_string(), v),
+                    "type" if is_item => ("tipo".to_string(), v),
+                    "status" => ("estado".to_string(), v),
+                    "kind" if is_item && v == "item" => (k, Value::String("wi".into())),
+                    "planGaps" => (
+                        k,
+                        Value::Array(
+                            v.as_array()
+                                .unwrap()
+                                .iter()
+                                .map(|g| {
+                                    if g == "tasks" { Value::String("pendientes".into()) } else { g.clone() }
+                                })
+                                .collect(),
+                        ),
+                    ),
+                    // El frontmatter queda tal cual: sus claves son las del archivo.
+                    "meta" => (k, v),
+                    _ => (k, to_v1(v)),
+                };
+                out.insert(k, v);
+            }
+            Value::Object(out)
+        }
+        other => other,
     }
 }
 
