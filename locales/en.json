@@ -34,5 +34,10 @@
   "about.version": "Version {version} · {os}",
   "error.generic": "Something went wrong: {message}",
   "error.unknownPreset": "Unknown workflow preset: {id}",
-  "error.invalidWorkflow": "Invalid workflow: {message}"
+  "error.invalidWorkflow": "Invalid workflow: {message}",
+  "core.io": "File system error: {message}",
+  "core.task.empty": "The task is empty",
+  "core.task.tooLong": "The task is longer than {max} characters",
+  "core.task.notFound": "That task does not exist",
+  "core.task.changed": "The task list changed on disk; reload and try again"
 }

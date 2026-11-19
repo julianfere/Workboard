@@ -34,5 +34,10 @@
   "about.version": "Versión {version} · {os}",
   "error.generic": "Algo salió mal: {message}",
   "error.unknownPreset": "Preset de flujo desconocido: {id}",
-  "error.invalidWorkflow": "Flujo inválido: {message}"
+  "error.invalidWorkflow": "Flujo inválido: {message}",
+  "core.io": "Error del sistema de archivos: {message}",
+  "core.task.empty": "La tarea está vacía",
+  "core.task.tooLong": "La tarea supera {max} caracteres",
+  "core.task.notFound": "No existe esa tarea",
+  "core.task.changed": "La lista de pendientes cambió en disco; recargá y reintentá"
 }
