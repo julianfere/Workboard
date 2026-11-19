@@ -8,8 +8,13 @@
 //! preflight CORS: ninguna web externa puede postear a localhost). Responde `{"ok": true, "data": …}` o
 //! `{"ok": false, "error": {code, params}}`. `GET` sirve `ui/dist` si existe (UI ya compilada).
 //! Usar con `WORKBOARD_CONFIG_DIR` apuntando a una carpeta temporal.
+//!
+//! `--fake-tracker <archivo.json>`: el tracker responde desde un archivo (`{"GET /_apis/wit/fields": {…}}`,
+//! la clave es el método y el final de la ruta) y los secretos quedan en memoria. Sirve para probar la UI de
+//! trackers sin red ni credenciales reales.
 
 use std::path::PathBuf;
+use std::sync::Arc;
 
 use serde_json::json;
 use tiny_http::{Header, Method, Response, Server};
@@ -19,17 +24,47 @@ fn header(k: &str, v: &str) -> Header {
     Header::from_bytes(k.as_bytes(), v.as_bytes()).expect("valid header")
 }
 
+/// Tracker simulado: responde por método y final de la ruta; lo demás, 404.
+struct FakeTracker(serde_json::Map<String, serde_json::Value>);
+
+impl wb_tracker::Transport for FakeTracker {
+    fn send(&self, req: &wb_tracker::HttpRequest) -> Result<wb_tracker::HttpResponse, String> {
+        let path = req.url.split('?').next().unwrap_or_default();
+        let found = self
+            .0
+            .iter()
+            .find(|(k, _)| k.split_once(' ').is_some_and(|(m, p)| m == req.method && path.ends_with(p)));
+        let (status, body) = found.map_or((404, json!({"message": "not found"})), |(_, v)| (200, v.clone()));
+        Ok(wb_tracker::HttpResponse {
+            status,
+            content_type: "application/json".into(),
+            body: body.to_string().into_bytes(),
+        })
+    }
+}
+
 fn main() {
     let mut args = std::env::args().skip(1);
-    let (mut root, mut port) = (None, 8766u16);
+    let (mut root, mut port, mut fake) = (None, 8766u16, None);
     while let Some(a) = args.next() {
         if a == "--port" {
             port = args.next().and_then(|p| p.parse().ok()).expect("--port <number>");
+        } else if a == "--fake-tracker" {
+            fake = Some(args.next().expect("--fake-tracker <file.json>"));
         } else {
             root = Some(a);
         }
     }
     let api = Api::new(wb_platform::config_dir());
+    if let Some(file) = fake {
+        let text = std::fs::read_to_string(&file).expect("--fake-tracker: unreadable file");
+        let routes: serde_json::Map<String, serde_json::Value> =
+            serde_json::from_str(&text).expect("--fake-tracker: invalid JSON");
+        api.set_tracker_backend(
+            Arc::new(wb_platform::secrets::MemorySecrets::default()),
+            Arc::new(FakeTracker(routes)),
+        );
+    }
     if let Some(root) = root
         && let Err(e) = api.dispatch("open_root", &json!({"path": root}))
     {

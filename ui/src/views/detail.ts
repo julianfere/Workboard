@@ -12,6 +12,7 @@ import { S, effectiveStatus, inSession, itemByName, metaList, metaText, stateDef
 import { termSize } from "../terminal";
 import type { ApiError, FileEntry, Item } from "../types";
 import { statusChip } from "./items";
+import { trackerCard } from "./tracker";
 
 const item = (): Item => S.detailData!.item;
 
@@ -122,7 +123,7 @@ function sessionsCard(it: Item): string {
 
 function summaryTab(it: Item): string {
   const deploy = it.deploy ? `<section class="card"><h2>${esc(t("detail.deploy"))}</h2><div class="md">${renderMarkdown(it.deploy)}</div></section>` : "";
-  return `<div class="detail-grid"><div>${tasksCard(it)}${membersCard(it)}${deploy}</div><div>${sessionsCard(it)}${fieldsCard(it)}</div></div>`;
+  return `<div class="detail-grid"><div>${tasksCard(it)}${membersCard(it)}${deploy}</div><div>${sessionsCard(it)}${trackerCard(it)}${fieldsCard(it)}</div></div>`;
 }
 
 function readmeTab(): string {

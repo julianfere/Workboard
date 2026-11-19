@@ -3,10 +3,11 @@
 import { api } from "../api";
 import { onAction, onChange, openDetail, refresh, registerView, render } from "../app";
 import { $, confirmDialog, daysUntil, esc, fmtAgo, promptDialog, toast } from "../dom";
-import { label, t } from "../i18n";
+import { errorText, label, t } from "../i18n";
 import { ico } from "../icons";
 import { S, effectiveStatus, isClosed, metaText, stateDef, stateLabel, stateRank, titleOf, typeLabel, wf } from "../state";
-import type { Item } from "../types";
+import type { Item, TrackerItem } from "../types";
+import { createTrackedItem, fetchTrackerItem, openAssigned, trackerBadge, trackerBulk, trackerConnected, trackerToolbar } from "./tracker";
 
 const selected = new Set<string>();
 
@@ -60,7 +61,7 @@ function row(it: Item, nested = false): string {
     <td class="c-status">${statusChip(effectiveStatus(it))}</td>
     <td class="c-id">${isGroup ? ico("layers") : esc(it.ids.join(", ") || "—")}</td>
     <td class="c-type">${it.type ? esc(typeLabel(it.type)) : ""}</td>
-    <td class="c-title"><div class="title">${esc(titleOf(it))} ${dueBadge(it)}</div><div class="sub">${esc(it.name)}</div></td>
+    <td class="c-title"><div class="title">${esc(titleOf(it))} ${dueBadge(it)}${trackerBadge(it)}</div><div class="sub">${esc(it.name)}</div></td>
     <td class="c-notes">${esc(notes)}</td>
     <td class="c-tasks">${it.tasks.length ? `${open}/${it.tasks.length}` : ""}</td>
     <td class="c-last">${esc(fmtAgo(it.last))}</td>
@@ -107,6 +108,7 @@ function bulkBar(): string {
   return `<div class="bulk"><span>${esc(t("items.selected", { n: selected.size }))}</span>
     <select data-change="bulk-status" aria-label="${esc(t("items.setStatus"))}"><option value="">${esc(t("items.setStatus"))}</option>${states}</select>
     <button class="btn" data-action="bulk-group">${ico("layers")}${esc(t("items.group"))}</button>
+    ${trackerBulk([...selected])}
     <button class="btn danger" data-action="bulk-trash">${ico("trash")}${esc(t("items.delete"))}</button>
     <button class="link" data-action="bulk-clear">${esc(t("items.clearSelection"))}</button></div>`;
 }
@@ -126,6 +128,7 @@ function renderItems(): string {
       <select data-change="group-by" aria-label="${esc(t("items.groupBy"))}">${groupOpts}</select>
       <span class="spacer"></span>
       ${S.deletedCount ? `<button class="btn ghost" data-action="show-deleted" title="${esc(t("items.deleted"))}">${ico("trash")}${S.deletedCount}</button>` : ""}
+      ${trackerToolbar()}
       <button class="btn primary" data-action="new-item">${ico("plus")}${esc(t("items.new"))}</button>
     </div>
     ${S.loadError ? `<p class="error">${esc(S.loadError)}</p>` : ""}
@@ -142,7 +145,9 @@ function newItemModal(): void {
   const back = document.createElement("div");
   back.className = "modal-back";
   back.innerHTML = `<form class="modal" role="dialog" aria-modal="true"><h2>${esc(t("items.new"))}</h2>
-    <label>${esc(t("newItem.id"))}<input name="id" placeholder="${esc(t("newItem.idHint"))}"></label>
+    ${trackerConnected() ? `<p class="muted"><button type="button" class="link" data-assigned>${ico("calendar")} ${esc(t("tracker.assigned.fromNewItem"))}</button></p>` : ""}
+    <label>${esc(t("newItem.id"))}<span class="add-row"><input name="id" placeholder="${esc(t("newItem.idHint"))}"><button type="button" class="btn" data-fetch title="${esc(t("tracker.fetchHint"))}">${ico("cloud")}${esc(t("tracker.fetch"))}</button></span></label>
+    <p class="muted" data-fetched></p>
     <label>${esc(t("items.title"))}<input name="title" required></label>
     <label>${esc(t("items.type"))}<select name="type"><option value=""></option>${types}</select></label>
     <label>${esc(t("newItem.folder"))}<input name="folder" required></label>
@@ -160,20 +165,55 @@ function newItemModal(): void {
     field("folder").value = tpl.replace("{id}", id).replace("{slug}", slug).replace(/^-+|-+$/g, "");
   };
   field("title").oninput = suggest;
-  field("id").oninput = suggest;
   field("folder").oninput = () => (touched = true);
   const close = () => back.remove();
+  // Con id: el tracker completa título, tipo y carpeta (y la descripción y los criterios del README).
+  let fetched: TrackerItem | null = null;
+  const info = back.querySelector<HTMLElement>("[data-fetched]")!;
+  field("id").oninput = () => {
+    if (fetched && fetched.id !== field("id").value.trim().replace(/^#/, "")) {
+      fetched = null;
+      info.textContent = "";
+    }
+    suggest();
+  };
+  back.querySelector<HTMLElement>("[data-fetch]")!.onclick = async () => {
+    const id = field("id").value.trim();
+    if (!id) return;
+    info.textContent = t("common.loading");
+    try {
+      const d = await fetchTrackerItem(id);
+      fetched = d.fromTracker ? d : null;
+      if (d.fromTracker) {
+        field("title").value = d.title;
+        (form.elements.namedItem("type") as HTMLSelectElement).value = d.localType;
+        if (!touched) field("folder").value = d.folder;
+      }
+      const have = d.existing.length ? ` · ${t("tracker.alreadyIn", { folders: d.existing.join(", ") })}` : "";
+      info.textContent = (d.fromTracker ? t("tracker.fetched", { type: d.type, state: d.state, source: d.source }) : t("tracker.fetchOffline")) + have;
+    } catch (err) {
+      fetched = null;
+      info.textContent = errorText(err);
+    }
+  };
+  back.querySelector<HTMLElement>("[data-assigned]")?.addEventListener("click", () => {
+    close();
+    openAssigned();
+  });
   back.querySelector<HTMLElement>("[data-cancel]")!.onclick = close;
   back.addEventListener("keydown", (e) => e.key === "Escape" && close());
   form.onsubmit = async (e) => {
     e.preventDefault();
     try {
-      const it = await api.createItem(field("folder").value.trim(), field("title").value, (form.elements.namedItem("type") as HTMLSelectElement).value);
+      const id = field("id").value.trim();
+      const type = (form.elements.namedItem("type") as HTMLSelectElement).value;
+      const it = id
+        ? await createTrackedItem({ id, title: field("title").value, type, folder: field("folder").value.trim(), fetched })
+        : await api.createItem(field("folder").value.trim(), field("title").value, type);
       close();
       await refresh();
       await openDetail(it.name);
     } catch (err) {
-      const { errorText } = await import("../i18n");
       back.querySelector("[data-error]")!.textContent = errorText(err);
     }
   };

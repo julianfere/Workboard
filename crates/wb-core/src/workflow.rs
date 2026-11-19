@@ -60,6 +60,10 @@ pub struct StateDef {
 pub struct Choice {
     pub id: String,
     pub labels: Labels,
+    /// Otros nombres que corresponden a esta opción, sin distinguir mayúsculas (por ejemplo, los tipos de
+    /// work item de un tracker: `User Story` → `us`).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub aliases: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -160,6 +164,14 @@ pub struct PlanRules {
     pub min_chars: usize,
 }
 
+/// Títulos de las secciones del README que la app completa al crear un item con datos de un tracker.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct SectionTitles {
+    pub description: String,
+    pub criteria: String,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct FileCategory {
@@ -202,6 +214,7 @@ pub struct Workflow {
     /// Título del archivo de la bandeja de tareas sin item.
     pub inbox_title: String,
     pub plan: PlanRules,
+    pub sections: SectionTitles,
     pub files: FileRules,
     #[serde(skip)]
     compiled: OnceLock<Compiled>,

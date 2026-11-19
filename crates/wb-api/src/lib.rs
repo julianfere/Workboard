@@ -5,6 +5,7 @@
 pub mod error;
 mod sessions;
 pub mod settings;
+mod tracker;
 
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, OnceLock};
@@ -30,6 +31,8 @@ pub struct Api {
     sessions: OnceLock<Arc<wb_sessions::SessionManager>>,
     /// Ejecutables del MCP y del hook, si no son los que viajan junto a la app.
     session_bins: Mutex<Option<(PathBuf, PathBuf)>>,
+    /// Almacén de secretos y transporte HTTP de los trackers.
+    tracker: tracker::TrackerDeps,
 }
 
 fn to_json<T: Serialize>(v: T) -> ApiResult<Json> {
@@ -72,6 +75,7 @@ impl Api {
             settings: Mutex::new(s),
             sessions: OnceLock::new(),
             session_bins: Mutex::new(None),
+            tracker: Default::default(),
         }
     }
 
@@ -279,6 +283,7 @@ impl Api {
             }
             _ => self
                 .session_command(cmd, &a)
+                .or_else(|| self.tracker_command(cmd, &a))
                 .unwrap_or_else(|| Err(ApiError::new("error.unknownCommand", &[("name", cmd)]))),
         }
     }

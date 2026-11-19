@@ -27,7 +27,7 @@ Feature/Bug de Implementar) va al plugin privado y se marca **(privado)**.
 | [x] | Categorías de archivo por prefijo/extensión; scripts "corridos en DEV/QA/PROD" (`runs.json`) | 3 | misc, mcp |
 | [x] | Mover a grupo / sacar / disolver, eliminar a `_deleted` con deshacer, restaurar, renombrar carpeta | 3 | workspace_ops |
 | [~] | Después de mover: sesiones, marcas, backups y notas siguen a la carpeta (falta notas) | 3 / 6 | parcial (backups) |
-| [~] | Nuevo item con o sin WI (crea carpeta + README) | 3 / 7 | workspace_ops (create_folder) |
+| [x] | Nuevo item con o sin WI (crea carpeta + README; con id trae título, tipo, descripción y criterios del tracker) | 3 / 7 | workspace_ops (create_folder), wb-api/tests/tracker |
 | [x] | Plan incompleto (`plan_gaps`) | 3 | misc |
 | [x] | Bandeja de tareas sin WI (`inbox.md` en la config) | 3 | tasks (mismas funciones) |
 | [~] | Watcher: refresco en vivo del filesystem y de `.git` de los repos | 4 | — |
@@ -103,9 +103,9 @@ Feature/Bug de Implementar) va al plugin privado y se marca **(privado)**.
 
 | | Función | Fase | Golden |
 |---|---|---|---|
-| [ ] | Conexión por raíz, PAT de solo lectura cifrado; mapeo de estados con sugerencias por categoría | 7 | — |
-| [ ] | Sync con previsualización (checkboxes, retrocesos destildados, fila "según git") | 7 | — |
-| [ ] | Campos elegibles de fecha pactada y horas; prioridad | 7 | — |
-| [ ] | Asignados del período (WIQL) e importación | 7 | — |
-| [ ] | Cambiar estado en Azure (PAT de escritura aparte, solo `System.State`) | 7 | — |
+| [x] | Conexión por raíz, PAT de solo lectura en el almacén de credenciales del SO; mapeo de estados con sugerencias por categoría | 7 | wb-tracker/tests, wb-api/tests/tracker |
+| [~] | Sync con previsualización (checkboxes, retrocesos destildados) ✓; fila "según git" (falta: depende de la fase 5) | 7 | wb-api/tests/tracker |
+| [x] | Campos elegibles de fecha pactada y horas; prioridad | 7 | wb-tracker (catalog) |
+| [x] | Asignados del período (WIQL) e importación | 7 | wb-api/tests/tracker |
+| [x] | Cambiar estado en Azure (PAT de escritura aparte, solo `System.State`) | 7 | wb-api/tests/tracker |
 | [ ] | ReleaseManual **(privado)** | 8 | — |
