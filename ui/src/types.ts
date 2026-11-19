@@ -244,3 +244,142 @@ export interface ApiError {
   params: Record<string, string>;
   conflict?: boolean;
 }
+
+// ---------- git ----------
+
+/** Texto traducible que arma el backend: clave de `locales/*.json` y parámetros. */
+export interface Msg {
+  code: string;
+  params: Record<string, string>;
+}
+
+export interface RepoConfig {
+  name: string;
+  path: string;
+  /** Ambiente → rama remota (`origin/main`). */
+  envs: Record<string, string>;
+  /** Se compara con los otros repos (alerta de repos desparejos). */
+  compare: boolean;
+}
+
+export interface GitConfig {
+  repos: RepoConfig[];
+  detected: RepoConfig[];
+  /** La carpeta tiene repos configurados a mano (si no, son los detectados). */
+  custom: boolean;
+  envRefs: Record<string, string[]>;
+  customEnvRefs: boolean;
+}
+
+export type GitState = "merged" | "equivalent" | "content" | "mentioned" | "pending";
+
+export interface EnvState {
+  ahead: number | null;
+  state: GitState;
+}
+
+export interface GitTip {
+  sha: string;
+  ts: number;
+  author: string;
+  subject: string;
+  loc: string;
+}
+
+export interface GitBranch {
+  repo: string;
+  name: string;
+  locations: string[];
+  tip: GitTip;
+  envs: Record<string, EnvState>;
+  own: number;
+  files: number;
+  mergedInto: string | null;
+  ids: string[];
+  current: boolean;
+}
+
+export interface GitMention {
+  sha: string;
+  ts: number;
+  subject: string;
+}
+
+export interface GitRepoInfo {
+  name: string;
+  path?: string;
+  envs?: Record<string, string>;
+  missingEnvs?: string[];
+  current?: string;
+  dirty?: string[];
+  dirtyCount?: number;
+  lastFetch?: number | null;
+  compare?: boolean;
+  error?: Msg;
+}
+
+export interface GitOverview {
+  repos: GitRepoInfo[];
+  byItem: Record<string, GitBranch[]>;
+  /** id → repo → ambiente → commit. */
+  mentions: Record<string, Record<string, Record<string, GitMention>>>;
+  computedAt: number;
+  seconds: number;
+}
+
+export interface PromoFlag extends Msg {
+  kind: "otherItem" | "shared" | "likely" | "merge";
+}
+
+export interface PromoRow {
+  sha: string;
+  short: string;
+  ts: number;
+  author: string;
+  parents: string[];
+  subject: string;
+  branch: string;
+  ids: string[];
+  merge: boolean;
+  flags: PromoFlag[];
+  on: boolean;
+}
+
+export interface PromoBranch {
+  name: string;
+  ids: string[];
+  locations: string[];
+  commits: PromoRow[];
+  notes: Msg[];
+  warnings: Msg[];
+  alreadyCp: number;
+  fromEnv?: string;
+}
+
+export interface PromoRepo {
+  name: string;
+  path?: string;
+  targetRef?: string;
+  remote?: string;
+  targetBranch?: string;
+  webUrl?: string | null;
+  forge?: "azure" | "github" | "gitlab" | null;
+  lastFetch?: number | null;
+  branches?: PromoBranch[];
+  commits?: PromoRow[];
+  sourceEnv?: string | null;
+  error?: Msg;
+}
+
+export interface Promotion {
+  target: string;
+  ids: string[];
+  repos: PromoRepo[];
+}
+
+export interface BranchDiff {
+  repo: string;
+  path: string;
+  branch: string;
+  diff: { base: string; tip: string; commits: number; stat: string; diff: string; cut: boolean };
+}

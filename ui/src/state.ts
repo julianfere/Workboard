@@ -19,7 +19,7 @@ export const S = {
   /** Detalle abierto (nombre del item) y sus datos. */
   detail: null as string | null,
   detailData: null as ItemDetail | null,
-  detailTab: "summary" as "summary" | "readme" | "files" | "versions",
+  detailTab: "summary" as "summary" | "readme" | "files" | "versions" | "git",
   /** Errores de validación por clave del frontmatter. */
   fieldErrors: {} as Record<string, string>,
   /** Lo que escribió el usuario en un campo que no pasó la validación (no se pierde al re-renderizar). */

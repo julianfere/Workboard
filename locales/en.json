@@ -467,5 +467,6 @@
   "promo.copied": "Commands copied",
   "promo.copyFailed": "Could not copy",
   "alerts.gitDesync": "Repositories out of step in an environment",
-  "alerts.gitDirty": "Uncommitted changes on the item's branch"
+  "alerts.gitDirty": "Uncommitted changes on the item's branch",
+  "detail.tab.git": "Git"
 }

@@ -7,6 +7,7 @@ import { label, t } from "../i18n";
 import { ico } from "../icons";
 import { S, effectiveStatus, isClosed, metaText, stateDef, stateLabel, stateRank, titleOf, typeLabel, wf } from "../state";
 import type { Item } from "../types";
+import { openPromotion } from "../git";
 
 const selected = new Set<string>();
 
@@ -107,6 +108,7 @@ function bulkBar(): string {
   return `<div class="bulk"><span>${esc(t("items.selected", { n: selected.size }))}</span>
     <select data-change="bulk-status" aria-label="${esc(t("items.setStatus"))}"><option value="">${esc(t("items.setStatus"))}</option>${states}</select>
     <button class="btn" data-action="bulk-group">${ico("layers")}${esc(t("items.group"))}</button>
+    <button class="btn" data-action="bulk-promote" title="${esc(t("promo.buttonHint"))}">${ico("promote")}${esc(t("promo.button"))}</button>
     <button class="btn danger" data-action="bulk-trash">${ico("trash")}${esc(t("items.delete"))}</button>
     <button class="link" data-action="bulk-clear">${esc(t("items.clearSelection"))}</button></div>`;
 }
@@ -228,6 +230,7 @@ onAction("sort", (el) => {
   render();
 });
 onAction("new-item", () => newItemModal());
+onAction("bulk-promote", () => openPromotion([...selected]));
 onAction("show-deleted", () => deletedModal());
 onAction("bulk-group", async () => {
   const title = await promptDialog(t("items.groupTitle"));

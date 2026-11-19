@@ -467,5 +467,6 @@
   "promo.copied": "Comandos copiados",
   "promo.copyFailed": "No se pudo copiar",
   "alerts.gitDesync": "Repos desparejos en un entorno",
-  "alerts.gitDirty": "Cambios sin commitear en la rama del WI"
+  "alerts.gitDirty": "Cambios sin commitear en la rama del WI",
+  "detail.tab.git": "Git"
 }

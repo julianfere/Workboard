@@ -19,6 +19,7 @@ import type {
   Version,
   Workflow,
 } from "./types";
+import type { BranchDiff, GitConfig, GitOverview, Promotion, RepoConfig } from "./types";
 
 export const inTauri = "__TAURI_INTERNALS__" in window;
 
@@ -124,3 +125,16 @@ export async function pickFolder(): Promise<string | null> {
   const res = await open({ directory: true, multiple: false });
   return typeof res === "string" ? res : null;
 }
+
+// ---------- git ----------
+
+/** Panel Git (solo lectura) y datos de la promoción. */
+export const gitApi = {
+  config: () => call<GitConfig>("git_config"),
+  /** `repos: null` = volver a los detectados; `envRefs: null` = las ramas del flujo. */
+  setConfig: (cfg: { repos?: RepoConfig[] | null; envRefs?: Record<string, string[]> | null }) => call<GitConfig>("set_git_config", cfg),
+  signature: () => call<string>("git_signature"),
+  overview: (refresh: boolean) => call<GitOverview>("git_overview", { refresh }),
+  promotion: (ids: string[], target: string) => call<Promotion>("git_promotion", { ids, target }),
+  branchDiff: (name: string) => call<BranchDiff[]>("git_branch_diff", { name }),
+};
