@@ -129,5 +129,5 @@ config real.
 ## Plan
 
 Fases: 0 golden ✓ · 1 spike ✓ · 2 esqueleto ✓ · 3 core + MCP ✓ · 4 UI base ✓ · 5 git ✓ ·
-6 sesiones y agentes ✓ · 7 trackers ✓ · 8 plugins + plugin privado (host ✓; plugin privado en `../workboard-private`) · 9 multiplataforma, docs y release ·
+6 sesiones y agentes ✓ · 7 trackers ✓ · 8 plugins + plugin privado ✓ (el privado vive en `../workboard-private`) · 9 multiplataforma, docs y release ·
 10 cutover desde la v1. El checklist de paridad está en `docs/parity-checklist.md`.
