@@ -9,6 +9,8 @@ export default defineConfig({
     port: 1420,
     strictPort: true,
     fs: { allow: [".."] },
+    // En el navegador la API va al wb-devserver (cargo run -p wb-api --bin wb-devserver).
+    proxy: { "/api": "http://127.0.0.1:8766" },
   },
   build: {
     outDir: "dist",

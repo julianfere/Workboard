@@ -1,66 +1,101 @@
-// Única puerta al backend. Dentro de Tauri usa `invoke`; en un navegador común (desarrollo con
-// `npm run dev`, Playwright) usa un mock con los mismos presets, para trabajar la UI sin compilar Rust.
+// Única puerta al backend: `wb_api::Api::dispatch`. Dentro de Tauri va por el comando `api`; en un
+// navegador (desarrollo, Playwright) por HTTP al `wb-devserver` (`npm run dev` lo reenvía).
 
 import { invoke } from "@tauri-apps/api/core";
-import classicEs from "../../crates/wb-core/presets/classic-es.json";
-import defaultPreset from "../../crates/wb-core/presets/default.json";
-import type { ApiError, AppInfo, PresetSummary, Settings, Workflow } from "./types";
+import type {
+  ApiError,
+  AppInfo,
+  DeletedEntry,
+  Item,
+  ItemDetail,
+  ItemList,
+  Note,
+  PresetSummary,
+  Settings,
+  Task,
+  Version,
+  Workflow,
+} from "./types";
 
-const inTauri = "__TAURI_INTERNALS__" in window;
-
-export async function call<T>(cmd: string, args: Record<string, unknown> = {}): Promise<T> {
-  if (!inTauri) return mock(cmd, args) as T;
-  try {
-    return await invoke<T>(cmd, args);
-  } catch (err) {
-    throw toApiError(err);
-  }
-}
+export const inTauri = "__TAURI_INTERNALS__" in window;
 
 function toApiError(err: unknown): ApiError {
   const e = err as Partial<ApiError>;
-  if (e && typeof e.code === "string") return { code: e.code, params: e.params ?? {} };
+  if (e && typeof e.code === "string") return { code: e.code, params: e.params ?? {}, conflict: e.conflict };
   return { code: "error.generic", params: { message: String(err) } };
+}
+
+export async function call<T>(cmd: string, args: Record<string, unknown> = {}): Promise<T> {
+  if (inTauri) {
+    try {
+      return await invoke<T>("api", { cmd, args });
+    } catch (err) {
+      throw toApiError(err);
+    }
+  }
+  let res: Response;
+  try {
+    res = await fetch(`/api/${cmd}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Workboard": "1" },
+      body: JSON.stringify(args),
+    });
+  } catch (err) {
+    throw toApiError({ code: "error.devserver", params: { message: String(err) } });
+  }
+  const out = (await res.json()) as { ok: boolean; data?: T; error?: ApiError };
+  if (!out.ok) throw toApiError(out.error);
+  return out.data as T;
 }
 
 export const api = {
   appInfo: () => call<AppInfo>("app_info"),
   workflowPresets: () => call<PresetSummary[]>("workflow_presets"),
-  workflowPreset: (id: string) => call<Workflow>("workflow_preset", { id }),
+  workflow: () => call<Workflow>("workflow"),
   getSettings: () => call<Settings>("get_settings"),
   setSettings: (settings: Settings) => call<Settings>("set_settings", { settings }),
+  openRoot: (path: string) => call<Settings>("open_root", { path }),
+  forgetRecent: (path: string) => call<Settings>("forget_recent", { path }),
+
+  signature: () => call<[number, number]>("signature"),
+  listItems: () => call<ItemList>("list_items"),
+  getItem: (name: string) => call<ItemDetail>("get_item", { name }),
+  updateFields: (name: string, fields: Record<string, unknown>) => call<Item>("update_fields", { name, fields }),
+  addTask: (name: string, text: string) => call<Item>("add_task", { name, text }),
+  setTask: (name: string, index: number, done: boolean, expect: string) => call<Item>("set_task", { name, index, done, expect }),
+  editTask: (name: string, index: number, text: string, expect: string) => call<Item>("edit_task", { name, index, text, expect }),
+  removeTask: (name: string, index: number, expect: string) => call<Item>("remove_task", { name, index, expect }),
+  readFile: (path: string) => call<string>("read_file", { path }),
+  readMedia: (path: string) => call<{ mime: string; data: string }>("read_media", { path }),
+  listVersions: (name: string) => call<Version[]>("list_versions", { name }),
+  readVersion: (name: string, id: string) => call<string>("read_version", { name, id }),
+  restoreVersion: (name: string, id: string) => call<Item>("restore_version", { name, id }),
+  createItem: (folder: string, title: string, type: string) => call<Item>("create_item", { folder, title, type }),
+  createGroup: (title: string, members: string[]) => call<{ group: string; members: string[] }>("create_group", { title, members }),
+  moveFolder: (name: string, dest: string) => call<string>("move_folder", { name, dest }),
+  renameFolder: (name: string, base: string) => call<string>("rename_folder", { name, base }),
+  trash: (name: string) => call<string>("trash", { name }),
+  untrash: (deleted: string, name: string) => call<string>("untrash", { deleted, name }),
+  listDeleted: () => call<DeletedEntry[]>("list_deleted"),
+  markRan: (path: string, env: string, on: boolean) => call<Record<string, number>>("mark_ran", { path, env, on }),
+  reveal: (path: string) => call<null>("reveal", { path }),
+  openPath: (path: string) => call<null>("open_path", { path }),
+
+  inbox: () => call<Task[]>("inbox"),
+  inboxAdd: (text: string) => call<Task[]>("inbox_add", { text }),
+  inboxSet: (index: number, done: boolean, expect: string) => call<Task[]>("inbox_set", { index, done, expect }),
+  inboxRemove: (index: number, expect: string) => call<Task[]>("inbox_remove", { index, expect }),
+  inboxClearDone: () => call<Task[]>("inbox_clear_done"),
+  notes: () => call<Note[]>("notes"),
+  noteRead: (id: string) => call<Note>("note_read", { id }),
+  noteSave: (id: string, body: string, mtime: number) => call<Note>("note_save", { id, body, mtime }),
+  noteCreate: (title: string, items: string[]) => call<Note>("note_create", { title, items }),
 };
 
-// ---------- mock para el navegador ----------
-
-const PRESETS: Record<string, Workflow> = {
-  default: defaultPreset as Workflow,
-  "classic-es": classicEs as Workflow,
-};
-const SETTINGS_KEY = "workboard.dev.settings";
-
-function mock(cmd: string, args: Record<string, unknown>): unknown {
-  switch (cmd) {
-    case "app_info":
-      return { version: "dev", os: "browser", configDir: "(localStorage)" } satisfies AppInfo;
-    case "workflow_presets":
-      return Object.values(PRESETS).map((p) => ({ id: p.id, name: p.name }));
-    case "workflow_preset": {
-      const preset = PRESETS[args.id as string];
-      if (!preset) throw { code: "error.unknownPreset", params: { id: String(args.id) } } satisfies ApiError;
-      return structuredClone(preset);
-    }
-    case "get_settings": {
-      const saved = localStorage.getItem(SETTINGS_KEY);
-      return saved ? (JSON.parse(saved) as Settings) : ({ lang: null, theme: "system", workflow: "default" } satisfies Settings);
-    }
-    case "set_settings": {
-      const settings = args.settings as Settings;
-      if (!PRESETS[settings.workflow]) throw { code: "error.unknownPreset", params: { id: settings.workflow } } satisfies ApiError;
-      localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-      return settings;
-    }
-    default:
-      throw { code: "error.generic", params: { message: `unknown command ${cmd}` } } satisfies ApiError;
-  }
+/** Elegir una carpeta: diálogo nativo en la app; en el navegador no hay (se escribe la ruta). */
+export async function pickFolder(): Promise<string | null> {
+  if (!inTauri) return null;
+  const { open } = await import("@tauri-apps/plugin-dialog");
+  const res = await open({ directory: true, multiple: false });
+  return typeof res === "string" ? res : null;
 }
