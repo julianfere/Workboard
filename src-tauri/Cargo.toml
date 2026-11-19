@@ -1,0 +1,22 @@
+[package]
+name = "workboard"
+description = "Workboard desktop app"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+default-run = "workboard"
+
+[dependencies]
+tauri = { version = "2", features = [] }
+serde.workspace = true
+serde_json.workspace = true
+wb-core.workspace = true
+wb-i18n.workspace = true
+wb-platform.workspace = true
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[lints]
+workspace = true
