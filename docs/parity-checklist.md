@@ -11,36 +11,36 @@ Feature/Bug de Implementar) va al plugin privado y se marca **(privado)**.
 
 | | Función | Fase | Golden |
 |---|---|---|---|
-| [ ] | Escaneo de la raíz en cada llamada (sin caché); `_` y `.` se ignoran | 3 | workspace_scan |
-| [ ] | Frontmatter propio (`k: v`, `k: [a, b]`), comillas al escribir, campos vacíos no se escriben | 3 | frontmatter |
-| [ ] | Lectura utf-8 / BOM / cp1252; escritura siempre UTF-8 + LF | 3 | frontmatter, workspace_ops |
-| [ ] | WI por nombre `wiNNNNNN[-NNNNNN]-slug` o campo `wi`; duplicados entre carpetas | 3 | misc, workspace_scan |
-| [ ] | Grupos `grp-*` (un nivel, README propio, lo compartido en la carpeta del grupo) | 3 | workspace_scan |
-| [ ] | Escritura única de README: chequeo de mtime + reintento, backup (20), escritura atómica | 3 | workspace_ops |
-| [ ] | Versiones anteriores del README: listar, ver, restaurar | 3 | workspace_ops |
-| [ ] | `state_log.jsonl` con cada cambio de `estado` | 3 | workspace_ops |
-| [ ] | `## Pendientes`: agregar, tildar, editar, borrar (con `expect`), limpiar hechas; nada más de la sección | 3 | tasks, workspace_ops |
-| [ ] | Pasar a PROD / descartado tilda los pendientes abiertos | 3 | workspace_ops |
-| [ ] | Validación de campos editables (estado, tipo, ambientes, wi, pactada, periodo, horas, textos) | 3 | validate |
-| [ ] | Períodos configurables (hoy del 20 al 19) | 3 | misc |
-| [ ] | Categorías de archivo por prefijo/extensión; scripts "corridos en DEV/QA/PROD" (`runs.json`) | 3 | misc, mcp |
-| [ ] | Mover a grupo / sacar / disolver, eliminar a `_deleted` con deshacer, restaurar, renombrar carpeta | 3 | workspace_ops |
+| [x] | Escaneo de la raíz en cada llamada (sin caché); `_` y `.` se ignoran | 3 | workspace_scan |
+| [x] | Frontmatter propio (`k: v`, `k: [a, b]`), comillas al escribir, campos vacíos no se escriben | 3 | frontmatter |
+| [x] | Lectura utf-8 / BOM / cp1252; escritura siempre UTF-8 + LF | 3 | frontmatter, workspace_ops |
+| [x] | WI por nombre `wiNNNNNN[-NNNNNN]-slug` o campo `wi`; duplicados entre carpetas | 3 | misc, workspace_scan |
+| [x] | Grupos `grp-*` (un nivel, README propio, lo compartido en la carpeta del grupo) | 3 | workspace_scan |
+| [x] | Escritura única de README: chequeo de mtime + reintento, backup (20), escritura atómica | 3 | workspace_ops |
+| [x] | Versiones anteriores del README: listar, ver, restaurar | 3 | workspace_ops |
+| [x] | `state_log.jsonl` con cada cambio de `estado` | 3 | workspace_ops |
+| [x] | `## Pendientes`: agregar, tildar, editar, borrar (con `expect`), limpiar hechas; nada más de la sección | 3 | tasks, workspace_ops |
+| [x] | Pasar a PROD / descartado tilda los pendientes abiertos | 3 | workspace_ops |
+| [x] | Validación de campos editables (estado, tipo, ambientes, wi, pactada, periodo, horas, textos) | 3 | validate |
+| [x] | Períodos configurables (hoy del 20 al 19) | 3 | misc |
+| [x] | Categorías de archivo por prefijo/extensión; scripts "corridos en DEV/QA/PROD" (`runs.json`) | 3 | misc, mcp |
+| [x] | Mover a grupo / sacar / disolver, eliminar a `_deleted` con deshacer, restaurar, renombrar carpeta | 3 | workspace_ops |
 | [ ] | Después de mover: sesiones, marcas, backups y notas siguen a la carpeta | 3 | parcial (backups) |
 | [ ] | Nuevo item con o sin WI (crea carpeta + README) | 3 / 7 | workspace_ops (create_folder) |
-| [ ] | Plan incompleto (`plan_gaps`) | 3 | misc |
-| [ ] | Bandeja de tareas sin WI (`inbox.md` en la config) | 3 | tasks (mismas funciones) |
+| [x] | Plan incompleto (`plan_gaps`) | 3 | misc |
+| [x] | Bandeja de tareas sin WI (`inbox.md` en la config) | 3 | tasks (mismas funciones) |
 | [ ] | Watcher: refresco en vivo del filesystem y de `.git` de los repos | 4 | — |
 
 ## MCP `workboard`
 
 | | Función | Fase | Golden |
 |---|---|---|---|
-| [ ] | Modos: sesión (solo sus WI, grupos incluyen sus WI), escritura global, solo lectura | 3 | mcp |
-| [ ] | `session`, `list_wis`, `get_wi`, `set_estado`, `add_task`, `complete_task`, `marcar_ejecutado`, `add_note`, `list_tools`, `run_tool` | 3 | mcp |
+| [x] | Modos: sesión (solo sus WI, grupos incluyen sus WI), escritura global, solo lectura | 3 | mcp |
+| [x] | `session`, `list_wis`, `get_wi`, `set_estado`, `add_task`, `complete_task`, `marcar_ejecutado`, `add_note`, `list_tools`, `run_tool` | 3 | mcp |
 | [ ] | `instructions` con la guía + contexto de la sesión | 3 | mcp |
-| [ ] | Eventos por sesión (`<id>.events.jsonl`) o globales | 3 | mcp |
-| [ ] | Planificación: prioridad, pactada, período y horas (local pisa a Azure) | 3 | mcp |
-| [ ] | Nombres de herramientas en inglés con alias de los actuales | 3 | — |
+| [x] | Eventos por sesión (`<id>.events.jsonl`) o globales | 3 | mcp |
+| [x] | Planificación: prioridad, pactada, período y horas (local pisa a Azure) | 3 | mcp |
+| [x] | Nombres de herramientas y respuestas en inglés (sin alias: las sesiones de la v1 usan el MCP de la v1) | 3 | mcp |
 
 ## UI
 

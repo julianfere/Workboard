@@ -20,8 +20,16 @@ config real.
 
 ## Arquitectura
 
-- `crates/wb-core` — lógica sin UI. Hoy: `workflow` (presets en `crates/wb-core/presets/*.json`).
-  Próximo: escaneo de la carpeta de trabajos, frontmatter, `## Pendientes`, escritura única de README.
+- `crates/wb-core` — lógica sin UI: `workflow` (presets en `crates/wb-core/presets/*.json`), `frontmatter`
+  (parser/escritor propio, decodificación utf-8/BOM/cp1252), `tasks` (sección de tareas), `validate`,
+  `text` (slug, secciones, `plan_gaps`), `workspace` (escaneo, rutas seguras), `write` (**`write_readme` es
+  la única escritura de README**: reintento por mtime, backup de 20 copias, escritura atómica, `state_log`;
+  mover, eliminar, renombrar, versiones), `records` (`runs.json`, bandeja), `notes`. `py.rs` replica la
+  semántica de texto de Python de la que depende el formato. Errores: `CoreError { kind, code, params }`.
+- `crates/wb-mcp` — MCP `workboard` (stdio, `rmcp`). `lib.rs` tiene la lógica de cada herramienta (se prueba
+  sin JSON-RPC) y `main.rs` el transporte. Modos: `WORKBOARD_SESSION` (solo los items de esa sesión),
+  `WORKBOARD_MCP_WRITE=1` o solo lectura. Lee `settings.json` (preset, idioma, `root`, `notesFolder`) y
+  `tracker_cache.json` de la carpeta de config. Herramientas y respuestas en inglés.
 - `crates/wb-i18n` — `t(lang, key, params)` sobre `locales/*.json` (los mismos archivos que usa la UI).
 - `crates/wb-platform` — todo lo que depende del SO (`config_dir`, `open_path`, `reveal_path`,
   `kill_tree`). Fuera de este crate no hay `cfg(windows)`.
@@ -58,6 +66,6 @@ config real.
 
 ## Plan
 
-Fases: 0 golden ✓ · 1 spike ✓ · 2 esqueleto (este estado) · 3 core + MCP · 4 UI base · 5 git ·
+Fases: 0 golden ✓ · 1 spike ✓ · 2 esqueleto ✓ · 3 core + MCP ✓ · 4 UI base · 5 git ·
 6 sesiones y agentes · 7 trackers · 8 plugins + plugin privado · 9 multiplataforma, docs y release ·
 10 cutover desde la v1. El checklist de paridad está en `docs/parity-checklist.md`.

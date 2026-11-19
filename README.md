@@ -35,7 +35,8 @@ Set `WORKBOARD_CONFIG_DIR` to a temporary folder when testing, so you don't touc
 ## Layout
 
 ```
-crates/wb-core      workflow presets; work folders and frontmatter (in progress)
+crates/wb-core      workflow presets, work folders, frontmatter, tasks, safe README writes
+crates/wb-mcp       the `workboard` MCP server agents use
 crates/wb-i18n      translations, shared with the UI (locales/*.json)
 crates/wb-platform  config folder, opening files, process trees
 src-tauri/          the desktop app and its commands
