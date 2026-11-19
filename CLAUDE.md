@@ -11,10 +11,14 @@ sección de checklist. La v1 sigue en uso y es la referencia de comportamiento.
 | App | `npm install` y `npm run tauri dev` (compila antes `wb-mcp` y `wb-hook`, que van junto al exe) |
 | UI en el navegador contra el backend real | `cargo run -p wb-api --bin wb-devserver -- <carpeta>` + `npm run dev` → `http://localhost:1420` (o `http://127.0.0.1:8766` con la UI compilada) |
 | Tests | `cargo test --workspace` |
+| Instaladores | `npm run tauri build` (en CI: tag `v*` → `.github/workflows/release.yml`, release en borrador) |
 | Lint (lo mismo que el CI) | `cargo fmt --all --check && cargo clippy --workspace --all-targets -- -D warnings` y `npm run build` |
 | Golden files | `py tests/golden/gen/gen_all.py` (necesita la v1 en `_v1/` o `WORKBOARD_V1`) |
 
 En Git Bash `cargo` está en `~/.cargo/bin` (agregarlo al PATH si no aparece).
+`src-tauri` no compila sin `wb-mcp` y `wb-hook` en `src-tauri/binaries/<nombre>-<target>` (`externalBin`): los deja
+`npm run bins` (`scripts/sidecars.mjs`), que corre solo antes de `tauri dev`/`tauri build`; para un `cargo clippy
+--workspace` en limpio, correrlo antes.
 **Al probar, siempre `WORKBOARD_CONFIG_DIR` apuntando a una carpeta temporal**: si no, se pisa la
 config real.
 
