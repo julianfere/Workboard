@@ -21,6 +21,10 @@ wb-core.workspace = true
 wb-i18n.workspace = true
 wb-platform.workspace = true
 wb-sessions.workspace = true
+wb-tracker.workspace = true
+
+[dev-dependencies]
+base64 = "0.23.1"
 
 [lints]
 workspace = true
