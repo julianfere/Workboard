@@ -212,7 +212,8 @@ fn wis(list: &[&str]) -> BTreeSet<String> {
     list.iter().map(|s| s.to_string()).collect()
 }
 
-/// Los entornos que detectaba la v1 (`origin/development`, `rel/qa`, `rel/main` u `origin/main`), como datos.
+/// Candidatas como las de la v1 (ramas propias de QA y PROD que el repo de prueba no tiene, y
+/// `origin/main` de respaldo), como datos.
 fn v1_candidates() -> IndexMap<String, Vec<String>> {
     [("DEV", vec!["origin/development"]), ("QA", vec!["rel/qa"]), ("PROD", vec!["rel/main", "origin/main"])]
         .into_iter()

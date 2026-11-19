@@ -5,7 +5,7 @@ Todo lo que hace la v1 (Python + pywebview) y tiene que hacer la nueva versión 
 las secciones del README de la v1. **Fase** = la del plan en que se porta. **Golden** = archivo de
 `tests/golden/cases/` que fija el comportamiento (— = se prueba a mano o con Playwright).
 
-Lo que es propio de un flujo de trabajo concreto (ReleaseManual, ramas de entorno `rel/*`, el flujo
+Lo que es propio de un flujo de trabajo concreto (ReleaseManual, ramas de entorno propias, el flujo
 Feature/Bug de Implementar) va al plugin privado y se marca **(privado)**.
 
 ## Datos y archivos (core)
@@ -108,5 +108,5 @@ Feature/Bug de Implementar) va al plugin privado y se marca **(privado)**.
 | [x] | Campos elegibles de fecha pactada y horas; prioridad (la vista Horas usa horas y fecha del tracker si el README no las tiene) | 7 | wb-tracker (catalog) |
 | [x] | Asignados del período (WIQL) e importación | 7 | wb-api/tests/tracker |
 | [x] | Cambiar estado en Azure (PAT de escritura aparte, solo `System.State`) | 7 | wb-api/tests/tracker |
-| [x] | ReleaseManual **(privado: plugin en `../workboard-private`, preset `my-flow` con ramas `rel/*`)** | 8 | workboard-private tests/stdio |
+| [x] | ReleaseManual **(privado: plugin en `../workboard-private`, más un preset con las ramas de la empresa)** | 8 | workboard-private tests/stdio |
 | [x] | Plugins: manifiesto, acciones con formulario genérico, presets aportados, permisos del host | 8 | wb-plugins tests/rpc, wb-api tests/plugins |

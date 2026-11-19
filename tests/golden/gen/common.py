@@ -85,7 +85,7 @@ class TempCopy:
         self.src = Path(src)
 
     def __enter__(self):
-        # resolve(): %TEMP% puede venir con nombres cortos de Windows (JULIAN~1) y la v1 resuelve la raíz.
+        # resolve(): %TEMP% puede venir con nombres cortos de Windows (USUARI~1) y la v1 resuelve la raíz.
         self.tmp = Path(tempfile.mkdtemp(prefix="wb-golden-")).resolve()
         self.path = self.tmp / self.src.name
         shutil.copytree(self.src, self.path)
