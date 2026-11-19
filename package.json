@@ -7,6 +7,8 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit",
+    "bins": "cargo build -p wb-mcp -p wb-hook",
+    "bins:release": "cargo build --release -p wb-mcp -p wb-hook",
     "tauri": "tauri"
   },
   "dependencies": {

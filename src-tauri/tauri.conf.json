@@ -4,9 +4,9 @@
   "version": "0.1.0",
   "identifier": "dev.workboard.app",
   "build": {
-    "beforeDevCommand": "npm run dev",
+    "beforeDevCommand": "npm run bins && npm run dev",
     "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "npm run build",
+    "beforeBuildCommand": "npm run bins:release && npm run build",
     "frontendDist": "../ui/dist"
   },
   "app": {
