@@ -23,6 +23,7 @@ use wb_core::workspace::Item;
 use wb_core::{Workflow, Workspace, py};
 
 pub mod context;
+pub mod tools;
 
 pub const MAX_LIST: usize = 100;
 pub const MAX_FILES: usize = 200;
@@ -624,19 +625,19 @@ pub fn registered_tools(ctx: &Ctx) -> Vec<Json> {
 }
 
 pub fn list_tools(ctx: &Ctx) -> ToolResult {
-    let tools: Vec<Json> = registered_tools(ctx)
+    let tools: Vec<Json> = tools::list(&ctx.config_dir)
         .iter()
         .map(|t| {
-            json!({"name": t["nombre"], "description": t.get("descripcion").unwrap_or(&json!("")),
-                   "usage": t.get("uso").unwrap_or(&json!("")), "interpreter": t.get("interprete").unwrap_or(&json!(""))})
+            json!({"name": t.meta.name, "description": t.meta.description, "usage": t.meta.usage,
+                   "interpreter": t.meta.interpreter, "ok": t.ok})
         })
         .collect();
     Ok(json!({"tools": tools}))
 }
 
-/// Corre una tool en la carpeta del item (`item`, o el primero de la sesión). Solo dentro de una sesión.
-/// La ejecución llega con el port de las tools; por ahora valida y dice que la tool no está disponible.
-pub fn run_tool(ctx: &Ctx, name: &str, _args: &[String], item: &str) -> ToolResult {
+/// Corre una tool en la carpeta del item (`item`, o el primero de la sesión). Solo dentro de una sesión
+/// y solo si el script sigue igual que cuando se promovió.
+pub fn run_tool(ctx: &Ctx, name: &str, args: &[String], item: &str) -> ToolResult {
     if ctx.session.is_none() {
         return Err(ToolError::new("mcp.tool.sessionOnly", vec![]));
     }
@@ -649,8 +650,14 @@ pub fn run_tool(ctx: &Ctx, name: &str, _args: &[String], item: &str) -> ToolResu
     } else {
         items.iter().next().cloned().ok_or_else(|| ToolError::new("mcp.tool.noItem", vec![]))?
     };
-    t.ws.folder_of(&folder)?;
-    let exists = registered_tools(ctx).iter().any(|t| t["nombre"] == name);
-    let code = if exists { "mcp.tool.unavailable" } else { "mcp.tool.notFound" };
-    Err(ToolError::new(code, vec![("name", name.into()), ("tool", names::LIST_TOOLS.into())]))
+    let path = t.ws.folder_of(&folder)?;
+    if tools::get(&ctx.config_dir, name).is_none() {
+        return Err(ToolError::new(
+            "mcp.tool.notFound",
+            vec![("name", name.into()), ("tool", names::LIST_TOOLS.into())],
+        ));
+    }
+    let out = tools::run(&ctx.config_dir, name, args, &path, tools::RUN_TIMEOUT)?;
+    ctx.event("run_tool", &folder, name);
+    Ok(out)
 }

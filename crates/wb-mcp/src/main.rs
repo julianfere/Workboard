@@ -212,7 +212,12 @@ impl Server {
         &self,
         Parameters(p): Parameters<RunTool>,
     ) -> Result<CallToolResult, McpError> {
-        reply(&self.ctx, wb_mcp::run_tool(&self.ctx, &p.name, &p.args, &p.item))
+        // Un script puede tardar minutos: corre fuera de los hilos del runtime.
+        let ctx = self.ctx.clone();
+        let out = tokio::task::spawn_blocking(move || wb_mcp::run_tool(&ctx, &p.name, &p.args, &p.item))
+            .await
+            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
+        reply(&self.ctx, out)
     }
 }
 
