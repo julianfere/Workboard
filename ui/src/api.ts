@@ -14,8 +14,12 @@ import type {
   PresetSummary,
   Session,
   SessionList,
+  SessionStats,
   Settings,
   Task,
+  TimeReport,
+  ToolInfo,
+  ToolsOverview,
   Version,
   Workflow,
 } from "./types";
@@ -115,6 +119,19 @@ export const api = {
   sessionWrite: (id: string, data: string) => call<null>("session_write", { id, data }),
   sessionResize: (id: string, cols: number, rows: number) => call<null>("session_resize", { id, cols, rows }),
   planItem: (name: string, cols: number, rows: number) => call<{ folder: string; session: Session }>("plan_item", { name, cols, rows }),
+
+  // ---------- horas, métricas, tools y Reflexionar (fase 6) ----------
+  timeReport: () => call<TimeReport>("time_report"),
+  statsReport: () => call<{ sessions: SessionStats[] }>("stats_report"),
+  toolsOverview: () => call<ToolsOverview>("tools_overview"),
+  toolPreview: (path: string) => call<{ code: string; description: string; usage: string }>("tool_preview", { path }),
+  toolPromote: (path: string, name: string, description: string, usage: string, replace: boolean) =>
+    call<ToolInfo>("tool_promote", { path, name, description, usage, replace }),
+  toolUpdate: (name: string, description: string, usage: string) => call<ToolInfo>("tool_update", { name, description, usage }),
+  toolRemove: (name: string) => call<null>("tool_remove", { name }),
+  reflectItems: (names: string[], cols: number, rows: number) => call<{ session: Session; evidence: string }>("reflect_items", { names, cols, rows }),
+  saveExport: (name: string, text: string) => call<string>("save_export", { name, text }),
+  revealExport: (path: string) => call<null>("reveal_export", { path }),
 };
 
 /** Elegir una carpeta: diálogo nativo en la app; en el navegador no hay (se escribe la ruta). */

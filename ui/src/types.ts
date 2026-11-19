@@ -244,3 +244,114 @@ export interface ApiError {
   params: Record<string, string>;
   conflict?: boolean;
 }
+
+// ---------- horas, métricas y tools (fase 6) ----------
+
+export interface ItemTime {
+  /** Segundos activos por día local (`AAAA-MM-DD`). */
+  days: Record<string, number>;
+  /** Segundos con la sesión abierta (agentes sin hooks). */
+  open: Record<string, number>;
+  /** Segundos activos por sesión. */
+  sessions: Record<string, number>;
+}
+
+export interface SessionTime {
+  id: string;
+  name: string;
+  agent: string;
+  state: "active" | "paused" | "closed";
+  items: string[];
+  active: number;
+  open: number;
+  source: "" | "log" | "transcript" | "log+transcript";
+  from: number | null;
+  to: number | null;
+}
+
+export interface TimeReport {
+  byItem: Record<string, ItemTime>;
+  sessions: SessionTime[];
+}
+
+export interface Tokens {
+  input: number;
+  output: number;
+  cacheRead: number;
+  cacheWrite: number;
+}
+
+export interface Transition {
+  ts: number;
+  from: string;
+  to: string;
+  session: string | null;
+}
+
+export interface Outcome {
+  start: string | null;
+  end: string | null;
+  advance: number;
+  setbacks: number;
+  transitions: Transition[];
+}
+
+export interface WrittenScript {
+  path: string;
+  ts: number;
+  chars: number;
+}
+
+export interface SessionStats {
+  id: string;
+  name: string;
+  agent: string;
+  mode: string;
+  plan: boolean;
+  model?: string | null;
+  state: "active" | "paused" | "closed";
+  items: string[];
+  forkOf: string | null;
+  from: number | null;
+  to: number | null;
+  models: Record<string, number>;
+  tokens: Tokens | null;
+  prompts: number;
+  interrupts: number;
+  asks: number;
+  tools: Record<string, number>;
+  scripts: { written: WrittenScript[]; runs: Record<string, number> };
+  outcome: Record<string, Outcome>;
+  transcript?: string;
+}
+
+export interface ToolInfo {
+  name: string;
+  file: string;
+  interpreter: string;
+  description: string;
+  usage: string;
+  origin: { path: string; sessions: string[]; items: string[] };
+  sha256: string;
+  created: string;
+  /** El script sigue igual que cuando se promovió (si no, el MCP no lo corre). */
+  ok: boolean;
+  path: string;
+}
+
+export interface ToolCandidate {
+  name: string;
+  path: string;
+  paths: string[];
+  runs: number;
+  sessions: { id: string; name: string }[];
+  items: string[];
+  last: number | null;
+  bytes: number;
+  suggested: string;
+}
+
+export interface ToolsOverview {
+  tools: ToolInfo[];
+  candidates: ToolCandidate[];
+}
