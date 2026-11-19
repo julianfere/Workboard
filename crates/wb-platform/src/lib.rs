@@ -53,6 +53,17 @@ pub fn hide_console(cmd: &mut Command) {
     let _ = cmd;
 }
 
+/// Proceso de fondo que después se termina con `kill_tree`: sin ventana de consola en Windows y líder de
+/// su grupo de procesos en Unix.
+pub fn background(cmd: &mut Command) {
+    hide_console(cmd);
+    #[cfg(unix)]
+    {
+        use std::os::unix::process::CommandExt;
+        cmd.process_group(0);
+    }
+}
+
 /// Abre un archivo o carpeta con la aplicación predeterminada del sistema.
 pub fn open_path(path: &Path) -> io::Result<()> {
     if !path.exists() {
