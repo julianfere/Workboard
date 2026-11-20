@@ -98,7 +98,10 @@ config real.
   árbol, como la v1) y registro de acciones (`data-action` / `data-change` / `data-enter`). Una vista por
   archivo en `ui/src/views/` (`render()` + sus acciones). `state.ts`: estado global y helpers del flujo
   (`metaText(item, wf().fields.status)`…: nunca claves del frontmatter escritas a mano). `markdown.ts`:
-  renderer propio que escapa todo el HTML. Diálogos propios (`confirmDialog`, `promptDialog`), no los del navegador;
+  renderer propio que escapa todo el HTML. `viewer.ts`: visor de archivos (texto/SQL con `highlight.ts`, Markdown,
+  imágenes y PDF desde `blob:` con `read_media` en base64, `.drawio`/`.mmd`); `diagrams/`: draw.io con el visor oficial
+  vendorizado en `ui/public/vendor/drawio/` (subconjunto, ver `THIRD_PARTY.md`) y renderer propio de respaldo, Mermaid
+  del paquete npm con import dinámico; limpia fuentes e imágenes remotas. Diálogos propios (`confirmDialog`, `promptDialog`), no los del navegador;
   el clic en el fondo de un modal se maneja con un bloque (`{ if (e.target === back) close(); }`): devolver `false`
   cancela los clics en checkboxes. Por feature: `sessions.ts` + `terminal.ts` (xterm), `git.ts` (pestaña Git,
   promoción, alertas, sondea `git_signature` cada 3 s), `views/tracker.ts`, `views/hours.ts`, `views/metrics.ts`,

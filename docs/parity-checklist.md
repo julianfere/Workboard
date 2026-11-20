@@ -56,7 +56,7 @@ Feature/Bug de Implementar) va al plugin privado y se marca **(privado)**.
 | [ ] | Exportar CSV (`;`, BOM) | 4 | — |
 | [~] | Detalle a página completa: pasos de estado, guardado automático solo de lo tocado, conflicto con disco | 4 | — |
 | [~] | Pestañas del detalle: Resumen, README, Archivos, Git, Cómo deployar, Notas | 4 | — |
-| [ ] | Visor: SQL coloreado, Markdown, imágenes, PDF, draw.io (visor local), Mermaid; offline | 4 | — |
+| [x] | Visor: SQL coloreado, Markdown, imágenes, PDF, draw.io (visor local), Mermaid; offline | 4 | viewer_reads (límites y rutas) |
 | [ ] | Alertas desestimables (sin README, número sin prefijo, duplicados, plan incompleto, git) | 4 | — |
 | [~] | Proyectos recientes con alias; cambiar de proyecto | 4 | — |
 | [~] | Tema claro / oscuro / sistema; variables de color; i18n en / es | 2 / 4 | — |
