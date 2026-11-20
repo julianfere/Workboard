@@ -419,6 +419,27 @@ fn migrate_settings(run: &mut Run, v1: &Json) -> Settings {
         s.open_root(&root);
     }
 
+    // Nombres para mostrar de las carpetas. La v1 guarda la clave en minúsculas: va con la grafía de los
+    // recientes, como en la app. Un alias distinto que ya existe se conserva (salvo `--force`).
+    if let Some(aliases) = v1["aliases"].as_object().filter(|a| !a.is_empty()) {
+        let (mut added, mut kept) = (0, 0);
+        for (key, name) in aliases {
+            let Some(name) = str_of(name) else { continue };
+            let path = canon(&display_root(v1, key));
+            match s.alias_of(&path) {
+                Some(cur) if cur == name => {}
+                Some(_) if !force => kept += 1,
+                _ => {
+                    if s.set_alias(&path, &name).is_ok() {
+                        added += 1;
+                    }
+                }
+            }
+        }
+        run.record(plan_counts(added, kept), "migrate.item.aliases", vec![("count", added.to_string())]);
+        changed |= added > 0;
+    }
+
     if let Some(folder) = str_of(&v1["notesFolder"]) {
         let plan = plan_value(s.notes_folder.as_ref(), &folder, force);
         run.record(plan, "migrate.item.notesFolder", vec![("path", folder.clone())]);
@@ -898,9 +919,6 @@ fn ignored(from: &Path, v1: &Json) -> Vec<&'static str> {
     }
     if has("tools/_removed") {
         out.push("migrate.ignored.removedTools");
-    }
-    if v1["aliases"].as_object().is_some_and(|a| !a.is_empty()) {
-        out.push("migrate.ignored.aliases");
     }
     if v1["prefs"].as_object().is_some_and(|p| p.keys().any(|k| k != "theme")) {
         out.push("migrate.ignored.prefs");

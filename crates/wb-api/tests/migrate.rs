@@ -210,6 +210,10 @@ fn migrates_everything_and_leaves_v1_untouched() {
     assert_eq!(s["recents"].as_array().unwrap().len(), 3);
     assert_eq!(s["recents"][0], rs.as_str());
     assert_eq!(s["notesFolder"], Json::Null);
+    // El alias de la v1 (clave en minúsculas) queda con la grafía de la carpeta.
+    assert_eq!(s["aliases"], json!({rs.as_str(): "Proyecto"}));
+    assert_eq!(outcome(&r, "migrate.item.aliases"), Outcome::Done);
+    assert!(!r.ignored.contains(&"migrate.ignored.aliases"));
     assert_eq!(s["agents"]["default"], "copilot");
     assert_eq!(s["agents"]["custom"]["command"], "myagent");
     assert_eq!(s["agents"]["custom"]["args"], "--id {session_id}");
@@ -272,7 +276,6 @@ fn migrates_everything_and_leaves_v1_untouched() {
         "migrate.ignored.caches",
         "migrate.ignored.log",
         "migrate.ignored.sessionFiles",
-        "migrate.ignored.aliases",
         "migrate.ignored.prefs",
         "migrate.ignored.releaseManual",
         "migrate.ignored.deletedNotes",
@@ -334,7 +337,8 @@ fn existing_values_are_kept_unless_forced() {
     let secrets = MemorySecrets::default();
     write(
         &fx.v2.join("settings.json"),
-        &json!({"workflow": "default", "lang": "en", "theme": "light", "root": "C:/elsewhere", "recents": ["C:/elsewhere"]})
+        &json!({"workflow": "default", "lang": "en", "theme": "light", "root": "C:/elsewhere", "recents": ["C:/elsewhere"],
+                "aliases": {fx.root.display().to_string().to_uppercase(): "Mío"}})
             .to_string(),
     );
     secrets.set(&format!("azure-devops:read:{ORG}"), "another-token").unwrap();
@@ -347,6 +351,7 @@ fn existing_values_are_kept_unless_forced() {
     assert_eq!(outcome(&r, "migrate.item.root"), Outcome::Kept);
     assert_eq!(outcome(&r, "migrate.item.secretRead"), Outcome::Kept);
     assert_eq!(outcome(&r, "migrate.item.inbox"), Outcome::Kept);
+    assert_eq!(outcome(&r, "migrate.item.aliases"), Outcome::Kept);
     // El preset por defecto cuenta como no elegido; los recientes se suman.
     assert_eq!(outcome(&r, "migrate.item.workflow"), Outcome::Done);
     assert_eq!(outcome(&r, "migrate.item.recents"), Outcome::Done);
@@ -365,6 +370,8 @@ fn existing_values_are_kept_unless_forced() {
     let s = read(&fx.v2.join("settings.json"));
     assert_eq!(s["lang"], "es");
     assert_eq!(s["root"], fx.root.display().to_string().as_str());
+    assert_eq!(s["aliases"].as_object().unwrap().len(), 1);
+    assert_eq!(s["aliases"].as_object().unwrap().values().next().unwrap(), "Proyecto");
     assert_eq!(secrets.get(&format!("azure-devops:read:{ORG}")).unwrap().as_deref(), Some(PAT));
     assert!(std::fs::read_to_string(fx.v2.join("inbox.md")).unwrap().contains("Llamar a Juan"));
 }
