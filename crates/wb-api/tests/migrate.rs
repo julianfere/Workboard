@@ -448,8 +448,7 @@ fn errors_and_arguments() {
     assert!(!fx.v2.exists());
 
     let args = |a: &[&str]| migrate::parse_args(&a.iter().map(|s| s.to_string()).collect::<Vec<_>>());
-    let p =
-        args(&["--from", "C:/v1", "--to=C:/v2", "--dry-run", "--force", "--preset", "my-flow"]).unwrap();
+    let p = args(&["--from", "C:/v1", "--to=C:/v2", "--dry-run", "--force", "--preset", "my-flow"]).unwrap();
     assert_eq!(p.from.as_deref(), Some(Path::new("C:/v1")));
     assert_eq!(p.to.as_deref(), Some(Path::new("C:/v2")));
     assert!(p.dry_run && p.force && !p.help);
