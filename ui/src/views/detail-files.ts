@@ -4,7 +4,7 @@
 
 import { api } from "../api";
 import { loadDetail, onAction, render } from "../app";
-import { esc, fmtAgo, fmtSize } from "../dom";
+import { esc, fmtAgo, fmtDateTimeFull, fmtSize } from "../dom";
 import { label, t } from "../i18n";
 import { ico } from "../icons";
 import { S, itemByName, wf } from "../state";
@@ -58,7 +58,7 @@ function envToggles(f: FileEntry): string {
     .environments.map((e) => {
       const name = label(e.labels, e.id);
       const at = marks[e.id];
-      const title = at ? t("detail.run.on", { env: name, date: new Date(at * 1000).toLocaleString() }) : t("detail.run.mark", { env: name });
+      const title = at ? t("detail.run.on", { env: name, date: fmtDateTimeFull(at) }) : t("detail.run.mark", { env: name });
       return `<button class="env${at ? " on" : ""}" data-action="toggle-ran" data-path="${esc(f.path)}" data-env="${esc(e.id)}" aria-pressed="${at ? "true" : "false"}" title="${esc(title)}">${esc(name)}</button>`;
     })
     .join("");

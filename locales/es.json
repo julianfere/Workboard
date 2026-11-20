@@ -152,7 +152,6 @@
   "palette.act.promote": "Promover…",
   "palette.act.editor": "Abrir en VS Code",
   "palette.act.folder": "Abrir la carpeta",
-  "palette.editorNotFound": "No se encontró VS Code (el comando code no está en el PATH)",
   "projects.menu": "Carpetas de trabajos",
   "projects.recents": "Carpetas recientes",
   "projects.noRecents": "Ninguna todavía",

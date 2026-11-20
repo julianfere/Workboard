@@ -70,7 +70,6 @@ export const api = {
   restoreRecent: (path: string, pos: number) => call<Settings>("restore_recent", { path, pos }),
   recentFolders: () => call<RecentFolder[]>("recent_folders"),
   setAlias: (path: string, name: string) => call<Settings>("set_alias", { path, name }),
-  openInEditor: (path: string) => call<null>("open_in_editor", { path }),
 
   signature: () => call<[number, number]>("signature"),
   listItems: () => call<ItemList>("list_items"),

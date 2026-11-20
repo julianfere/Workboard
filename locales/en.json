@@ -152,7 +152,6 @@
   "palette.act.promote": "Promote…",
   "palette.act.editor": "Open in VS Code",
   "palette.act.folder": "Open the folder",
-  "palette.editorNotFound": "VS Code was not found (the code command is not in the PATH)",
   "projects.menu": "Work folders",
   "projects.recents": "Recent folders",
   "projects.noRecents": "None yet",

@@ -175,18 +175,6 @@ pub fn reveal_path(path: &Path) -> io::Result<()> {
     }
 }
 
-/// Abre una carpeta en VS Code (`code` del `PATH`). `Ok(false)` si VS Code no está instalado.
-pub fn open_in_editor(path: &Path) -> io::Result<bool> {
-    if !path.exists() {
-        return Err(io::Error::new(io::ErrorKind::NotFound, path.display().to_string()));
-    }
-    let Some(exe) = which_env(&["code"]) else { return Ok(false) };
-    let mut cmd = Command::new(exe);
-    cmd.arg(path).stdout(std::process::Stdio::null()).stderr(std::process::Stdio::null());
-    hide_console(&mut cmd);
-    cmd.spawn().map(|_| true)
-}
-
 /// Termina un proceso y todos sus hijos (las sesiones de agentes lanzan sub-procesos).
 ///
 /// En Unix el proceso tiene que haberse lanzado como líder de su grupo (`process_group(0)`): se manda

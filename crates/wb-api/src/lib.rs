@@ -297,14 +297,6 @@ impl Api {
                 )?;
                 to_json(marks)
             }
-            "open_in_editor" => {
-                let ws = self.workspace()?;
-                let p = ws.safe_path(a.opt_str("path").unwrap_or(""))?;
-                if !wb_platform::open_in_editor(&p)? {
-                    return Err(ApiError::new("palette.editorNotFound", &[]));
-                }
-                Ok(Json::Null)
-            }
             "reveal" | "open_path" => {
                 let ws = self.workspace()?;
                 let p = ws.safe_path(a.opt_str("path").unwrap_or(""))?;

@@ -218,7 +218,7 @@ export function render(): void {
     const count = S.items.length ? fn() : 0;
     if (badge) badge.textContent = count ? String(count) : "";
   }
-  document.title = S.root ? `${S.root.split(/[\\/]/).pop()} · ${t("app.name")}` : t("app.name");
+  syncTitle();
   for (const fn of afterRenders) fn();
 }
 
