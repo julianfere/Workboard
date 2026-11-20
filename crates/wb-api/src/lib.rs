@@ -224,6 +224,12 @@ impl Api {
                 a.int("index")?,
                 a.opt_str("expect"),
             )?),
+            "move_task" => self.move_task(
+                a.opt_str("src").unwrap_or(""),
+                a.int("index")?,
+                a.str("expect")?,
+                a.opt_str("dst").unwrap_or(""),
+            ),
             "read_file" => to_json(self.workspace()?.read_file(a.str("path")?)?),
             "read_media" => to_json(self.workspace()?.read_media(a.str("path")?)?),
             "list_versions" => to_json(self.workspace()?.list_versions(a.str("name")?)?),
@@ -333,6 +339,43 @@ impl Api {
         Ok(())
     }
 
+    /// Mueve una tarea entre items y la bandeja ("" = bandeja). Primero la agrega en el destino (con su
+    /// tildado) y después la borra del origen: si algo falla queda duplicada, nunca perdida. Los README se
+    /// escriben solo con `add_task`/`set_task`/`remove_task` (el escritor único).
+    fn move_task(&self, src: &str, index: i64, expect: &str, dst: &str) -> ApiResult<Json> {
+        if src == dst {
+            return Ok(Json::Null);
+        }
+        let ws = self.workspace()?;
+        let inbox = self.inbox()?;
+        let tasks = if src.is_empty() { inbox.tasks()? } else { ws.build_item(&ws.folder_of(src)?)?.tasks };
+        let task = usize::try_from(index)
+            .ok()
+            .and_then(|i| tasks.get(i))
+            .ok_or_else(|| ApiError::new("core.task.notFound", &[]))?;
+        if task.text != expect.trim() {
+            return Err(ApiError::new("core.task.changed", &[]));
+        }
+        let (text, done) = (task.text.clone(), task.done);
+        if dst.is_empty() {
+            let after = inbox.add(&text)?;
+            if done {
+                inbox.set(after.len() as i64 - 1, true, Some(&text))?;
+            }
+        } else {
+            let after = ws.add_task(dst, &text)?;
+            if done {
+                ws.set_task(dst, after.tasks.len() as i64 - 1, true, Some(&text))?;
+            }
+        }
+        if src.is_empty() {
+            inbox.remove(index, Some(&text))?;
+        } else {
+            ws.remove_task(src, index, Some(&text))?;
+        }
+        Ok(json!(true))
+    }
+
     /// Carpeta nueva con su README: estado inicial (el primero "por hacer" del flujo) y tipo.
     fn create_item(&self, folder: &str, title: &str, item_type: &str) -> ApiResult<Json> {
         let ws = self.workspace()?;
@@ -438,6 +481,63 @@ mod tests {
 
         assert_eq!(api.dispatch("nope", &json!({})).unwrap_err().code, "error.unknownCommand");
         std::fs::remove_dir_all(&base).unwrap();
+    }
+
+    #[test]
+    fn move_task_between_items_and_inbox() {
+        let (root, base) = fixture_copy("move-task");
+        let api = Api::new(base.join("cfg"));
+        api.dispatch("set_settings", &json!({"settings": {"workflow": "classic-es"}})).unwrap();
+        api.dispatch("open_root", &json!({"path": root})).unwrap();
+        let tasks = |name: &str| -> Vec<(String, bool)> {
+            let list = api.dispatch("list_items", &json!({})).unwrap();
+            let it = list["items"].as_array().unwrap().iter().find(|i| i["name"] == name).unwrap().clone();
+            it["tasks"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|t| (t["text"].as_str().unwrap().to_string(), t["done"].as_bool().unwrap()))
+                .collect()
+        };
+        let sso = "wi111111-login-con-sso";
+        let pagos = "wi222222-333333-pagos";
+        let before = tasks(sso);
+        assert_eq!(before[1], ("Crear la tabla de sesiones".to_string(), true));
+
+        // Texto que no coincide: no toca nada.
+        let err = api
+            .dispatch("move_task", &json!({"src": sso, "index": 1, "expect": "otra", "dst": pagos}))
+            .unwrap_err();
+        assert_eq!(err.code, "core.task.changed");
+        assert_eq!(tasks(sso), before);
+
+        // De un item a otro: conserva el tildado y se va del origen.
+        api.dispatch(
+            "move_task",
+            &json!({"src": sso, "index": 1, "expect": "Crear la tabla de sesiones", "dst": pagos}),
+        )
+        .unwrap();
+        assert_eq!(tasks(sso).len(), before.len() - 1);
+        assert_eq!(tasks(pagos).last().unwrap(), &("Crear la tabla de sesiones".to_string(), true));
+
+        // A la bandeja y de vuelta.
+        api.dispatch("move_task", &json!({"src": pagos, "index": 0, "expect": "Verificar en QA", "dst": ""}))
+            .unwrap();
+        let inbox = api.dispatch("inbox", &json!({})).unwrap();
+        assert_eq!(inbox[0]["text"], "Verificar en QA");
+        assert!(!tasks(pagos).iter().any(|t| t.0 == "Verificar en QA"));
+        api.dispatch("move_task", &json!({"src": "", "index": 0, "expect": "Verificar en QA", "dst": sso}))
+            .unwrap();
+        assert_eq!(api.dispatch("inbox", &json!({})).unwrap().as_array().unwrap().len(), 0);
+        assert_eq!(tasks(sso).last().unwrap().0, "Verificar en QA");
+
+        // Mismo origen y destino: no hace nada.
+        assert!(
+            api.dispatch("move_task", &json!({"src": sso, "index": 0, "expect": "x", "dst": sso}))
+                .unwrap()
+                .is_null()
+        );
+        std::fs::remove_dir_all(&base).ok();
     }
 
     #[test]

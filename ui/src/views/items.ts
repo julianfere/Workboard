@@ -664,7 +664,7 @@ function planningModal(names: string[]): void {
     <p class="muted">${esc(t("grid.plan.intro", { n: names.length }))}</p>
     <label>${esc(t("detail.due"))}<input name="due" type="date"></label>
     <label>${esc(t("detail.period"))}<input name="period" placeholder="${esc(t("detail.periodHint"))}"></label>
-    <label>${esc(t("detail.hours"))}<input name="hours" inputmode="decimal"></label>
+    <label class="hrs">${esc(t("detail.hours"))}<input name="hours" inputmode="decimal"></label>
     <p class="error" data-error></p>
     <div class="modal-actions"><button type="button" class="btn" data-cancel>${esc(t("common.cancel"))}</button><button class="btn primary">${esc(t("common.ok"))}</button></div></form>`;
   document.body.append(back);

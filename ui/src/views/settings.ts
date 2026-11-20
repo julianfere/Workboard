@@ -10,6 +10,7 @@ import type { Settings, Theme } from "../types";
 import { agentLabel, agentsInfo, loadSessions } from "../sessions";
 import type { AgentsInfo } from "../types";
 import { loadInbox } from "./tasks";
+import { hoursHidden } from "../discreet";
 import { loadNotes } from "./notes";
 import { trackerSettingsCard } from "./tracker";
 import { gitSettingsCard } from "../git";
@@ -96,6 +97,7 @@ function renderSettings(): string {
     <section class="card"><h2>${esc(t("settings.appearance"))}</h2>
       <div class="set-row"><label for="set-lang">${esc(t("settings.language"))}</label><select id="set-lang" data-change="set-lang">${options(langs, s.lang ?? "")}</select></div>
       <div class="set-row"><label for="set-theme">${esc(t("settings.theme"))}</label><select id="set-theme" data-change="set-theme">${options(themes, s.theme)}</select></div>
+      <div class="set-row"><label for="set-discreet">${esc(t("discreet.label"))}</label><label class="check"><input type="checkbox" id="set-discreet" data-change="set-discreet"${hoursHidden() ? " checked" : ""}>${esc(t("discreet.hint"))}</label></div>
     </section>
     <section class="card"><h2>${esc(t("settings.workflow"))}</h2>
       <div class="set-row"><label for="set-workflow">${esc(t("settings.workflow.preset"))}</label><select id="set-workflow" data-change="set-workflow">${options(presets, s.workflow)}</select></div>

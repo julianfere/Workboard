@@ -9,6 +9,7 @@ import { lang, t } from "../i18n";
 import { ico } from "../icons";
 import { sessionsOf } from "../sessions";
 import { S, effectiveStatus, envLabel, isClosed, metaList, metaText, stateDef, stateLabel, stateRank, titleOf, typeLabel, wf } from "../state";
+import { hoursHidden } from "../discreet";
 import { fmtH, periodRange, timeReady, workedTotal } from "../stats";
 import { byUrgency, dueCell, dueOf, hoursCell, hoursOf, isOverdue, lateTag, passesDue, periodDiff, periodOf, periodRel, priorityBadge, priorityOf } from "../planning";
 import type { Item } from "../types";
@@ -309,12 +310,16 @@ export function statusChipHtml(status: string): string {
 }
 
 /** Columnas que se pueden mostrar ahora (la del tracker, solo con tracker). */
-export const availableColumns = () => COLUMNS.filter((c) => !c.tracker || trackerConnected());
+export const availableColumns = () => COLUMNS.filter((c) => (!c.tracker || trackerConnected()) && !hiddenHours(c.id));
+
+/** Columnas de horas: en modo discreto no se muestran (siguen guardadas en la vista). */
+const HOUR_COLUMNS = ["hours", "worked"];
+const hiddenHours = (id: string) => hoursHidden() && HOUR_COLUMNS.includes(id);
 
 /** Columnas visibles, en orden, con su ancho. El título siempre está. */
 export function visibleColumns(): (Column & { width: number })[] {
   const saved: ColPref[] = snap().columns ?? DEFAULT_COLUMNS.map((id) => ({ id }));
-  const list = saved.filter((c) => COL_BY_ID[c.id] && (!COL_BY_ID[c.id].tracker || trackerConnected()));
+  const list = saved.filter((c) => COL_BY_ID[c.id] && (!COL_BY_ID[c.id].tracker || trackerConnected()) && !hiddenHours(c.id));
   if (!list.some((c) => c.id === "title")) list.splice(Math.min(2, list.length), 0, { id: "title" });
   return list.map((c) => ({ ...COL_BY_ID[c.id], width: c.w ?? COL_BY_ID[c.id].w }));
 }

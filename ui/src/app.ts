@@ -124,7 +124,8 @@ export function startPolling(): void {
 // ---------- navegación ----------
 
 export function goView(view: ViewId): void {
-  S.view = view;
+  // En modo discreto (clase `discreet` en `<html>`, ver `discreet.ts`) la vista Horas no está.
+  S.view = view === "hours" && document.documentElement.classList.contains("discreet") ? "today" : view;
   S.detail = null;
   S.detailData = null;
   render();
@@ -150,8 +151,8 @@ export function closeDetail(): void {
 function renderNav(): string {
   const projectName = S.root ? S.root.split(/[\\/]/).pop() : t("project.none");
   const item = (id: ViewId, icon: string, key: string) => {
-    const badge = id === "alerts" ? `<span class="nav-count" id="alerts-count"></span>` : "";
-    return `<button class="nav-item${S.view === id && !S.detail ? " sel" : ""}" data-action="nav" data-view="${id}">${ico(icon)}<span>${esc(t(`nav.${id}`))}</span>${badge}<span class="nav-key">${key}</span></button>`;
+    const badge = navCounters[id] ? `<span class="nav-count${id === "tasks" ? " neutral" : ""}" id="${id}-count"></span>` : "";
+    return `<button class="nav-item${S.view === id && !S.detail ? " sel" : ""}${id === "hours" ? " hrs" : ""}" data-action="nav" data-view="${id}">${ico(icon)}<span>${esc(t(`nav.${id}`))}</span>${badge}<span class="nav-key">${key}</span></button>`;
   };
   return `<button class="brand" data-action="project-menu" title="${esc(S.root)}"><span class="brand-icon">${ico("folder")}</span><span class="brand-name">${esc(projectName)}</span>${ico("chevronDown", "chev")}</button>
     ${NAV.map((v, i) => item(v.id, v.icon, String(i + 1))).join("")}
@@ -174,19 +175,22 @@ export function render(): void {
       ? view()
       : `<div class="page"><h1>${esc(t(`nav.${S.view}`))}</h1><p class="empty">${esc(t("view.placeholder", { view: t(`nav.${S.view}`) }))}</p></div>`;
   }
-  const count = alertCount();
-  const badge = $("#alerts-count");
-  if (badge) badge.textContent = count ? String(count) : "";
+  for (const [id, fn] of Object.entries(navCounters)) {
+    const badge = $(`#${id}-count`);
+    const count = S.items.length ? fn() : 0;
+    if (badge) badge.textContent = count ? String(count) : "";
+  }
   document.title = S.root ? `${S.root.split(/[\\/]/).pop()} · ${t("app.name")}` : t("app.name");
   for (const fn of afterRenders) fn();
 }
 
-let alertCounter: () => number = () => 0;
-export function setAlertCounter(fn: () => number): void {
-  alertCounter = fn;
+/** Contadores del menú (alertas, «necesita tu atención» en Hoy, tareas abiertas en Pendientes). */
+const navCounters: Partial<Record<ViewId, () => number>> = {};
+export function setNavCounter(id: ViewId, fn: () => number): void {
+  navCounters[id] = fn;
 }
-function alertCount(): number {
-  return S.items.length ? alertCounter() : 0;
+export function setAlertCounter(fn: () => number): void {
+  setNavCounter("alerts", fn);
 }
 
 // ---------- eventos ----------

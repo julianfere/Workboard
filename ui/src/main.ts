@@ -5,6 +5,7 @@ import { api } from "./api";
 import { applyTheme, closeDetail, goView, installEvents, NAV, refresh, render, startPolling } from "./app";
 import { esc } from "./dom";
 import { errorText, setLang, t } from "./i18n";
+import { loadDiscreet, toggleDiscreet } from "./discreet";
 import { openPalette } from "./palette";
 import { loadSessions, startSessionPolling } from "./sessions";
 import { S } from "./state";
@@ -42,6 +43,12 @@ document.addEventListener("keydown", (ev) => {
   // Dentro de la terminal las teclas son del agente.
   if (target.closest("#term-body")) return;
   if (document.querySelector(".modal-back")) return;
+  // `Ctrl+Shift+H`: modo discreto (oculta horas pactadas y trabajadas).
+  if ((ev.ctrlKey || ev.metaKey) && ev.shiftKey && !ev.altKey && ev.key.toLowerCase() === "h") {
+    ev.preventDefault();
+    void toggleDiscreet();
+    return;
+  }
   if (ev.key === "F5") {
     ev.preventDefault();
     refresh();
@@ -89,7 +96,7 @@ document.addEventListener("keydown", (ev) => {
 
 async function boot(): Promise<void> {
   try {
-    [S.settings, S.presets, S.info, S.workflow] = await Promise.all([api.getSettings(), api.workflowPresets(), api.appInfo(), api.workflow(), loadPlugins()]);
+    [S.settings, S.presets, S.info, S.workflow] = await Promise.all([api.getSettings(), api.workflowPresets(), api.appInfo(), api.workflow(), loadPlugins(), loadDiscreet()]);
     setLang(S.settings.lang);
     applyTheme(S.settings.theme);
     if (S.settings.root) {

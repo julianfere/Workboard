@@ -47,7 +47,7 @@ Feature/Bug de Implementar) va al plugin privado y se marca **(privado)**.
 
 | | Función | Fase | Golden |
 |---|---|---|---|
-| [~] | Vistas: Hoy, Trabajos, Pendientes, Horas, Alertas, Notas, Métricas, Tools, Ajustes | 4 | — |
+| [~] | Vistas: Hoy, Trabajos, Pendientes, Horas, Alertas, Notas, Métricas, Tools, Ajustes. **Hoy** completo: saludo y fecha, tarjeta del período (días que quedan, avance, horas pactadas y trabajadas, cerrados N de M), «Necesita tu atención» (sesiones que te necesitan, también de otros proyectos; vencidas; alertas de git, sin movimiento y plan incompleto) con acción y Desestimar (el mismo de Alertas), En curso con horas trabajadas vs pactadas, fechas pactadas, próximas tareas de lo en curso o pactado para el período. **Pendientes** completo: filtros de estado, sesión, ambiente corrido y fecha pactada (guardados en `ui_prefs`, clave `tasks`), «Mostrar hechas», bloques por período pactado con sesión abierta y «N de M abiertas»; editar, borrar (con deshacer) y «Mover…» tareas de items y bandeja (`move_task`). Contadores del menú en Hoy (atención), Pendientes (abiertas + bandeja) y Alertas | 4 | wb-api tests::move_task_between_items_and_inbox |
 | [~] | Paleta `Ctrl+K` (buscar trabajos, tareas, archivos; comandos; acciones del trabajo de arriba) | 4 | — |
 | [x] | Atajos (`Ctrl+J`, `/`, `1`…`6`, `Ctrl+S`, `Esc`, `F5`, `Supr`, `Alt+1`…`9`; también `Ctrl+A` en la grilla) | 4 | — |
 | [x] | Selección múltiple, barra y menú contextual en bulk; deshacer de 12 s | 4 | — |
@@ -61,6 +61,7 @@ Feature/Bug de Implementar) va al plugin privado y se marca **(privado)**.
 | [~] | Proyectos recientes con alias; cambiar de proyecto | 4 | — |
 | [~] | Tema claro / oscuro / sistema; variables de color; i18n en / es | 2 / 4 | — |
 | [x] | Prioridad, pactada, vencidas, agrupar por período, planificación local con marca **local** | 4 | misc (períodos) |
+| [x] | Modo discreto (`Ctrl+Shift+H` o Ajustes → Apariencia): oculta horas pactadas y trabajadas (grilla, detalle, Hoy, planificación en lote) y la vista Horas; se guarda en `ui_prefs` (`hideHours`) | 4 | — |
 
 ## Git
 
