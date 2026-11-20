@@ -1333,5 +1333,6 @@
   "viewer.drawio.load": "No se pudo cargar el visor de draw.io",
   "viewer.drawio.render": "No se pudo dibujar la página",
   "viewer.diagram.empty": "La página está vacía",
-  "viewer.mermaid.error": "Mermaid: {msg}"
+  "viewer.mermaid.error": "Mermaid: {msg}",
+  "settings.shortcuts": "Atajos: Ctrl+K buscar o hacer · Ctrl+J terminal · / buscar en la lista · 1…6 vistas · Ctrl+S guardar · Esc cerrar · F5 releer · Supr eliminar la selección · Ctrl+A marcar todo · Alt+1…9 vistas guardadas · Ctrl+Shift+H modo discreto"
 }

@@ -27,6 +27,9 @@ function projectPicker(): string {
     <div class="add-row"><input id="root-path" placeholder="${esc(t("project.pathHint"))}" data-enter="open-path">
       ${inTauri ? `<button class="btn" data-action="browse-root">${ico("folder")}${esc(t("project.browse"))}</button>` : ""}
       <button class="btn primary" data-action="open-path">${esc(t("project.openBtn"))}</button></div>
+    ${S.settings?.root ? `<div class="add-row"><span class="muted root-path"><code>${esc(S.settings.root)}</code></span>
+      <button class="btn" data-action="root-open">${ico("folder")}${esc(t("detail.openFolder"))}</button>
+      <button class="btn" data-action="root-vscode">${ico("code")}${esc(t("detail.vscode"))}</button></div>` : ""}
     ${recents ? `<h3>${esc(t("project.recents"))}</h3><ul class="list">${recents}</ul>` : ""}</section>`;
 }
 
@@ -95,6 +98,7 @@ function renderSettings(): string {
     <section class="card"><h2>${esc(t("settings.appearance"))}</h2>
       <div class="set-row"><label for="set-lang">${esc(t("settings.language"))}</label><select id="set-lang" data-change="set-lang">${options(langs, s.lang ?? "")}</select></div>
       <div class="set-row"><label for="set-theme">${esc(t("settings.theme"))}</label><select id="set-theme" data-change="set-theme">${options(themes, s.theme)}</select></div>
+      <p class="muted">${esc(t("settings.shortcuts"))}</p>
       <div class="set-row"><label for="set-discreet">${esc(t("discreet.label"))}</label><label class="check"><input type="checkbox" id="set-discreet" data-change="set-discreet"${hoursHidden() ? " checked" : ""}>${esc(t("discreet.hint"))}</label></div>
     </section>
     <section class="card"><h2>${esc(t("settings.workflow"))}</h2>
@@ -154,6 +158,8 @@ onAction("open-path", () => {
   const v = document.querySelector<HTMLInputElement>("#root-path")!.value.trim();
   if (v) return openRoot(v);
 });
+onAction("root-open", () => void api.openPath("").catch((err) => toast(errorText(err), undefined, "error")));
+onAction("root-vscode", () => void api.openInVscode("").catch((err) => toast(errorText(err), undefined, "error")));
 onAction("browse-root", async () => {
   const p = await pickFolder();
   if (p) await openRoot(p);
