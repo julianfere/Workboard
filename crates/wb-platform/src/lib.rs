@@ -112,6 +112,15 @@ pub fn open_url(url: &str) -> io::Result<()> {
     cmd.spawn().map(drop)
 }
 
+/// Manda un archivo a la papelera del sistema (Papelera de Windows, Trash de macOS, la de freedesktop
+/// en Linux), de donde se puede recuperar. Nunca borra en duro.
+pub fn move_to_trash(path: &Path) -> io::Result<()> {
+    if !path.exists() {
+        return Err(io::Error::new(io::ErrorKind::NotFound, path.display().to_string()));
+    }
+    trash::delete(path).map_err(|e| io::Error::other(e.to_string()))
+}
+
 /// Muestra el archivo seleccionado en el explorador del sistema (o abre la carpeta, en Linux).
 pub fn reveal_path(path: &Path) -> io::Result<()> {
     if !path.exists() {

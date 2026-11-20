@@ -8,6 +8,8 @@ rust-version.workspace = true
 
 [dependencies]
 dirs = "6"
+# Papelera del sistema (borrar notas sin perderlas).
+trash = "5.4.0"
 
 [lints]
 workspace = true
