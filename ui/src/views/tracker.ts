@@ -159,17 +159,19 @@ export function trackerCard(it: Item): string {
         const requested = cfg.cache?.requested.includes(id);
         return `<li><span class="grow">#${esc(id)} <span class="muted">${esc(t(requested ? "tracker.notFound" : "tracker.notSynced"))}</span></span>${open}</li>`;
       }
+      // Las horas llevan `hrs` (el modo discreto las oculta).
+      const hrs = (text: string) => `<span class="hrs">${esc(text)}</span>`;
       const facts = [
-        w.type,
-        w.assigned && t("tracker.assignedTo", { name: w.assigned }),
-        w.priority !== null && t("tracker.priority", { n: w.priority }),
-        w.due && t("tracker.due", { date: fmtIso(w.due) }),
-        w.estimate !== null && t("tracker.estimate", { hours: fmtHours(w.estimate) }),
-        w.completed !== null && t("tracker.completed", { hours: fmtHours(w.completed) }),
-        w.changed && t("tracker.changed", { date: fmtIso(w.changed) }),
-      ].filter(Boolean);
+        w.type && esc(w.type),
+        w.assigned && esc(t("tracker.assignedTo", { name: w.assigned })),
+        w.priority !== null && esc(t("tracker.priority", { n: w.priority })),
+        w.due && esc(t("tracker.due", { date: fmtIso(w.due) })),
+        w.estimate !== null && hrs(t("tracker.estimate", { hours: fmtHours(w.estimate) })),
+        w.completed !== null && hrs(t("tracker.completed", { hours: fmtHours(w.completed) })),
+        w.changed && esc(t("tracker.changed", { date: fmtIso(w.changed) })),
+      ].filter((f): f is string => !!f);
       return `<li><span class="grow"><span class="chip">${trackerDot(w.state)}${esc(w.state)}</span> #${esc(id)} ${esc(w.title)}
-        <div class="muted">${esc(facts.join(" · "))}</div></span>${open}</li>`;
+        <div class="muted tr-facts">${facts.map((f) => (f.startsWith("<span") ? f : `<span>${f}</span>`)).join("")}</div></span>${open}</li>`;
     })
     .join("");
   const synced = cfg.cache?.syncedAt ? t("tracker.syncedAt", { date: fmtDate(cfg.cache.syncedAt) }) : t("tracker.neverSynced");

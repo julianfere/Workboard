@@ -523,5 +523,8 @@ pre.tool-code { max-height: 40vh; }
 .pick-list { max-height: 50vh; overflow-y: auto; }
 .nav-count.neutral { background: var(--surface-2); color: var(--fg-2); border: 1px solid var(--line); }
 
+/* ---------- modo discreto: sin horas pactadas ni trabajadas ---------- */
+.discreet .hrs { display: none !important; }
+.tr-facts > span:not(:first-child)::before { content: " · "; }
 
 .card h2 .link { font-size: 13px; font-weight: 400; }
