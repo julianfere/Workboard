@@ -2,6 +2,7 @@
 //! `wb_api::Api` (lo mismo que sirve `wb-devserver` por HTTP en desarrollo). La salida de las terminales
 //! de las sesiones es un flujo: va por `session_attach`, con un canal de bytes crudos por pestaña.
 //! `workboard migrate-v1 …` no abre la ventana: importa la config de la v1 (`docs/migrate-v1.md`).
+//! `workboard <carpeta>` abre la app con esa carpeta de trabajos (como `py app.py <carpeta>` en la v1).
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use serde_json::{Value, json};
@@ -48,9 +49,16 @@ fn main() {
         std::process::exit(code);
     }
 
+    let app_api = Api::new(wb_platform::config_dir());
+    // Una carpeta como argumento queda abierta (y primera de los recientes). Si no sirve, la app abre con
+    // la última, como siempre.
+    if let Some(folder) = args.first().filter(|a| !a.starts_with('-')) {
+        let _ = app_api.dispatch("open_root", &json!({ "path": folder }));
+    }
+
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
-        .manage(Api::new(wb_platform::config_dir()))
+        .manage(app_api)
         .invoke_handler(tauri::generate_handler![api, session_attach])
         .on_window_event(|window, event| {
             // Cerrar la ventana mata las terminales (nada de huérfanos); las sesiones quedan pausadas.
