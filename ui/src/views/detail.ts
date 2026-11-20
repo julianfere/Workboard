@@ -13,6 +13,7 @@ import { canReview, openReview } from "../review";
 import { addToSessionModal, launched, loadSessions, newSessionModal, planItem, sessionById } from "../sessions";
 import { S, effectiveStatus, inSession, itemByName, metaList, metaText, stateDef, titleOf, wf } from "../state";
 import { termSize } from "../terminal";
+import { openFileViewer } from "../viewer";
 import type { ApiError, FileEntry, Item } from "../types";
 import { statusChip } from "./items";
 import { localTag, overridesTracker } from "../planning";
@@ -149,8 +150,7 @@ function fileRow(f: FileEntry, runnable: boolean): string {
         )
         .join("")
     : "";
-  const viewable = f.text || f.media;
-  return `<li class="file"><span class="grow">${viewable ? `<button class="link" data-action="view-file" data-path="${esc(f.path)}">${esc(f.name)}</button>` : esc(f.name)}
+  return `<li class="file"><span class="grow"><button class="link" data-action="view-file" data-path="${esc(f.path)}">${esc(f.name)}</button>
       <span class="muted">${esc(f.path.split("/").slice(1, -1).join("/"))}</span></span>
     <span class="envs">${envs}</span><span class="muted size">${esc(fmtSize(f.size))}</span><span class="muted">${esc(fmtAgo(f.mtime))}</span>
     <button class="icon-btn" data-action="reveal" data-path="${esc(f.path)}" title="${esc(t("detail.reveal"))}">${ico("folder")}</button></li>`;
@@ -301,17 +301,9 @@ onAction("toggle-ran", async (el) => {
   await api.markRan(path, el.dataset.env!, on);
   await loadDetail(item().name);
 });
-onAction("view-file", async (el) => {
-  const path = el.dataset.path!;
-  const f = item().files.find((x) => x.path === path)!;
-  if (f.media) {
-    const m = await api.readMedia(path);
-    const src = `data:${m.mime};base64,${m.data}`;
-    viewer(f.name, m.mime === "application/pdf" ? `<iframe class="pdf" src="${src}"></iframe>` : `<img class="media" src="${src}" alt="${esc(f.name)}">`);
-    return;
-  }
-  const text = await api.readFile(path);
-  viewer(f.name, f.name.toLowerCase().endsWith(".md") ? `<div class="md">${renderMarkdown(text)}</div>` : `<pre class="code">${esc(text)}</pre>`);
+onAction("view-file", (el) => {
+  const f = item().files.find((x) => x.path === el.dataset.path);
+  if (f) openFileViewer(f);
 });
 onAction("reveal", async (el) => {
   await api.reveal(el.dataset.path!);

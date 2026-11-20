@@ -56,7 +56,7 @@ Feature/Bug de Implementar) va al plugin privado y se marca **(privado)**.
 | [x] | Exportar CSV (`;`, BOM) | 4 | — |
 | [~] | Detalle a página completa: pasos de estado, guardado automático solo de lo tocado, conflicto con disco | 4 | — |
 | [~] | Pestañas del detalle: Resumen, README, Archivos, Git, Cómo deployar, Notas | 4 | — |
-| [ ] | Visor: SQL coloreado, Markdown, imágenes, PDF, draw.io (visor local), Mermaid; offline | 4 | — |
+| [x] | Visor: SQL coloreado, Markdown, imágenes, PDF, draw.io (visor local), Mermaid; offline | 4 | viewer_reads (límites y rutas) |
 | [x] | Alertas desestimables (sin README, número sin prefijo, duplicados, plan incompleto, git; también activos sin movimiento, sin estado y fecha vencida): por fila o todas por tipo, con huella de lo que la disparó (vuelve si cambia), por raíz en `<config>/alerts_off.json`; el badge no cuenta las desestimadas. Falta «MIGRATION / FIX sin correr en PROD» (necesita un dato nuevo en el preset) y «A _deleted» por carpeta en duplicados | 4 | wb-api alerts::tests |
 | [~] | Proyectos recientes con alias; cambiar de proyecto | 4 | — |
 | [~] | Tema claro / oscuro / sistema; variables de color; i18n en / es | 2 / 4 | — |

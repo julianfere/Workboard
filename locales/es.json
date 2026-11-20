@@ -1147,5 +1147,21 @@
   "migrate.error.sameFolder": "La carpeta de la v1 y el destino son la misma carpeta",
   "migrate.error.preset": "Preset de flujo desconocido: {preset} (tiene que ser uno incluido o de un plugin habilitado en esta versión)",
   "migrate.error.missingValue": "{flag} necesita un valor",
-  "migrate.error.unknownArg": "Argumento desconocido: {arg}"
+  "migrate.error.unknownArg": "Argumento desconocido: {arg}",
+  "viewer.viewSource": "Ver código",
+  "viewer.viewDiagram": "Ver diagrama",
+  "viewer.copy": "Copiar",
+  "viewer.copied": "Copiado",
+  "viewer.openWith": "Abrir con la app",
+  "viewer.binary": "Archivo binario o muy grande para mostrar ({size}). Abrilo con la app del sistema.",
+  "viewer.drawing": "Dibujando…",
+  "viewer.page": "Página {n}",
+  "viewer.zoomHint": "Click para ver en tamaño real",
+  "viewer.drawio.invalid": "El archivo no es un XML de draw.io válido",
+  "viewer.drawio.noDiagram": "No se encontró ningún diagrama en el archivo",
+  "viewer.drawio.inflate": "No se pudo descomprimir la página",
+  "viewer.drawio.load": "No se pudo cargar el visor de draw.io",
+  "viewer.drawio.render": "No se pudo dibujar la página",
+  "viewer.diagram.empty": "La página está vacía",
+  "viewer.mermaid.error": "Mermaid: {msg}"
 }

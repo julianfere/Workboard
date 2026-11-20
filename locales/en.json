@@ -1147,5 +1147,21 @@
   "migrate.error.sameFolder": "The v1 folder and the destination are the same folder",
   "migrate.error.preset": "Unknown workflow preset: {preset} (it must be included or come from a plugin enabled in this version)",
   "migrate.error.missingValue": "{flag} needs a value",
-  "migrate.error.unknownArg": "Unknown argument: {arg}"
+  "migrate.error.unknownArg": "Unknown argument: {arg}",
+  "viewer.viewSource": "View source",
+  "viewer.viewDiagram": "View diagram",
+  "viewer.copy": "Copy",
+  "viewer.copied": "Copied",
+  "viewer.openWith": "Open with app",
+  "viewer.binary": "Binary file or too large to show ({size}). Open it with the system app.",
+  "viewer.drawing": "Drawing…",
+  "viewer.page": "Page {n}",
+  "viewer.zoomHint": "Click to toggle actual size",
+  "viewer.drawio.invalid": "The file is not valid draw.io XML",
+  "viewer.drawio.noDiagram": "No diagram found in the file",
+  "viewer.drawio.inflate": "Could not decompress the page",
+  "viewer.drawio.load": "Could not load the draw.io viewer",
+  "viewer.drawio.render": "Could not draw the page",
+  "viewer.diagram.empty": "The page is empty",
+  "viewer.mermaid.error": "Mermaid: {msg}"
 }

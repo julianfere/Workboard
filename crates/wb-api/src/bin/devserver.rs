@@ -71,6 +71,9 @@ fn main() {
         eprintln!("no se pudo abrir {root}: {e:?}");
     }
     let dist = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../ui/dist");
+    let tauri_conf: serde_json::Value =
+        serde_json::from_str(include_str!("../../../../src-tauri/tauri.conf.json")).expect("tauri.conf.json");
+    let csp = tauri_conf["app"]["security"]["csp"].as_str().unwrap_or_default().to_string();
     let server = Server::http(("127.0.0.1", port)).expect("port in use?");
     println!("wb-devserver: http://127.0.0.1:{port} (config: {})", wb_platform::config_dir().display());
 
@@ -102,9 +105,21 @@ fn main() {
                         Some("js") => "text/javascript; charset=utf-8",
                         Some("css") => "text/css; charset=utf-8",
                         Some("svg") => "image/svg+xml",
+                        Some("xml") => "application/xml",
+                        Some("json") => "application/json",
+                        Some("png") => "image/png",
+                        Some("jpg" | "jpeg") => "image/jpeg",
+                        Some("gif") => "image/gif",
+                        Some("webp") => "image/webp",
+                        Some("woff2") => "font/woff2",
                         _ => "application/octet-stream",
                     };
-                    Response::from_data(bytes).with_header(header("Content-Type", ctype))
+                    let mut res = Response::from_data(bytes).with_header(header("Content-Type", ctype));
+                    if ctype.starts_with("text/html") {
+                        // La misma CSP que la ventana de Tauri: lo que pasa acá pasa en la app.
+                        res = res.with_header(header("Content-Security-Policy", &csp));
+                    }
+                    res
                 }
                 _ => Response::from_string("not found").with_status_code(404),
             }

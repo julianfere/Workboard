@@ -34,6 +34,10 @@ group related items. Files are categorized by name (`MIGRATION_…`, `DIAG_…`,
 marked as ran in each environment. Every README write keeps a backup that can be restored from
 **Versions**.
 
+The file viewer shows each file of an item in place, offline: SQL with syntax colors, Markdown (with
+` ```mermaid ` blocks drawn), images, PDF, draw.io diagrams (multi-page, with the official viewer bundled
+locally) and Mermaid (`.mmd`/`.mermaid`). **Open with app** is always there for the rest.
+
 ```markdown
 ---
 status: in-progress
@@ -226,4 +230,4 @@ docs/               documentation
 
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE). Bundled third-party code is listed in [THIRD_PARTY.md](THIRD_PARTY.md).
