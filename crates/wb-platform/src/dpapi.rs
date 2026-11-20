@@ -28,8 +28,7 @@ pub fn unprotect(token: &str) -> io::Result<String> {
     let blob = base64::engine::general_purpose::STANDARD
         .decode(token.trim())
         .map_err(|_| io::Error::new(io::ErrorKind::InvalidData, "not base64"))?;
-    let data =
-        windows_dpapi::decrypt_data(&blob, windows_dpapi::Scope::User, None).map_err(|_| failed())?;
+    let data = windows_dpapi::decrypt_data(&blob, windows_dpapi::Scope::User, None).map_err(|_| failed())?;
     String::from_utf8(data).map_err(|_| io::Error::new(io::ErrorKind::InvalidData, "not utf-8"))
 }
 
@@ -50,19 +49,16 @@ mod tests {
     #[test]
     fn roundtrip_or_unsupported() {
         let fake = "fake-token-for-tests";
-        match protect(fake) {
-            Ok(token) => {
-                assert!(SUPPORTED);
+        match (protect(fake), SUPPORTED) {
+            (Ok(token), true) => {
                 assert!(!token.contains(fake));
                 assert_eq!(unprotect(&token).unwrap(), fake);
                 let err = unprotect("bm90IGEgYmxvYg==").unwrap_err();
                 assert!(!err.to_string().contains("bm90"));
                 assert!(unprotect("%%%").is_err());
             }
-            Err(e) => {
-                assert!(!SUPPORTED);
-                assert_eq!(e.kind(), io::ErrorKind::Unsupported);
-            }
+            (Err(e), false) => assert_eq!(e.kind(), io::ErrorKind::Unsupported),
+            (r, supported) => panic!("protect: {:?} with SUPPORTED = {supported}", r.map(|_| "<token>")),
         }
     }
 }
