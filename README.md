@@ -170,6 +170,8 @@ Settings, caches, backups, session files and promoted tools live in the configur
 Set **`WORKBOARD_CONFIG_DIR`** to use another folder, for testing or to run a second, independent
 instance. The full list of files is in [docs/architecture.md](docs/architecture.md#configuration-folder).
 Tracker tokens are not there: they are in the system credential store.
+Coming from the v1 (the Python app)? `workboard migrate-v1 --dry-run` shows what it would import from
+`%APPDATA%\Workboard` and `workboard migrate-v1` imports it: see [docs/migrate-v1.md](docs/migrate-v1.md).
 
 ## Development
 
@@ -218,6 +220,7 @@ docs/               documentation
 - [Trackers](docs/trackers.md): Azure DevOps setup, state mapping, sync, writing states, adding a tracker.
 - [Plugins](docs/plugins.md): manifest, protocol, host methods.
 - [Architecture](docs/architecture.md): crates, data flow, config folder, dev server, tests, conventions.
+- [Migrating from the v1](docs/migrate-v1.md): `workboard migrate-v1`, what it imports and what not.
 - [Parity checklist](docs/parity-checklist.md) (Spanish): what is ported from the v1.
 - [Changelog](CHANGELOG.md).
 
