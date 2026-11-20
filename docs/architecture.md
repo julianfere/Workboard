@@ -31,8 +31,7 @@ agent CLI ──hook───▶ wb-hook ──HTTP 127.0.0.1 + token──▶ w
 | `wb-platform` | Everything OS-specific: `config_dir`, opening files and https URLs, revealing in the file manager, `kill_tree`, `which`, running scripts with a timeout, the downloads folder, hiding console windows, and `secrets` (system credential store via `keyring`). There is no `cfg(windows)` outside this crate. |
 | `wb-api` | The app API. `Api::dispatch(cmd, args)` is one `match` with every command, each a thin wrapper over the crates above; `settings.rs` (`settings.json`); feature modules `sessions.rs`, `git.rs`, `tracker.rs`, `stats.rs`, `plugins.rs`, chained in the fallback of `dispatch`. Errors are `ApiError { code, params, conflict }`. Binary `wb-devserver`. |
 
-Outside the workspace: `src-tauri/` (the window), `ui/` (the UI), `tests/golden/` (reference behavior),
-`spike/` (throwaway experiments, not built).
+Outside the workspace: `src-tauri/` (the window), `ui/` (the UI), `tests/golden/` (reference behavior).
 
 ## Data flow
 

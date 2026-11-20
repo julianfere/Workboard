@@ -212,7 +212,6 @@ ui/                 the UI (TypeScript + Vite)
 locales/            UI and agent texts (en, es)
 examples/           a demo work folder and an example plugin
 tests/golden/       reference behavior captured from the v1
-spike/              throwaway experiments (terminal, MCP, hook)
 docs/               documentation
 ```
 

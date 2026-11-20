@@ -111,7 +111,6 @@ config real.
   vistas guardadas; se guardan con `ui_prefs`/`ui_pref_set` en `<config>/ui_prefs.json`, clave `grid`) y `planning.ts`
   (prioridad, pactada, período, horas y la marca «local» cuando el README pisa al tracker).
 - `tests/golden/` — comportamiento de la v1 capturado como JSON (ver su README y `KNOWN_ISSUES.md`).
-- `spike/` — experimentos descartables (terminal, MCP con `rmcp`, hook). No son parte del workspace.
 - `_v1/` — copia local de la v1 (ignorada por git, no se publica).
 
 ## Convenciones (no romper)

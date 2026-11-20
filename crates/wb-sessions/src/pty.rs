@@ -2,7 +2,8 @@
 //! la salida reciente para redibujarla al reconectar.
 //!
 //! La salida se agrupa en un hilo aparte (8 ms o 256 KB): ConPTY entrega de a ~65 bytes y mandar cada
-//! lectura como un mensaje a la UI es lo que frena (ver `spike/RESULTS.md`).
+//! lectura como un mensaje a la UI es lo que frena (medido en el prototipo: agrupar bajó un 25 % una salida
+//! masiva sin latencia perceptible al tipear).
 
 use std::collections::{BTreeMap, VecDeque};
 use std::ffi::OsString;
