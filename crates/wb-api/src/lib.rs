@@ -325,10 +325,10 @@ impl Api {
     fn follow_move(&self, ws: &Workspace, old: &str, new: &str) -> ApiResult<()> {
         self.runs().move_prefix(ws.root(), old, new)?;
         self.sessions_moved(ws, old, new);
-        if !ws.workflow().is_ignored_folder(new.split('/').next().unwrap_or(new)) {
-            if let Ok(notes) = self.notes() {
-                notes.rename_links(old, new);
-            }
+        if !ws.workflow().is_ignored_folder(new.split('/').next().unwrap_or(new))
+            && let Ok(notes) = self.notes()
+        {
+            notes.rename_links(old, new);
         }
         Ok(())
     }
