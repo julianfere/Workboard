@@ -63,10 +63,10 @@ fn store_error(_: std::io::Error) -> ApiError {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-struct FieldRef {
+pub(crate) struct FieldRef {
     #[serde(rename = "ref")]
-    reference: String,
-    name: String,
+    pub(crate) reference: String,
+    pub(crate) name: String,
 }
 
 impl From<&FieldInfo> for FieldRef {
@@ -78,25 +78,25 @@ impl From<&FieldInfo> for FieldRef {
 /// Lo que se sabe de un proyecto del tracker (compartido por las raíces conectadas a él).
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
-struct ProjectCfg {
-    states: Vec<TrackerState>,
+pub(crate) struct ProjectCfg {
+    pub(crate) states: Vec<TrackerState>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    fetched_at: Option<f64>,
+    pub(crate) fetched_at: Option<f64>,
     /// Estado del tracker → id de estado del flujo.
-    map: BTreeMap<String, String>,
-    map_saved: bool,
+    pub(crate) map: BTreeMap<String, String>,
+    pub(crate) map_saved: bool,
     /// `None` = todavía no se leyeron los campos.
     #[serde(skip_serializing_if = "Option::is_none")]
-    date_fields: Option<Vec<FieldRef>>,
+    pub(crate) date_fields: Option<Vec<FieldRef>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    num_fields: Option<Vec<FieldRef>>,
-    has_priority: bool,
-    has_effort: bool,
+    pub(crate) num_fields: Option<Vec<FieldRef>>,
+    pub(crate) has_priority: bool,
+    pub(crate) has_effort: bool,
     /// `None` = sin elegir (se adivina); `""` = el usuario eligió ninguno.
     #[serde(skip_serializing_if = "Option::is_none")]
-    due_field: Option<String>,
+    pub(crate) due_field: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    hours_field: Option<String>,
+    pub(crate) hours_field: Option<String>,
 }
 
 impl ProjectCfg {
@@ -135,11 +135,11 @@ impl ProjectCfg {
 
 #[derive(Debug, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
-struct TrackerFile {
+pub(crate) struct TrackerFile {
     /// Por raíz (`RunLog::root_key`).
-    connections: BTreeMap<String, Connection>,
+    pub(crate) connections: BTreeMap<String, Connection>,
     /// Por `tipo|org|proyecto` en minúsculas.
-    projects: BTreeMap<String, ProjectCfg>,
+    pub(crate) projects: BTreeMap<String, ProjectCfg>,
 }
 
 /// Lo último leído del tracker para una raíz.
@@ -156,11 +156,11 @@ struct CacheEntry {
     items: BTreeMap<String, WorkItem>,
 }
 
-fn project_key(c: &Connection) -> String {
+pub(crate) fn project_key(c: &Connection) -> String {
     format!("{}|{}|{}", c.kind, c.org, c.project).to_lowercase()
 }
 
-fn secret_key(c: &Connection, write: bool) -> String {
+pub(crate) fn secret_key(c: &Connection, write: bool) -> String {
     format!("{}:{}:{}", c.kind, if write { "write" } else { "read" }, c.org.to_lowercase())
 }
 

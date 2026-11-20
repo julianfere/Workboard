@@ -5205,8 +5205,10 @@ dependencies = [
 name = "wb-platform"
 version = "0.1.0"
 dependencies = [
+ "base64 0.23.1",
  "dirs 6.0.0",
  "keyring",
+ "windows-dpapi",
 ]
 
 [[package]]
@@ -5471,6 +5473,17 @@ dependencies = [
  "windows-link",
  "windows-result",
  "windows-strings",
+]
+
+[[package]]
+name = "windows-dpapi"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2981752d6f11bdcab4db52be8ad5c0e6a6d4d6d566764b3058cc1ee473e6479e"
+dependencies = [
+ "anyhow",
+ "log",
+ "winapi",
 ]
 
 [[package]]

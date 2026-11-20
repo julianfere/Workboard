@@ -1,6 +1,7 @@
 //! Workboard: app de escritorio. Toda la API pasa por un único comando, `api(cmd, args)`, que despacha
 //! `wb_api::Api` (lo mismo que sirve `wb-devserver` por HTTP en desarrollo). La salida de las terminales
 //! de las sesiones es un flujo: va por `session_attach`, con un canal de bytes crudos por pestaña.
+//! `workboard migrate-v1 …` no abre la ventana: importa la config de la v1 (`docs/migrate-v1.md`).
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use serde_json::{Value, json};
@@ -40,6 +41,13 @@ fn session_attach(
 }
 
 fn main() {
+    // Subcomandos de consola, antes de abrir la ventana.
+    let args: Vec<String> = std::env::args().skip(1).collect();
+    if args.first().map(String::as_str) == Some("migrate-v1") {
+        let code = wb_api::migrate::cli(&args[1..], &mut std::io::stdout().lock());
+        std::process::exit(code);
+    }
+
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .manage(Api::new(wb_platform::config_dir()))

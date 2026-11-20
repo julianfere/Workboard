@@ -14,6 +14,7 @@ sección de checklist. La v1 sigue en uso y es la referencia de comportamiento.
 | Instaladores | `npm run tauri build` (en CI: tag `v*` → `.github/workflows/release.yml`, release en borrador) |
 | Lint (lo mismo que el CI) | `cargo fmt --all --check && cargo clippy --workspace --all-targets -- -D warnings` y `npm run build` |
 | Golden files | `py tests/golden/gen/gen_all.py` (necesita la v1 en `_v1/` o `WORKBOARD_V1`) |
+| Migrar la config de la v1 | `workboard migrate-v1 [--from <v1>] [--to <config>] [--preset <id>] [--dry-run] [--force]` (lógica en `wb-api/src/migrate.rs`, DPAPI en `wb_platform::dpapi`; tabla en `docs/migrate-v1.md`). Al probar, siempre `--from` a un fixture y `WORKBOARD_CONFIG_DIR`/`WORKBOARD_SECRET_SERVICE` temporales |
 
 En Git Bash `cargo` está en `~/.cargo/bin` (agregarlo al PATH si no aparece).
 `src-tauri` no compila sin `wb-mcp` y `wb-hook` en `src-tauri/binaries/<nombre>-<target>` (`externalBin`): los deja

@@ -4,6 +4,7 @@
 
 pub mod error;
 mod git;
+pub mod migrate;
 mod plugins;
 mod sessions;
 pub mod settings;
