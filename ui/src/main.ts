@@ -12,7 +12,7 @@ import { installTerminalPanel, retheme, toggleTerminal } from "./terminal";
 import "./views/alerts";
 import "./views/detail";
 import "./views/hours";
-import "./views/items";
+import { clearSelection, deleteSelection, selectAllVisible, selectionSize, switchSavedView } from "./views/items";
 import "./views/metrics";
 import { loadNotes } from "./views/notes";
 import "./views/settings";
@@ -47,8 +47,34 @@ document.addEventListener("keydown", (ev) => {
     refresh();
     return;
   }
-  if (typing || ev.ctrlKey || ev.metaKey || ev.altKey) return;
+  const ctrl = ev.ctrlKey || ev.metaKey;
+  // El detalle se guarda al cambiar cada campo: `Ctrl+S` confirma el que se está editando.
+  if (ctrl && ev.key.toLowerCase() === "s" && S.detail) {
+    ev.preventDefault();
+    if (typing) target.blur();
+    return;
+  }
+  const inGrid = S.view === "items" && !S.detail;
+  // `Alt+1`…`Alt+9`: vistas guardadas de Trabajos.
+  if (ev.altKey && !ctrl && inGrid && /^Digit[1-9]$/.test(ev.code)) {
+    ev.preventDefault();
+    switchSavedView(Number(ev.code.slice(5)) - 1);
+    return;
+  }
+  if (typing) return;
+  if (ctrl && !ev.altKey && ev.key.toLowerCase() === "a" && inGrid) {
+    ev.preventDefault();
+    selectAllVisible();
+    return;
+  }
+  if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
+  if (ev.key === "Delete" && inGrid && selectionSize()) {
+    ev.preventDefault();
+    void deleteSelection();
+    return;
+  }
   if (ev.key === "Escape" && S.detail) closeDetail();
+  else if (ev.key === "Escape" && inGrid) clearSelection();
   else if (ev.key === "/") {
     const search = document.querySelector<HTMLInputElement>("#items-search, #notes-search");
     if (search) {

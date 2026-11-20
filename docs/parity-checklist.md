@@ -49,7 +49,7 @@ Feature/Bug de Implementar) va al plugin privado y se marca **(privado)**.
 |---|---|---|---|
 | [~] | Vistas: Hoy, Trabajos, Pendientes, Horas, Alertas, Notas, Métricas, Tools, Ajustes | 4 | — |
 | [~] | Paleta `Ctrl+K` (buscar trabajos, tareas, archivos; comandos; acciones del trabajo de arriba) | 4 | — |
-| [ ] | Atajos (`Ctrl+J`, `/`, `1`…`6`, `Ctrl+S`, `Esc`, `F5`, `Supr`, `Alt+1`…`9`) | 4 | — |
+| [x] | Atajos (`Ctrl+J`, `/`, `1`…`6`, `Ctrl+S`, `Esc`, `F5`, `Supr`, `Alt+1`…`9`; también `Ctrl+A` en la grilla) | 4 | — |
 | [x] | Selección múltiple, barra y menú contextual en bulk; deshacer de 12 s | 4 | — |
 | [x] | Grilla: columnas configurables, orden, ancho, agrupar hasta 3 niveles, filtros con chips, densidad | 4 | — |
 | [x] | Vistas guardadas (pestañas) con Guardar / Descartar | 4 | — |
