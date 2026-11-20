@@ -82,7 +82,12 @@ export async function refresh(): Promise<void> {
     S.deletedCount = list.deleted;
     S.signature = list.signature.join(":");
     S.loadError = "";
-    if (S.detail) await loadDetail(S.detail, false);
+    if (S.detail && !S.items.some((i) => i.name === S.detail)) {
+      // La carpeta abierta desapareció (la movieron, renombraron o borraron por fuera).
+      S.detail = null;
+      S.detailData = null;
+      toast(t("detail.gone"), undefined, "error");
+    } else if (S.detail) await loadDetail(S.detail, false);
   } catch (err) {
     S.loadError = errorText(err);
   }

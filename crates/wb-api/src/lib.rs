@@ -3,6 +3,7 @@
 //! Todo se lee en cada llamada: la carpeta de trabajos puede cambiar por fuera (agentes, el usuario).
 
 mod alerts;
+mod detail;
 pub mod error;
 mod git;
 pub mod migrate;
@@ -188,11 +189,14 @@ impl Api {
                 let item = ws.build_item(&folder)?;
                 let readme = folder.join(wb_core::workspace::README);
                 let text = if readme.exists() { wb_core::frontmatter::read(&readme)? } else { String::new() };
-                let runs = self.runs().of_root(ws.root());
-                let runs: serde_json::Map<String, Json> = item
-                    .files
-                    .iter()
-                    .filter_map(|f| runs.get(&f.path).map(|m| (f.path.clone(), json!(m))))
+                // Un grupo muestra también los archivos de sus items: van sus marcas.
+                let prefix = format!("{}/", item.name);
+                let runs: serde_json::Map<String, Json> = self
+                    .runs()
+                    .of_root(ws.root())
+                    .into_iter()
+                    .filter(|(p, _)| p.starts_with(&prefix))
+                    .map(|(p, m)| (p, json!(m)))
                     .collect();
                 Ok(json!({"item": item, "readme": text, "runs": runs}))
             }
@@ -311,6 +315,7 @@ impl Api {
                 .or_else(|| self.git_command(cmd, &a))
                 .or_else(|| self.alerts_command(cmd, &a))
                 .or_else(|| self.notes_command(cmd, &a))
+                .or_else(|| self.detail_command(cmd, &a))
                 .or_else(|| self.prefs_command(cmd, &a))
                 .unwrap_or_else(|| Err(ApiError::new("error.unknownCommand", &[("name", cmd)]))),
         }

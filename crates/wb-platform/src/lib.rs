@@ -99,6 +99,31 @@ pub fn open_path(path: &Path) -> io::Result<()> {
     cmd.spawn().map(drop)
 }
 
+/// Ejecutable de VS Code a partir del `code` que hay en `path`. En Windows `code` es un `.cmd` (que la
+/// consola parte mal con rutas entre comillas): se usa el `Code.exe` de la instalación, al lado de `bin/`.
+pub fn vscode_exe(path: &str) -> Option<PathBuf> {
+    let found = which("code", path)?;
+    let is_script =
+        found.extension().is_some_and(|e| e.eq_ignore_ascii_case("cmd") || e.eq_ignore_ascii_case("bat"));
+    if !is_script {
+        return Some(found);
+    }
+    let exe = found.parent()?.parent()?.join("Code.exe");
+    exe.is_file().then_some(exe)
+}
+
+/// Abre una carpeta (o archivo) en VS Code. `NotFound` si VS Code no está en el `PATH`.
+pub fn open_in_vscode(target: &Path) -> io::Result<()> {
+    if !target.exists() {
+        return Err(io::Error::new(io::ErrorKind::NotFound, target.display().to_string()));
+    }
+    let exe = vscode_exe(&std::env::var("PATH").unwrap_or_default())
+        .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "code"))?;
+    let mut cmd = Command::new(exe);
+    cmd.arg(target).stdout(std::process::Stdio::null()).stderr(std::process::Stdio::null());
+    cmd.spawn().map(drop)
+}
+
 /// Abre una URL `https://` en el navegador del sistema. Otros esquemas se rechazan.
 pub fn open_url(url: &str) -> io::Result<()> {
     let ok = url.strip_prefix("https://").is_some_and(|rest| {
@@ -307,6 +332,29 @@ mod tests {
         let missing = Path::new("definitely/not/here.txt");
         assert_eq!(open_path(missing).unwrap_err().kind(), io::ErrorKind::NotFound);
         assert_eq!(reveal_path(missing).unwrap_err().kind(), io::ErrorKind::NotFound);
+    }
+
+    #[test]
+    fn vscode_is_found_next_to_its_cli() {
+        let dir = std::env::temp_dir().join(format!("wb-platform-code-{}", std::process::id()));
+        let bin = dir.join("bin");
+        std::fs::create_dir_all(&bin).unwrap();
+        assert!(vscode_exe(&bin.display().to_string()).is_none());
+        if cfg!(windows) {
+            std::fs::write(bin.join("code.cmd"), "@echo off").unwrap();
+            // Sin `Code.exe` al lado de `bin/` no hay a qué llamar.
+            assert!(vscode_exe(&bin.display().to_string()).is_none());
+            std::fs::write(dir.join("Code.exe"), "").unwrap();
+            assert_eq!(vscode_exe(&bin.display().to_string()), Some(dir.join("Code.exe")));
+        } else {
+            std::fs::write(bin.join("code"), "#!/bin/sh").unwrap();
+            assert_eq!(vscode_exe(&bin.display().to_string()), Some(bin.join("code")));
+        }
+        assert_eq!(
+            open_in_vscode(Path::new("definitely/not/here")).unwrap_err().kind(),
+            io::ErrorKind::NotFound
+        );
+        let _ = std::fs::remove_dir_all(&dir);
     }
 
     #[test]
