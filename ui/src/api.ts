@@ -90,6 +90,9 @@ export const api = {
   markRan: (path: string, env: string, on: boolean) => call<Record<string, number>>("mark_ran", { path, env, on }),
   reveal: (path: string) => call<null>("reveal", { path }),
   openPath: (path: string) => call<null>("open_path", { path }),
+  /** Preferencias de la UI (`<config>/ui_prefs.json`); `null` borra la clave. */
+  uiPrefs: () => call<Record<string, unknown>>("ui_prefs"),
+  setUiPref: (key: string, value: unknown) => call<Record<string, unknown>>("ui_pref_set", { key, value }),
 
   inbox: () => call<Task[]>("inbox"),
   inboxAdd: (text: string) => call<Task[]>("inbox_add", { text }),

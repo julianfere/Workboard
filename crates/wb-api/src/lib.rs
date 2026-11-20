@@ -5,6 +5,7 @@
 pub mod error;
 mod git;
 mod plugins;
+mod prefs;
 mod sessions;
 pub mod settings;
 mod stats;
@@ -37,6 +38,8 @@ pub struct Api {
     /// Almacén de secretos y transporte HTTP de los trackers.
     tracker: tracker::TrackerDeps,
     git: git::GitState,
+    /// Serializa las escrituras de `ui_prefs.json`.
+    prefs_lock: Mutex<()>,
 }
 
 fn to_json<T: Serialize>(v: T) -> ApiResult<Json> {
@@ -81,6 +84,7 @@ impl Api {
             session_bins: Mutex::new(None),
             tracker: Default::default(),
             git: Default::default(),
+            prefs_lock: Mutex::new(()),
         }
     }
 
@@ -296,6 +300,7 @@ impl Api {
                 .or_else(|| self.plugin_command(cmd, &a))
                 .or_else(|| self.stats_command(cmd, &a))
                 .or_else(|| self.git_command(cmd, &a))
+                .or_else(|| self.prefs_command(cmd, &a))
                 .unwrap_or_else(|| Err(ApiError::new("error.unknownCommand", &[("name", cmd)]))),
         }
     }
