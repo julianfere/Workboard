@@ -200,6 +200,41 @@ impl Notes {
         self.read(id)
     }
 
+    /// Una carpeta de items se movió (`old` → `new`, rutas relativas a la raíz): las notas vinculadas por
+    /// esa carpeta, o por una de adentro si es un grupo, pasan a la nueva. Los vínculos por id no cambian.
+    /// Devuelve cuántas notas se reescribieron; una nota que no se puede leer o escribir se saltea.
+    pub fn rename_links(&self, old: &str, new: &str) -> usize {
+        let moved = |k: &str| -> Option<String> {
+            if k == old {
+                Some(new.to_string())
+            } else {
+                k.strip_prefix(old).filter(|rest| rest.starts_with('/')).map(|rest| format!("{new}{rest}"))
+            }
+        };
+        let mut changed = 0;
+        for note in self.list() {
+            if !note.items.iter().any(|k| moved(k).is_some()) {
+                continue;
+            }
+            let mut items: Vec<String> = Vec::new();
+            for k in &note.items {
+                let k = moved(k).unwrap_or_else(|| k.clone());
+                if !items.contains(&k) {
+                    items.push(k);
+                }
+            }
+            let Ok(p) = self.existing(&note.id, None) else { continue };
+            let Ok(raw) = frontmatter::read(&p) else { continue };
+            let (block, body) = split_raw(&raw);
+            let mut block = block.unwrap_or_default();
+            set_block_value(&mut block, &self.rules.items_key, &Value::List(items));
+            if write_atomic(&p, &join_raw(Some(&block), &body)).is_ok() {
+                changed += 1;
+            }
+        }
+        changed
+    }
+
     /// Nota nueva (nombre de archivo a partir del título, sin pisar otra). `today` = `AAAA-MM-DD`.
     pub fn create(
         &self,
@@ -363,6 +398,45 @@ mod tests {
         assert!(last.items.is_empty());
         let text = std::fs::read_to_string(n.folder().join("Proyectos/2026/Redondeo.md")).unwrap();
         assert!(!text.contains("wis:") && text.contains("cssclasses:\n  - wide\n---\n"), "{text}");
+    }
+
+    #[test]
+    fn rename_links_follows_the_folder_and_the_items_of_a_moved_group() {
+        let n = store("rename");
+        std::fs::write(
+            n.folder().join("a.md"),
+            "---
+wis: [wi1-foo, 589488]
+tags: [x]
+---
+# A
+",
+        )
+        .unwrap();
+        std::fs::write(
+            n.folder().join("b.md"),
+            "---
+wis: [grp-old/wi2-bar, grp-older]
+---
+# B
+",
+        )
+        .unwrap();
+        std::fs::write(
+            n.folder().join("c.md"),
+            "# C sin vínculos
+",
+        )
+        .unwrap();
+
+        assert_eq!(n.rename_links("wi1-foo", "grp-x/wi1-foo"), 1);
+        assert_eq!(n.read("a.md").unwrap().items, ["grp-x/wi1-foo", "589488"]);
+        assert!(std::fs::read_to_string(n.folder().join("a.md")).unwrap().contains("tags: [x]"));
+
+        // Un grupo renombrado arrastra a los de adentro; `grp-older` no es de ese grupo.
+        assert_eq!(n.rename_links("grp-old", "grp-new"), 1);
+        assert_eq!(n.read("b.md").unwrap().items, ["grp-new/wi2-bar", "grp-older"]);
+        assert_eq!(n.rename_links("nada", "otra"), 0);
     }
 
     #[test]

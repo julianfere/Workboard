@@ -26,7 +26,7 @@ Feature/Bug de Implementar) va al plugin privado y se marca **(privado)**.
 | [x] | Períodos configurables (hoy del 20 al 19) | 3 | misc |
 | [x] | Categorías de archivo por prefijo/extensión; scripts "corridos en DEV/QA/PROD" (`runs.json`) | 3 | misc, mcp |
 | [x] | Mover a grupo / sacar / disolver, eliminar a `_deleted` con deshacer, restaurar, renombrar carpeta | 3 | workspace_ops |
-| [~] | Después de mover: sesiones, marcas, backups y notas siguen a la carpeta (falta notas) | 3 / 6 | parcial (backups) |
+| [x] | Después de mover: sesiones, marcas, backups y notas siguen a la carpeta (notas vinculadas por carpeta, también las de adentro de un grupo) | 3 / 6 | parcial (backups) |
 | [x] | Nuevo item con o sin WI (crea carpeta + README; con id trae título, tipo, descripción y criterios del tracker) | 3 / 7 | workspace_ops (create_folder), wb-api/tests/tracker |
 | [x] | Plan incompleto (`plan_gaps`) | 3 | misc |
 | [x] | Bandeja de tareas sin WI (`inbox.md` en la config) | 3 | tasks (mismas funciones) |

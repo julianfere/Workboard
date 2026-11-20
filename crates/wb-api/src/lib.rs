@@ -315,10 +315,22 @@ impl Api {
         let ws = self.workspace()?;
         let new = f(&ws)?;
         if new != old {
-            self.runs().move_prefix(ws.root(), old, &new)?;
-            self.sessions_moved(&ws, old, &new);
+            self.follow_move(&ws, old, &new)?;
         }
         Ok(json!(new))
+    }
+
+    /// Lo que referencia una carpeta por nombre la sigue: marcas de ejecutados, sesiones y notas vinculadas
+    /// por carpeta (no a eliminados: ahí sesiones y notas quedan como estaban, para restaurar).
+    fn follow_move(&self, ws: &Workspace, old: &str, new: &str) -> ApiResult<()> {
+        self.runs().move_prefix(ws.root(), old, new)?;
+        self.sessions_moved(ws, old, new);
+        if !ws.workflow().is_ignored_folder(new.split('/').next().unwrap_or(new)) {
+            if let Ok(notes) = self.notes() {
+                notes.rename_links(old, new);
+            }
+        }
+        Ok(())
     }
 
     /// Carpeta nueva con su README: estado inicial (el primero "por hacer" del flujo) y tipo.
@@ -361,8 +373,7 @@ impl Api {
         let mut moved = vec![];
         for m in members.as_array().into_iter().flatten().filter_map(Json::as_str) {
             let new = ws.move_folder(m, &name)?;
-            self.runs().move_prefix(ws.root(), m, &new)?;
-            self.sessions_moved(&ws, m, &new);
+            self.follow_move(&ws, m, &new)?;
             moved.push(new);
         }
         Ok(json!({"group": name, "members": moved}))
