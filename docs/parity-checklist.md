@@ -57,7 +57,7 @@ Feature/Bug de Implementar) va al plugin privado y se marca **(privado)**.
 | [~] | Detalle a página completa: pasos de estado, guardado automático solo de lo tocado, conflicto con disco | 4 | — |
 | [~] | Pestañas del detalle: Resumen, README, Archivos, Git, Cómo deployar, Notas | 4 | — |
 | [ ] | Visor: SQL coloreado, Markdown, imágenes, PDF, draw.io (visor local), Mermaid; offline | 4 | — |
-| [ ] | Alertas desestimables (sin README, número sin prefijo, duplicados, plan incompleto, git) | 4 | — |
+| [x] | Alertas desestimables (sin README, número sin prefijo, duplicados, plan incompleto, git; también activos sin movimiento, sin estado y fecha vencida): por fila o todas por tipo, con huella de lo que la disparó (vuelve si cambia), por raíz en `<config>/alerts_off.json`; el badge no cuenta las desestimadas. Falta «MIGRATION / FIX sin correr en PROD» (necesita un dato nuevo en el preset) y «A _deleted» por carpeta en duplicados | 4 | wb-api alerts::tests |
 | [~] | Proyectos recientes con alias; cambiar de proyecto | 4 | — |
 | [~] | Tema claro / oscuro / sistema; variables de color; i18n en / es | 2 / 4 | — |
 | [ ] | Prioridad, pactada, vencidas, agrupar por período, planificación local con marca **local** | 4 | misc (períodos) |
@@ -96,8 +96,8 @@ Feature/Bug de Implementar) va al plugin privado y se marca **(privado)**.
 
 | | Función | Fase | Golden |
 |---|---|---|---|
-| [ ] | Carpeta configurable (vault de Obsidian), vínculo `wis: [...]`, autor | 3 / 4 | mcp (add_note) |
-| [ ] | Cambiar título sin renombrar archivo; borrar a la papelera del sistema; filtros y orden | 4 | — |
+| [x] | Carpeta configurable (vault de Obsidian: sin `.obsidian/` ni carpetas ocultas, con subcarpetas; el bloque de frontmatter ajeno se conserva al guardar, cambiar título o vincular; lee listas en bloque), vínculo de items (`notes.itemsKey` del preset) y autor | 3 / 4 | mcp (add_note), wb-core notes::tests |
+| [x] | Cambiar título sin renombrar archivo; borrar a la papelera del sistema (crate `trash`; si falla, a `<config>/notes-deleted/`); filtros (texto, item, sin vincular) y orden (fecha, título) | 4 | wb-core notes::tests, wb-api notes::tests |
 
 ## Azure DevOps
 

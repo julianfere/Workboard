@@ -89,7 +89,7 @@ fn parse_value(value: &str) -> Value {
     Value::Text(value.to_string())
 }
 
-fn format_value(value: &Value) -> String {
+pub(crate) fn format_value(value: &Value) -> String {
     match value {
         Value::List(items) => {
             format!("[{}]", items.iter().map(|v| v.replace(',', " ")).collect::<Vec<_>>().join(", "))

@@ -144,7 +144,7 @@ pub(crate) fn rel_posix(root: &Path, p: &Path) -> String {
 }
 
 /// Normaliza `.` y `..` sin tocar el disco (`Path.resolve` sobre rutas que pueden no existir).
-fn normalize(p: &Path) -> PathBuf {
+pub(crate) fn normalize(p: &Path) -> PathBuf {
     let mut out = PathBuf::new();
     for c in p.components() {
         match c {

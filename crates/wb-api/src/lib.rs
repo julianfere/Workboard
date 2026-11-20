@@ -2,9 +2,11 @@
 //! de desarrollo (`wb-devserver`, `POST /api/<cmd>`). Cada comando es un wrapper fino sobre `wb-core`.
 //! Todo se lee en cada llamada: la carpeta de trabajos puede cambiar por fuera (agentes, el usuario).
 
+mod alerts;
 pub mod error;
 mod git;
 pub mod migrate;
+mod notes;
 mod plugins;
 mod sessions;
 pub mod settings;
@@ -297,6 +299,8 @@ impl Api {
                 .or_else(|| self.plugin_command(cmd, &a))
                 .or_else(|| self.stats_command(cmd, &a))
                 .or_else(|| self.git_command(cmd, &a))
+                .or_else(|| self.alerts_command(cmd, &a))
+                .or_else(|| self.notes_command(cmd, &a))
                 .unwrap_or_else(|| Err(ApiError::new("error.unknownCommand", &[("name", cmd)]))),
         }
     }
