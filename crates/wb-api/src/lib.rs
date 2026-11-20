@@ -167,7 +167,38 @@ impl Api {
             }
             "forget_recent" => {
                 let mut s = self.settings();
-                s.recents.retain(|r| r != a.str("path").unwrap_or_default());
+                s.forget_recent(a.str("path")?);
+                to_json(self.save_settings(s)?)
+            }
+            "restore_recent" => {
+                let mut s = self.settings();
+                s.restore_recent(a.str("path")?, usize::try_from(a.int("pos")?).unwrap_or(0));
+                to_json(self.save_settings(s)?)
+            }
+            "recent_folders" => {
+                let s = self.settings();
+                let list: Vec<Json> = s
+                    .recents
+                    .iter()
+                    .map(|r| {
+                        json!({
+                            "path": r,
+                            "name": s.display_name(r),
+                            "alias": s.alias_of(r),
+                            "exists": Path::new(r).is_dir(),
+                            "current": s.root.as_deref().is_some_and(|x| x.eq_ignore_ascii_case(r)),
+                        })
+                    })
+                    .collect();
+                Ok(Json::Array(list))
+            }
+            "set_alias" => {
+                let path = a.str("path")?;
+                let path =
+                    dunce::canonicalize(path).map_or_else(|_| path.to_string(), |p| p.display().to_string());
+                let mut s = self.settings();
+                s.set_alias(&path, a.opt_str("name").unwrap_or_default())
+                    .map_err(|max| ApiError::new("projects.aliasTooLong", &[("max", &max.to_string())]))?;
                 to_json(self.save_settings(s)?)
             }
 
@@ -255,6 +286,14 @@ impl Api {
                     None,
                 )?;
                 to_json(marks)
+            }
+            "open_in_editor" => {
+                let ws = self.workspace()?;
+                let p = ws.safe_path(a.opt_str("path").unwrap_or(""))?;
+                if !wb_platform::open_in_editor(&p)? {
+                    return Err(ApiError::new("palette.editorNotFound", &[]));
+                }
+                Ok(Json::Null)
             }
             "reveal" | "open_path" => {
                 let ws = self.workspace()?;
@@ -400,6 +439,44 @@ mod tests {
         }
         copy(&src, &base.join("work"));
         (base.join("work"), base)
+    }
+
+    #[test]
+    fn recents_and_aliases() {
+        let (root, base) = fixture_copy("alias");
+        let api = Api::new(base.join("cfg"));
+        api.dispatch("set_settings", &json!({"settings": {"workflow": "classic-es"}})).unwrap();
+        let s = api.dispatch("open_root", &json!({"path": root})).unwrap();
+        let open = s["root"].as_str().unwrap().to_string();
+        let gone = base.join("gone").display().to_string();
+        api.dispatch("restore_recent", &json!({"path": gone, "pos": 5})).unwrap();
+
+        let s = api.dispatch("set_alias", &json!({"path": root, "name": " Mi  proyecto "})).unwrap();
+        assert_eq!(s["aliases"][&open], "Mi proyecto");
+        let list = api.dispatch("recent_folders", &json!({})).unwrap();
+        assert_eq!(list[0]["name"], "Mi proyecto");
+        assert_eq!(list[0]["current"], true);
+        assert_eq!(list[0]["exists"], true);
+        assert_eq!(list[1]["name"], "gone");
+        assert_eq!(list[1]["exists"], false);
+        assert_eq!(list[1]["alias"], Json::Null);
+
+        let err = api.dispatch("set_alias", &json!({"path": root, "name": "x".repeat(61)})).unwrap_err();
+        assert_eq!(err.code, "projects.aliasTooLong");
+        let s = api.dispatch("set_alias", &json!({"path": root, "name": ""})).unwrap();
+        assert!(s["aliases"].as_object().unwrap().is_empty());
+
+        let s = api.dispatch("forget_recent", &json!({"path": open.to_uppercase()})).unwrap();
+        assert_eq!(s["recents"], json!([gone]));
+        let s = api.dispatch("restore_recent", &json!({"path": open, "pos": 0})).unwrap();
+        assert_eq!(s["recents"][0], open.as_str());
+        // Lo guardado sobrevive a otra instancia.
+        let again = Api::new(base.join("cfg"));
+        assert_eq!(
+            again.dispatch("get_settings", &json!({})).unwrap()["recents"].as_array().unwrap().len(),
+            2
+        );
+        std::fs::remove_dir_all(&base).unwrap();
     }
 
     #[test]
