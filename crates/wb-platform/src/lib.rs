@@ -2,6 +2,7 @@
 //! carpetas y URLs, terminar un árbol de procesos, buscar ejecutables, correr scripts y el almacén de
 //! credenciales (`secrets`). El resto del código no usa `cfg(windows)`.
 
+pub mod dpapi;
 pub mod secrets;
 
 use std::ffi::OsString;
@@ -24,6 +25,18 @@ pub fn config_dir() -> PathBuf {
         return PathBuf::from(dir);
     }
     dirs::config_dir().or_else(dirs::home_dir).unwrap_or_else(|| PathBuf::from(".")).join(APP_DIR_NAME)
+}
+
+/// Nombre de la carpeta de configuración de la v1 (la app Python).
+pub const V1_APP_DIR_NAME: &str = "Workboard";
+
+/// Carpeta de configuración de la v1 (`%APPDATA%\Workboard`), de donde migra `workboard migrate-v1`.
+/// `None` fuera de Windows: la v1 solo corría ahí. No mira `WORKBOARD_CONFIG_DIR` (esa es la de la v2).
+pub fn v1_config_dir() -> Option<PathBuf> {
+    if !dpapi::SUPPORTED {
+        return None;
+    }
+    dirs::config_dir().map(|d| d.join(V1_APP_DIR_NAME))
 }
 
 /// Comando sin ventana de consola en Windows (las apps de escritorio no deben hacer parpadear una) y sin

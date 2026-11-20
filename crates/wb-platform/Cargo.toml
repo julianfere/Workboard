@@ -15,6 +15,9 @@ workspace = true
 # Almacén de credenciales del sistema (secretos de los trackers).
 [target.'cfg(windows)'.dependencies]
 keyring = { version = "3.6.3", features = ["windows-native"] }
+# DPAPI (solo para leer los PATs de la v1 al migrar): wrapper seguro, sin `unsafe` en este crate.
+windows-dpapi = "0.2"
+base64 = "0.23.1"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 keyring = { version = "3.6.3", features = ["apple-native"] }
