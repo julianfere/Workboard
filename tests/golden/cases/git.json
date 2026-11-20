@@ -820,7 +820,7 @@
         "flags": [
          {
           "kind": "otherwi",
-          "text": "menciona otro WI (#888888)"
+          "text": "menciona otro trabajo (#888888)"
          }
         ],
         "on": false
@@ -847,7 +847,7 @@
       "alreadyCp": 0
      },
      {
-      "name": "origin/development (commits que mencionan el WI)",
+      "name": "origin/development (commits que mencionan el trabajo)",
       "wis": [
        "111111",
        "222222",
@@ -867,7 +867,7 @@
          "b5e89ec957deaec76f908b6cdfa195fdc3ebab0c"
         ],
         "subject": "333333 ajuste de config",
-        "branch": "origin/development (commits que mencionan el WI)",
+        "branch": "origin/development (commits que mencionan el trabajo)",
         "wis": [
          "333333"
         ],
@@ -884,7 +884,7 @@
          "9a5dbe2c23f67cfe8677feccfc4cef3bd34ebf47"
         ],
         "subject": "otro trabajo en development",
-        "branch": "origin/development (commits que mencionan el WI)",
+        "branch": "origin/development (commits que mencionan el trabajo)",
         "wis": [
          "444444"
         ],
@@ -901,7 +901,7 @@
          "235f74491d0cec3d5baf31e5c0e61b0c4160370c"
         ],
         "subject": "999999 ff",
-        "branch": "origin/development (commits que mencionan el WI)",
+        "branch": "origin/development (commits que mencionan el trabajo)",
         "wis": [
          "999999"
         ],
@@ -1103,7 +1103,7 @@
       "flags": [
        {
         "kind": "otherwi",
-        "text": "menciona otro WI (#888888)"
+        "text": "menciona otro trabajo (#888888)"
        }
       ],
       "on": false
@@ -1134,7 +1134,7 @@
        "b5e89ec957deaec76f908b6cdfa195fdc3ebab0c"
       ],
       "subject": "333333 ajuste de config",
-      "branch": "origin/development (commits que mencionan el WI)",
+      "branch": "origin/development (commits que mencionan el trabajo)",
       "wis": [
        "333333"
       ],
@@ -1151,7 +1151,7 @@
        "9a5dbe2c23f67cfe8677feccfc4cef3bd34ebf47"
       ],
       "subject": "otro trabajo en development",
-      "branch": "origin/development (commits que mencionan el WI)",
+      "branch": "origin/development (commits que mencionan el trabajo)",
       "wis": [
        "444444"
       ],
@@ -1168,7 +1168,7 @@
        "235f74491d0cec3d5baf31e5c0e61b0c4160370c"
       ],
       "subject": "999999 ff",
-      "branch": "origin/development (commits que mencionan el WI)",
+      "branch": "origin/development (commits que mencionan el trabajo)",
       "wis": [
        "999999"
       ],
@@ -1501,7 +1501,7 @@
         "flags": [
          {
           "kind": "otherwi",
-          "text": "menciona otro WI (#888888)"
+          "text": "menciona otro trabajo (#888888)"
          }
         ],
         "on": false
@@ -1528,7 +1528,7 @@
       "alreadyCp": 0
      },
      {
-      "name": "origin/qa (commits que mencionan el WI)",
+      "name": "origin/qa (commits que mencionan el trabajo)",
       "wis": [
        "222222",
        "666666"
@@ -1544,7 +1544,7 @@
          "a8fbc136593e7a1cd0c485e7ecda69104932edd0"
         ],
         "subject": "666666 reportes (squash)",
-        "branch": "origin/qa (commits que mencionan el WI)",
+        "branch": "origin/qa (commits que mencionan el trabajo)",
         "wis": [
          "666666"
         ],
@@ -1753,7 +1753,7 @@
       "flags": [
        {
         "kind": "otherwi",
-        "text": "menciona otro WI (#888888)"
+        "text": "menciona otro trabajo (#888888)"
        }
       ],
       "on": false
@@ -1784,7 +1784,7 @@
        "a8fbc136593e7a1cd0c485e7ecda69104932edd0"
       ],
       "subject": "666666 reportes (squash)",
-      "branch": "origin/qa (commits que mencionan el WI)",
+      "branch": "origin/qa (commits que mencionan el trabajo)",
       "wis": [
        "666666"
       ],
@@ -1886,7 +1886,7 @@
       "alreadyCp": 0
      },
      {
-      "name": "origin/development (commits que mencionan el WI)",
+      "name": "origin/development (commits que mencionan el trabajo)",
       "wis": [
        "444444"
       ],
@@ -1901,7 +1901,7 @@
          "9a5dbe2c23f67cfe8677feccfc4cef3bd34ebf47"
         ],
         "subject": "otro trabajo en development",
-        "branch": "origin/development (commits que mencionan el WI)",
+        "branch": "origin/development (commits que mencionan el trabajo)",
         "wis": [
          "444444"
         ],
@@ -1983,7 +1983,7 @@
        "9a5dbe2c23f67cfe8677feccfc4cef3bd34ebf47"
       ],
       "subject": "otro trabajo en development",
-      "branch": "origin/development (commits que mencionan el WI)",
+      "branch": "origin/development (commits que mencionan el trabajo)",
       "wis": [
        "444444"
       ],
@@ -2037,7 +2037,7 @@
         "flags": [
          {
           "kind": "otherwi",
-          "text": "menciona otro WI (#111111)"
+          "text": "menciona otro trabajo (#111111)"
          },
          {
           "kind": "shared",
@@ -2063,7 +2063,7 @@
         "flags": [
          {
           "kind": "otherwi",
-          "text": "menciona otro WI (#111111)"
+          "text": "menciona otro trabajo (#111111)"
          },
          {
           "kind": "shared",
@@ -2113,7 +2113,7 @@
       "flags": [
        {
         "kind": "otherwi",
-        "text": "menciona otro WI (#111111)"
+        "text": "menciona otro trabajo (#111111)"
        },
        {
         "kind": "shared",
@@ -2139,7 +2139,7 @@
       "flags": [
        {
         "kind": "otherwi",
-        "text": "menciona otro WI (#111111)"
+        "text": "menciona otro trabajo (#111111)"
        },
        {
         "kind": "shared",
@@ -2185,7 +2185,7 @@
     "webUrl": null,
     "branches": [
      {
-      "name": "origin/development (commits que mencionan el WI)",
+      "name": "origin/development (commits que mencionan el trabajo)",
       "wis": [
        "333333"
       ],
@@ -2200,7 +2200,7 @@
          "b5e89ec957deaec76f908b6cdfa195fdc3ebab0c"
         ],
         "subject": "333333 ajuste de config",
-        "branch": "origin/development (commits que mencionan el WI)",
+        "branch": "origin/development (commits que mencionan el trabajo)",
         "wis": [
          "333333"
         ],
@@ -2225,7 +2225,7 @@
        "b5e89ec957deaec76f908b6cdfa195fdc3ebab0c"
       ],
       "subject": "333333 ajuste de config",
-      "branch": "origin/development (commits que mencionan el WI)",
+      "branch": "origin/development (commits que mencionan el trabajo)",
       "wis": [
        "333333"
       ],

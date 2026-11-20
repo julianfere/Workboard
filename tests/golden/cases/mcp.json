@@ -773,7 +773,7 @@
      "wi": "000000"
     },
     "error": "ToolError",
-    "message": "No encontré el WI '000000'. Buscalo con workboard_list_wis"
+    "message": "No encontré el trabajo '000000'. Buscalo con workboard_list_wis"
    },
    {
     "tool": "workboard_set_estado",
@@ -1029,7 +1029,7 @@
      "estado": "qa"
     },
     "error": "ToolError",
-    "message": "wi222222-333333-pagos no es de esta sesión. WI de la sesión: grp-checkout, wi111111-login-con-sso"
+    "message": "wi222222-333333-pagos no es de esta sesión. Trabajos de la sesión: grp-checkout, wi111111-login-con-sso"
    },
    {
     "tool": "workboard_set_estado",
@@ -1239,7 +1239,7 @@
      "ambiente": "QA"
     },
     "error": "ToolError",
-    "message": "No encontré el WI '111111-login'. Buscalo con workboard_list_wis"
+    "message": "No encontré el trabajo '111111-login'. Buscalo con workboard_list_wis"
    },
    {
     "tool": "workboard_marcar_ejecutado",

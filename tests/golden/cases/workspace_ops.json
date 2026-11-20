@@ -2258,7 +2258,7 @@
     "grp-x"
    ],
    "error": "ValueError",
-   "message": "Un WI no puede empezar con grp-",
+   "message": "Un trabajo no puede empezar con grp-",
    "tree": [
     "suelto.md",
     ".config/x.txt",
@@ -2301,7 +2301,7 @@
     "checkout"
    ],
    "error": "ValueError",
-   "message": "Un grupo tiene que empezar con grp- y un WI no",
+   "message": "Un grupo tiene que empezar con grp- y un trabajo no",
    "tree": [
     "suelto.md",
     ".config/x.txt",
