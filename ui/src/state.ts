@@ -24,9 +24,6 @@ export const S = {
   fieldErrors: {} as Record<string, string>,
   /** Lo que escribió el usuario en un campo que no pasó la validación (no se pierde al re-renderizar). */
   fieldDrafts: {} as Record<string, string>,
-  /** Filtros de la grilla. */
-  filter: { text: "", status: "", hideClosed: true, groupBy: "none" as "none" | "status" | "type" },
-  sort: { key: "last", dir: -1 },
   inbox: [] as Task[],
   notes: [] as Note[],
   note: null as Note | null,

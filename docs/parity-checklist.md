@@ -50,17 +50,17 @@ Feature/Bug de Implementar) va al plugin privado y se marca **(privado)**.
 | [~] | Vistas: Hoy, Trabajos, Pendientes, Horas, Alertas, Notas, Métricas, Tools, Ajustes | 4 | — |
 | [~] | Paleta `Ctrl+K` (buscar trabajos, tareas, archivos; comandos; acciones del trabajo de arriba) | 4 | — |
 | [ ] | Atajos (`Ctrl+J`, `/`, `1`…`6`, `Ctrl+S`, `Esc`, `F5`, `Supr`, `Alt+1`…`9`) | 4 | — |
-| [ ] | Selección múltiple, barra y menú contextual en bulk; deshacer de 12 s | 4 | — |
-| [ ] | Grilla: columnas configurables, orden, ancho, agrupar hasta 3 niveles, filtros con chips, densidad | 4 | — |
-| [ ] | Vistas guardadas (pestañas) con Guardar / Descartar | 4 | — |
-| [ ] | Exportar CSV (`;`, BOM) | 4 | — |
+| [x] | Selección múltiple, barra y menú contextual en bulk; deshacer de 12 s | 4 | — |
+| [x] | Grilla: columnas configurables, orden, ancho, agrupar hasta 3 niveles, filtros con chips, densidad | 4 | — |
+| [x] | Vistas guardadas (pestañas) con Guardar / Descartar | 4 | — |
+| [x] | Exportar CSV (`;`, BOM) | 4 | — |
 | [~] | Detalle a página completa: pasos de estado, guardado automático solo de lo tocado, conflicto con disco | 4 | — |
 | [~] | Pestañas del detalle: Resumen, README, Archivos, Git, Cómo deployar, Notas | 4 | — |
 | [ ] | Visor: SQL coloreado, Markdown, imágenes, PDF, draw.io (visor local), Mermaid; offline | 4 | — |
 | [x] | Alertas desestimables (sin README, número sin prefijo, duplicados, plan incompleto, git; también activos sin movimiento, sin estado y fecha vencida): por fila o todas por tipo, con huella de lo que la disparó (vuelve si cambia), por raíz en `<config>/alerts_off.json`; el badge no cuenta las desestimadas. Falta «MIGRATION / FIX sin correr en PROD» (necesita un dato nuevo en el preset) y «A _deleted» por carpeta en duplicados | 4 | wb-api alerts::tests |
 | [~] | Proyectos recientes con alias; cambiar de proyecto | 4 | — |
 | [~] | Tema claro / oscuro / sistema; variables de color; i18n en / es | 2 / 4 | — |
-| [ ] | Prioridad, pactada, vencidas, agrupar por período, planificación local con marca **local** | 4 | misc (períodos) |
+| [x] | Prioridad, pactada, vencidas, agrupar por período, planificación local con marca **local** | 4 | misc (períodos) |
 
 ## Git
 

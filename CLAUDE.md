@@ -104,6 +104,9 @@ config real.
   cancela los clics en checkboxes. Por feature: `sessions.ts` + `terminal.ts` (xterm), `git.ts` (pestaña Git,
   promoción, alertas, sondea `git_signature` cada 3 s), `views/tracker.ts`, `views/hours.ts`, `views/metrics.ts`,
   `views/tools.ts` (datos compartidos en `stats.ts`; horas y fecha pactadas: las del README y, si faltan, las del tracker) y `reflect.ts`.
+  Trabajos: `views/items.ts` (render, menús, selección y lote con deshacer) + `views/grid.ts` (columnas, filtros, agrupación,
+  vistas guardadas; se guardan con `ui_prefs`/`ui_pref_set` en `<config>/ui_prefs.json`, clave `grid`) y `planning.ts`
+  (prioridad, pactada, período, horas y la marca «local» cuando el README pisa al tracker).
 - `tests/golden/` — comportamiento de la v1 capturado como JSON (ver su README y `KNOWN_ISSUES.md`).
 - `spike/` — experimentos descartables (terminal, MCP con `rmcp`, hook). No son parte del workspace.
 - `_v1/` — copia local de la v1 (ignorada por git, no se publica).

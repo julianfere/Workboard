@@ -15,6 +15,7 @@ import { S, effectiveStatus, inSession, itemByName, metaList, metaText, stateDef
 import { termSize } from "../terminal";
 import type { ApiError, FileEntry, Item } from "../types";
 import { statusChip } from "./items";
+import { localTag, overridesTracker } from "../planning";
 import { trackerCard } from "./tracker";
 import { itemIds, openPromotion, renderGitTab } from "../git";
 
@@ -34,9 +35,9 @@ function fieldError(key: string): string {
   return S.fieldErrors[key] ? `<div class="field-error">${esc(S.fieldErrors[key])}</div>` : "";
 }
 
-function textField(key: string, labelText: string, type = "text", placeholder = ""): string {
+function textField(key: string, labelText: string, type = "text", placeholder = "", tag = ""): string {
   const value = key in S.fieldDrafts ? S.fieldDrafts[key] : metaText(item(), key);
-  return `<label class="field">${esc(labelText)}<input type="${type}" value="${esc(value)}" data-change="field" data-key="${esc(key)}" placeholder="${esc(placeholder)}"${S.fieldErrors[key] ? ' aria-invalid="true"' : ""}>${fieldError(key)}</label>`;
+  return `<label class="field"><span>${esc(labelText)}${tag}</span><input type="${type}" value="${esc(value)}" data-change="field" data-key="${esc(key)}" placeholder="${esc(placeholder)}"${S.fieldErrors[key] ? ' aria-invalid="true"' : ""}>${fieldError(key)}</label>`;
 }
 
 function fieldsCard(it: Item): string {
@@ -55,9 +56,9 @@ function fieldsCard(it: Item): string {
     ${textField(f.branch, t("detail.branch"))}
     ${textField(f.title, t("items.title"), "text", it.title)}
     <h3>${esc(t("detail.planning"))}</h3>
-    ${textField(f.due, t("detail.due"), "date")}
-    ${textField(f.period, t("detail.period"), "text", t("detail.periodHint"))}
-    ${textField(f.hours, t("detail.hours"), "text")}
+    ${textField(f.due, t("detail.due"), "date", "", overridesTracker(it, "due") ? localTag() : "")}
+    ${textField(f.period, t("detail.period"), "text", t("detail.periodHint"), overridesTracker(it, "period") ? localTag() : "")}
+    ${textField(f.hours, t("detail.hours"), "text", "", overridesTracker(it, "hours") ? localTag() : "")}
     ${f.extra.map((x) => textField(x.key, x.key)).join("")}
     ${textField(f.itemIds, t("detail.ids"), "text", it.ids.join(", "))}
   </section>`;

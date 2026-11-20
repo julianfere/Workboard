@@ -1,6 +1,7 @@
 // Helpers de DOM y formato, sin dependencias.
 
 import { lang, t } from "./i18n";
+import { ico } from "./icons";
 
 export const $ = <T extends HTMLElement = HTMLElement>(sel: string, root: ParentNode = document) =>
   root.querySelector(sel) as T | null;
@@ -48,24 +49,30 @@ export function daysUntil(iso: string): number {
   return Math.round((target - today) / 86400000);
 }
 
-let toastTimer = 0;
+const TOAST_MAX = 4;
 
-/** Aviso abajo a la derecha. `action` = botón opcional (Deshacer…). */
+/** Aviso abajo a la derecha. `action` = botón opcional (Deshacer…): ese aviso dura 12 s y otro aviso no lo
+ *  pisa (se apilan); los avisos simples se reemplazan entre sí. */
 export function toast(text: string, action?: { label: string; run: () => void }, kind: "info" | "error" = "info"): void {
-  let el = $("#toast");
-  if (!el) {
-    el = document.createElement("div");
-    el.id = "toast";
-    el.setAttribute("role", "status");
-    document.body.append(el);
+  let box = $("#toasts");
+  if (!box) {
+    box = document.createElement("div");
+    box.id = "toasts";
+    box.setAttribute("role", "status");
+    document.body.append(box);
   }
-  el.className = `toast ${kind}`;
-  el.innerHTML = `<span>${esc(text)}</span>${action ? `<button class="link" data-toast-action>${esc(action.label)}</button>` : ""}`;
-  el.hidden = false;
+  for (const old of [...box.children]) if (!old.classList.contains("has-action")) old.remove();
+  const el = document.createElement("div");
+  el.className = `toast ${kind}${action ? " has-action" : ""}`;
+  el.innerHTML = `<span>${esc(text)}</span>${action ? `<button class="link" data-toast-action>${esc(action.label)}</button><button class="toast-x" aria-label="${esc(t("common.close"))}">${ico("x")}</button>` : ""}`;
+  const close = () => el.remove();
   const btn = $("[data-toast-action]", el);
-  if (btn && action) btn.onclick = () => { el!.hidden = true; action.run(); };
-  clearTimeout(toastTimer);
-  toastTimer = window.setTimeout(() => (el!.hidden = true), action ? 12000 : 4000);
+  if (btn && action) btn.onclick = () => { close(); action.run(); };
+  const x = $(".toast-x", el);
+  if (x) x.onclick = close;
+  box.append(el);
+  while (box.children.length > TOAST_MAX) box.firstElementChild!.remove();
+  window.setTimeout(close, action ? 12000 : kind === "error" ? 6000 : 4000);
 }
 
 /** Diálogo de confirmación propio (`Enter` acepta, `Esc` cancela). */
