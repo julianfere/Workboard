@@ -15,16 +15,14 @@ import { loadNotes } from "./notes";
 import { trackerSettingsCard } from "./tracker";
 import { gitSettingsCard } from "../git";
 import { pluginsSettingsCard } from "../plugins";
+import { loadRecents, recentRows } from "../projects";
 
 function options(values: [string, string][], selected: string): string {
   return values.map(([v, text]) => `<option value="${esc(v)}"${v === selected ? " selected" : ""}>${esc(text)}</option>`).join("");
 }
 
 function projectPicker(): string {
-  const recents = (S.settings?.recents ?? [])
-    .map((r) => `<li class="link-row" data-action="open-recent" data-path="${esc(r)}">${ico("folder")}<span class="grow">${esc(r.split(/[\\/]/).pop())} <span class="muted">${esc(r)}</span></span>
-      <button class="icon-btn" data-action="forget-recent" data-path="${esc(r)}" title="${esc(t("project.forget"))}">${ico("x")}</button></li>`)
-    .join("");
+  const recents = S.settings?.recents.length ? recentRows(false) : "";
   return `<section class="card project"><h2>${esc(t("project.open"))}</h2><p class="muted">${esc(t("project.explain"))}</p>
     <div class="add-row"><input id="root-path" placeholder="${esc(t("project.pathHint"))}" data-enter="open-path">
       ${inTauri ? `<button class="btn" data-action="browse-root">${ico("folder")}${esc(t("project.browse"))}</button>` : ""}
@@ -142,6 +140,7 @@ export async function openRoot(path: string): Promise<void> {
     S.loadError = errorText(err);
     render();
   }
+  await loadRecents();
 }
 
 registerView("settings", renderSettings);
@@ -158,21 +157,6 @@ onAction("open-path", () => {
 onAction("browse-root", async () => {
   const p = await pickFolder();
   if (p) await openRoot(p);
-});
-onAction("open-recent", (el, ev) => {
-  if ((ev.target as HTMLElement).closest('[data-action="forget-recent"]')) return;
-  return openRoot(el.dataset.path!);
-});
-onAction("forget-recent", async (el, ev) => {
-  ev.stopPropagation();
-  S.settings = await api.forgetRecent(el.dataset.path!);
-  render();
-});
-onAction("project-menu", () => {
-  S.view = "settings";
-  S.detail = null;
-  render();
-  document.querySelector<HTMLInputElement>("#root-path")?.focus();
 });
 onChange("set-agent-default", (el) => saveAgents({ default: (el as HTMLSelectElement).value }));
 onChange("set-agent-custom", (el) => {

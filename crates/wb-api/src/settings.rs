@@ -1,5 +1,5 @@
 //! Preferencias de la app (`<config>/settings.json`): idioma, tema, preset de flujo, carpeta abierta,
-//! recientes y carpeta de notas. El MCP lee el mismo archivo. Un archivo que no existe o no se puede leer
+//! recientes (con su nombre para mostrar) y carpeta de notas. El MCP lee el mismo archivo. Un archivo que no existe o no se puede leer
 //! equivale a los valores por defecto; la escritura es atómica.
 
 use std::collections::BTreeMap;
@@ -8,6 +8,8 @@ use std::path::{Path, PathBuf};
 use serde::{Deserialize, Serialize};
 
 pub const MAX_RECENTS: usize = 12;
+/// Largo máximo de un nombre para mostrar (como la v1).
+pub const MAX_ALIAS_LEN: usize = 60;
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -30,6 +32,9 @@ pub struct Settings {
     pub root: Option<String>,
     /// Carpetas abiertas antes, la más reciente primero.
     pub recents: Vec<String>,
+    /// Nombre para mostrar de una carpeta de trabajos (clave: la ruta como en `recents`; se compara sin
+    /// distinguir mayúsculas). Solo en la app: la carpeta en disco no cambia.
+    pub aliases: BTreeMap<String, String>,
     /// Carpeta de notas (`None` = `<config>/notes`).
     pub notes_folder: Option<String>,
     /// Agentes de las sesiones: el de por defecto, el comando propio y prefijos de planificación.
@@ -56,6 +61,7 @@ impl Default for Settings {
             workflow: "default".into(),
             root: None,
             recents: vec![],
+            aliases: BTreeMap::new(),
             notes_folder: None,
             agents: Default::default(),
             git: Default::default(),
@@ -70,6 +76,58 @@ impl Settings {
         self.recents.insert(0, root.to_string());
         self.recents.truncate(MAX_RECENTS);
         self.root = Some(root.to_string());
+    }
+
+    /// Saca `path` de los recientes; devuelve en qué posición estaba (para deshacer).
+    pub fn forget_recent(&mut self, path: &str) -> Option<usize> {
+        let pos = self.recents.iter().position(|r| r.eq_ignore_ascii_case(path))?;
+        self.recents.remove(pos);
+        Some(pos)
+    }
+
+    /// Vuelve a poner `path` en los recientes en la posición `pos` (deshacer «Quitar de recientes»).
+    pub fn restore_recent(&mut self, path: &str, pos: usize) {
+        self.recents.retain(|r| !r.eq_ignore_ascii_case(path));
+        self.recents.insert(pos.min(self.recents.len()), path.to_string());
+        self.recents.truncate(MAX_RECENTS);
+    }
+
+    /// Clave de `path` en `aliases` (la que ya existe, sin distinguir mayúsculas).
+    fn alias_key(&self, path: &str) -> Option<&String> {
+        self.aliases.keys().find(|k| k.eq_ignore_ascii_case(path))
+    }
+
+    /// Nombre para mostrar de una carpeta, si tiene uno.
+    pub fn alias_of(&self, path: &str) -> Option<&str> {
+        self.alias_key(path).and_then(|k| self.aliases.get(k)).map(String::as_str)
+    }
+
+    /// Pone (o con un nombre vacío, quita) el nombre para mostrar de `path`. Los espacios se normalizan.
+    /// `Err(máximo)` si el nombre es demasiado largo.
+    pub fn set_alias(&mut self, path: &str, name: &str) -> Result<(), usize> {
+        let name = name.split_whitespace().collect::<Vec<_>>().join(" ");
+        if name.chars().count() > MAX_ALIAS_LEN {
+            return Err(MAX_ALIAS_LEN);
+        }
+        if let Some(k) = self.alias_key(path).cloned() {
+            self.aliases.remove(&k);
+        }
+        if !name.is_empty() {
+            self.aliases.insert(path.to_string(), name);
+        }
+        Ok(())
+    }
+
+    /// Nombre para mostrar: el alias o el nombre de la carpeta.
+    pub fn display_name(&self, path: &str) -> String {
+        self.alias_of(path).map_or_else(
+            || {
+                Path::new(path)
+                    .file_name()
+                    .map_or_else(|| path.to_string(), |n| n.to_string_lossy().into_owned())
+            },
+            String::from,
+        )
     }
 }
 
@@ -131,5 +189,54 @@ mod tests {
         assert_eq!(load(&path), s);
         assert!(!path.with_extension("json.tmp").exists());
         std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn old_settings_without_aliases_still_load() {
+        let dir = temp_dir("old");
+        let path = path_in(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(&path, r#"{"lang": "es", "theme": "dark", "workflow": "classic-es", "root": "C:/a", "recents": ["C:/a"]}"#)
+            .unwrap();
+        let s = load(&path);
+        assert_eq!(s.recents, ["C:/a"]);
+        assert_eq!(s.theme, Theme::Dark);
+        assert!(s.aliases.is_empty());
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn aliases_and_display_names() {
+        let mut s = Settings::default();
+        assert_eq!(s.display_name("C:/x/_work"), "_work");
+        s.set_alias("C:/x/_work", "  Contratos   (back) ").unwrap();
+        assert_eq!(s.alias_of("c:/X/_WORK"), Some("Contratos (back)"));
+        assert_eq!(s.display_name("C:/x/_work"), "Contratos (back)");
+        // Otra grafía de la misma carpeta reemplaza, no duplica.
+        s.set_alias("c:/x/_work", "Otro").unwrap();
+        assert_eq!(s.aliases.len(), 1);
+        assert_eq!(s.alias_of("C:/x/_work"), Some("Otro"));
+        assert_eq!(s.set_alias("C:/x/_work", &"a".repeat(61)), Err(MAX_ALIAS_LEN));
+        s.set_alias("C:/x/_work", "").unwrap();
+        assert!(s.aliases.is_empty());
+        // Ida y vuelta por JSON.
+        s.set_alias("C:/y", "Y").unwrap();
+        let back: Settings = serde_json::from_str(&serde_json::to_string(&s).unwrap()).unwrap();
+        assert_eq!(back, s);
+    }
+
+    #[test]
+    fn forget_and_restore_recent() {
+        let mut s = Settings::default();
+        s.open_root("C:/a");
+        s.open_root("C:/b");
+        s.open_root("C:/c");
+        assert_eq!(s.forget_recent("c:/B"), Some(1));
+        assert_eq!(s.recents, ["C:/c", "C:/a"]);
+        assert_eq!(s.forget_recent("C:/zzz"), None);
+        s.restore_recent("C:/b", 1);
+        assert_eq!(s.recents, ["C:/c", "C:/b", "C:/a"]);
+        s.restore_recent("C:/z", 99);
+        assert_eq!(s.recents.last().unwrap(), "C:/z");
     }
 }

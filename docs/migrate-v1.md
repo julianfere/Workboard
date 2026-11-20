@@ -41,6 +41,7 @@ v1 = `%APPDATA%\Workboard`, v2 = the destination. Keys are those of the v1 `conf
 |---|---|---|
 | `root` | `settings.json` → `root` | Canonical path. |
 | `recents` | `settings.json` → `recents` | Added after the existing ones (no duplicates, case-insensitive, up to 12); the open folder goes first. |
+| `aliases` (key: lower-case path) | `settings.json` → `aliases[<path>]` | Folder display names. The key goes to the path as written in the recents; an existing different name is kept unless `--force`. |
 | — (the v1 was Spanish only) | `settings.json` → `lang` = `es` | Only if not set. |
 | `prefs.theme` (`light`/`dark`) | `settings.json` → `theme` | `system` is the v2 default, nothing to do. |
 | — | `settings.json` → `workflow` = `--preset` | The v2 default (`default`) counts as not chosen. The preset must resolve (included or from an enabled plugin). |
@@ -71,7 +72,6 @@ v1 = `%APPDATA%\Workboard`, v2 = the destination. Keys are those of the v1 `conf
 | `ctx/`, `claude/` | Per-session context and Claude Code settings: rebuilt when a session starts or resumes. |
 | `reflect/`, `review/` | Reflect and Review packs already generated; the sessions that used them keep their transcripts. |
 | `notas-borradas/`, `tools/_removed/` | Deleted notes and removed tools. |
-| `aliases` | Folder display names: the v2 has no aliases. |
 | `prefs` other than `theme` | View state (filters, columns, sizes, active view, pinned sessions): the v2 keeps it in the window. |
 | `ado.rm` | ReleaseManual settings. In the v2 ReleaseManual belongs to a plugin, with its own data (`plugin-data/<id>.json`) and its own write token; set it up from the plugin. |
 

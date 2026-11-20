@@ -30,7 +30,7 @@ Feature/Bug de Implementar) va al plugin privado y se marca **(privado)**.
 | [x] | Nuevo item con o sin WI (crea carpeta + README; con id trae título, tipo, descripción y criterios del tracker) | 3 / 7 | workspace_ops (create_folder), wb-api/tests/tracker |
 | [x] | Plan incompleto (`plan_gaps`) | 3 | misc |
 | [x] | Bandeja de tareas sin WI (`inbox.md` en la config) | 3 | tasks (mismas funciones) |
-| [~] | Watcher: refresco en vivo del filesystem y de `.git` de los repos | 4 | — |
+| [~] | Watcher: refresco en vivo del filesystem y de `.git` de los repos. Un cambio en disco (o `F5`) relee items, detalle, bandeja, notas (salvo una en edición) y sesiones; las terminadas se cierran solas con Deshacer (`refreshAll`). Falta el aviso del detalle con cambios sin guardar | 4 | — |
 
 ## MCP `workboard`
 
@@ -48,7 +48,7 @@ Feature/Bug de Implementar) va al plugin privado y se marca **(privado)**.
 | | Función | Fase | Golden |
 |---|---|---|---|
 | [~] | Vistas: Hoy, Trabajos, Pendientes, Horas, Alertas, Notas, Métricas, Tools, Ajustes. **Hoy** completo: saludo y fecha, tarjeta del período (días que quedan, avance, horas pactadas y trabajadas, cerrados N de M), «Necesita tu atención» (sesiones que te necesitan, también de otros proyectos; vencidas; alertas de git, sin movimiento y plan incompleto) con acción y Desestimar (el mismo de Alertas), En curso con horas trabajadas vs pactadas, fechas pactadas, próximas tareas de lo en curso o pactado para el período. **Pendientes** completo: filtros de estado, sesión, ambiente corrido y fecha pactada (guardados en `ui_prefs`, clave `tasks`), «Mostrar hechas», bloques por período pactado con sesión abierta y «N de M abiertas»; editar, borrar (con deshacer) y «Mover…» tareas de items y bandeja (`move_task`). Contadores del menú en Hoy (atención), Pendientes (abiertas + bandeja) y Alertas | 4 | wb-api tests::move_task_between_items_and_inbox |
-| [~] | Paleta `Ctrl+K` (buscar trabajos, tareas, archivos; comandos; acciones del trabajo de arriba) | 4 | — |
+| [x] | Paleta `Ctrl+K` (buscar trabajos, tareas, archivos; comandos; acciones del trabajo de arriba): varias palabras (`matchesText`), Recientes sin texto, secciones con encabezado y pie ↑↓ / Enter. Acciones: siguiente estado (el que sigue en el preset sin cancelado/desconocido: en `classic-es`, En curso → Diagnóstico, la v1 saltaba a Codeado), sesión, tarea, pactada, Promover, VS Code (`open_in_editor`), carpeta. ReleaseManual va al plugin; el comando de modo discreto, con esa feature | 4 | — |
 | [x] | Atajos (`Ctrl+J`, `/`, `1`…`6`, `Ctrl+S`, `Esc`, `F5`, `Supr`, `Alt+1`…`9`; también `Ctrl+A` en la grilla) | 4 | — |
 | [x] | Selección múltiple, barra y menú contextual en bulk; deshacer de 12 s | 4 | — |
 | [x] | Grilla: columnas configurables, orden, ancho, agrupar hasta 3 niveles, filtros con chips, densidad | 4 | — |
@@ -58,8 +58,8 @@ Feature/Bug de Implementar) va al plugin privado y se marca **(privado)**.
 | [x] | Pestañas del detalle: Resumen («Qué falta» arriba, «Scripts para correr» con marcas), README, Archivos (en un grupo también los de sus items con su dueño, «nuevo» / «modificado», categorías plegables recordadas, «Corrido en…» en el visor), Git, Cómo deployar (con ayuda según `deployKeywords`), Notas (crear, vincular, desvincular, «También en»), Versiones; contadores en las pestañas | 4 | wb-api detail::tests |
 | [x] | Visor: SQL coloreado, Markdown, imágenes, PDF, draw.io (visor local), Mermaid; offline | 4 | viewer_reads (límites y rutas) |
 | [x] | Alertas desestimables (sin README, número sin prefijo, duplicados, plan incompleto, git; también activos sin movimiento, sin estado y fecha vencida): por fila o todas por tipo, con huella de lo que la disparó (vuelve si cambia), por raíz en `<config>/alerts_off.json`; el badge no cuenta las desestimadas. Falta «MIGRATION / FIX sin correr en PROD» (necesita un dato nuevo en el preset) y «A _deleted» por carpeta en duplicados | 4 | wb-api alerts::tests |
-| [~] | Proyectos recientes con alias; cambiar de proyecto | 4 | — |
-| [~] | Tema claro / oscuro / sistema; variables de color; i18n en / es | 2 / 4 | — |
+| [x] | Proyectos recientes con alias (`settings.json` → `aliases`, `set_alias`; se migran de la v1); menú del nombre del proyecto con recientes («(no existe)», el actual resaltado, renombrar, quitar con Deshacer) y «Abrir carpeta…»; título de la ventana nativa con `setTitle`; `workboard <carpeta>` la abre. Título nativo y argumento sin probar en la ventana | 4 | wb-api settings / lib tests |
+| [x] | Tema claro / oscuro / sistema (también desde la paleta); sin colores fijos fuera de los tokens (`--on-accent`, `--backdrop`); fechas con el idioma de la app; barra de título nativa con `setTheme` (sin probar en la ventana); i18n en / es | 2 / 4 | — |
 | [x] | Prioridad, pactada, vencidas, agrupar por período, planificación local con marca **local** | 4 | misc (períodos) |
 | [x] | Modo discreto (`Ctrl+Shift+H` o Ajustes → Apariencia): oculta horas pactadas y trabajadas (grilla, detalle, Hoy, planificación en lote) y la vista Horas; se guarda en `ui_prefs` (`hideHours`) | 4 | — |
 

@@ -150,8 +150,20 @@ export interface Settings {
   workflow: string;
   root: string | null;
   recents: string[];
+  /** Nombre para mostrar de cada carpeta de trabajos (clave: la ruta; sin distinguir mayúsculas). */
+  aliases: Record<string, string>;
   notesFolder: string | null;
   agents: AgentSettings;
+}
+
+/** Una carpeta reciente (`recent_folders`). */
+export interface RecentFolder {
+  path: string;
+  /** Alias o nombre de la carpeta. */
+  name: string;
+  alias: string | null;
+  exists: boolean;
+  current: boolean;
 }
 
 export interface CustomAgent {

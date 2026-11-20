@@ -20,6 +20,8 @@ const isLearnings = (n: Note) => n.items.length > 0 && n.title.startsWith(t("age
 const NO_ITEMS = "\u0000none";
 
 let editing = false;
+/** ¿Hay una nota en edición? (el refresco por cambios en disco no la relee). */
+export const noteEditing = () => editing;
 let folder: { folder: string; isDefault: boolean } | null = null;
 
 function pref(key: string, fallback: string): string {

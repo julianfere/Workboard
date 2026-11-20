@@ -34,6 +34,11 @@ export function fmtDate(ts: number): string {
   return new Date(ts * 1000).toLocaleDateString(lang(), { year: "numeric", month: "short", day: "numeric" });
 }
 
+/** Fecha y hora completas en el idioma de la app. `ts` en segundos. */
+export function fmtDateTimeFull(ts: number): string {
+  return new Date(ts * 1000).toLocaleString(lang());
+}
+
 /** `AAAA-MM-DD` local de hoy. */
 export function todayIso(): string {
   const d = new Date();

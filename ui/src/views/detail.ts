@@ -5,7 +5,7 @@
 
 import { api } from "../api";
 import { closeDetail, onAction, onAfterRender, onChange, refresh, registerDetail, render } from "../app";
-import { confirmDialog, esc, fmtSize, promptDialog, toast } from "../dom";
+import { confirmDialog, esc, fmtDateTimeFull, fmtSize, promptDialog, toast } from "../dom";
 import { errorText, label, t } from "../i18n";
 import { ico } from "../icons";
 import { renderMarkdown } from "../markdown";
@@ -428,7 +428,7 @@ function versionsTab(): string {
   }
   return versions.length
     ? `<section class="card"><ul class="list">${versions
-        .map((v) => `<li><span class="grow">${esc(new Date(v.ts * 1000).toLocaleString())}</span><span class="muted">${esc(fmtSize(v.size))}</span>
+        .map((v) => `<li><span class="grow">${esc(fmtDateTimeFull(v.ts))}</span><span class="muted">${esc(fmtSize(v.size))}</span>
           <button class="btn" data-action="view-version" data-id="${esc(v.id)}">${esc(t("detail.view"))}</button>
           <button class="btn" data-action="restore-version" data-id="${esc(v.id)}">${esc(t("detail.restore"))}</button></li>`)
         .join("")}</ul></section>`
