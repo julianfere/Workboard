@@ -23,6 +23,26 @@ interface ViewerState {
   page: number;
   url?: string;
   closed: boolean;
+  runs?: RunToggles;
+}
+
+/** Marcas «corrido en» de un script, con los ambientes del flujo (las pone el detalle). */
+export interface RunToggles {
+  envs: { id: string; label: string }[];
+  marks: Record<string, number>;
+  /** Marca o desmarca; devuelve las marcas que quedan. */
+  toggle: (env: string, on: boolean) => Promise<Record<string, number>>;
+}
+
+function runBar(r: RunToggles | undefined): string {
+  if (!r) return "";
+  return `<span class="run-toggles" title="${esc(t("detail.run.hint"))}">${r.envs
+    .map((e) => {
+      const at = r.marks[e.id];
+      const title = at ? t("detail.run.on", { env: e.label, date: new Date(at * 1000).toLocaleString() }) : t("detail.run.mark", { env: e.label });
+      return `<button class="env${at ? " on" : ""}" data-v="ran" data-env="${esc(e.id)}" aria-pressed="${at ? "true" : "false"}" title="${esc(title)}">${at ? ico("check") : ""}${esc(t("detail.ranIn", { env: e.label }))}</button>`;
+    })
+    .join("")}</span>`;
 }
 
 const msg = (key: string) => (key.startsWith("viewer.") ? t(key) : key);
@@ -36,7 +56,7 @@ function base64ToBlob(data: string, mime: string): Blob {
 
 function toolbar(v: ViewerState): string {
   const kind = v.f.text ? diagramKind(v.f.name) : "";
-  return `${kind ? `<button class="btn" data-v="source">${ico("code")}${esc(t(v.source ? "viewer.viewDiagram" : "viewer.viewSource"))}</button>` : ""}
+  return `${runBar(v.runs)}${kind ? `<button class="btn" data-v="source">${ico("code")}${esc(t(v.source ? "viewer.viewDiagram" : "viewer.viewSource"))}</button>` : ""}
     ${v.f.text ? `<button class="btn" data-v="copy">${ico("copy")}${esc(t("viewer.copy"))}</button>` : ""}
     <button class="btn" data-v="open">${ico("external")}${esc(t("viewer.openWith"))}</button>
     <button class="icon-btn" data-v="reveal" title="${esc(t("detail.reveal"))}">${ico("folder")}</button>
@@ -108,7 +128,7 @@ async function load(v: ViewerState): Promise<void> {
 }
 
 /** Abre el visor de un archivo del item (modal). */
-export function openFileViewer(f: FileEntry): void {
+export function openFileViewer(f: FileEntry, runs?: RunToggles): void {
   const back = document.createElement("div");
   back.className = "modal-back";
   const dir = f.path.split("/").slice(0, -1).join("/");
@@ -123,6 +143,7 @@ export function openFileViewer(f: FileEntry): void {
     source: false,
     page: 0,
     closed: false,
+    runs,
   };
   v.bar.innerHTML = toolbar(v);
 
@@ -145,6 +166,18 @@ export function openFileViewer(f: FileEntry): void {
         return showDiagram(v);
       case "page":
         return showPage(v, Number(el.dataset.page));
+      case "ran":
+        if (!v.runs) return;
+        try {
+          const env = el.dataset.env!;
+          v.runs.marks = await v.runs.toggle(env, !v.runs.marks[env]);
+          v.bar.innerHTML = toolbar(v);
+          // El botón se rearmó: el foco vuelve a él (si no, Escape ya no llega al visor).
+          v.bar.querySelector<HTMLElement>(`[data-v="ran"][data-env="${CSS.escape(env)}"]`)?.focus();
+        } catch (err) {
+          toast(errorText(err), undefined, "error");
+        }
+        return;
       case "zoom":
         el.classList.toggle("full");
         return;
