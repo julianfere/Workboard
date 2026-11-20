@@ -2,6 +2,7 @@
 // `>` al principio = solo comandos. ↑↓ para moverse, Enter para ejecutar, Esc para cerrar (como la v1).
 
 import { api } from "./api";
+import { hoursHidden, toggleDiscreet } from "./discreet";
 import { applyTheme, goView, NAV, onAction, openDetail, refresh, refreshAll, render, runAction } from "./app";
 import { esc, promptDialog, toast } from "./dom";
 import { errorText, t } from "./i18n";
@@ -41,7 +42,9 @@ const fail = (err: unknown) => toast(errorText(err), undefined, "error");
 
 function commands(): Entry[] {
   const go = t("palette.goTo");
-  const out: Entry[] = NAV.map((v, i) => ({ icon: v.icon, text: t(`nav.${v.id}`), hint: `${go} · ${i + 1}`, run: () => goView(v.id) }));
+  const out: Entry[] = NAV.flatMap((v, i) =>
+    v.id === "hours" && hoursHidden() ? [] : [{ icon: v.icon, text: t(`nav.${v.id}`), hint: `${go} · ${i + 1}`, run: () => goView(v.id) }],
+  );
   out.push({ icon: "settings", text: t("nav.settings"), hint: go, run: () => goView("settings") });
   out.push({ icon: "plus", text: t("items.new"), hint: "", run: () => runAction("new-item") });
   out.push({ icon: "play", text: t("palette.cmd.newSession"), hint: "", run: () => void newSessionModal(S.detail ? [S.detail] : []) });
@@ -51,6 +54,7 @@ function commands(): Entry[] {
   out.push({ icon: "refresh", text: t("palette.cmd.reload"), hint: "F5", run: () => void refreshAll() });
   const dark = document.documentElement.dataset.theme === "dark";
   out.push({ icon: dark ? "sun" : "moon", text: t(dark ? "palette.cmd.themeLight" : "palette.cmd.themeDark"), hint: "", run: () => void setTheme(dark ? "light" : "dark") });
+  out.push({ icon: "clock", text: t("discreet.label"), hint: `${t(hoursHidden() ? "discreet.on" : "discreet.off")} · Ctrl+Shift+H`, run: () => void toggleDiscreet() });
   out.push({ icon: "terminal", text: t("palette.cmd.terminal"), hint: "Ctrl+J", run: () => toggleTerminal() });
   out.push({ icon: "folder", text: t("projects.openFolder"), hint: "", run: () => openProjectMenu() });
   out.push(...pluginCommands());
@@ -97,7 +101,7 @@ function itemActions(it: Item): Entry[] {
   out.push({ icon: "plus", text: t("palette.act.addTask"), hint: "", run: () => void addTask(it) });
   out.push({ icon: "calendar", text: t("palette.act.due"), hint: metaText(it, f.due) ? fmtDay(metaText(it, f.due)) : "", run: () => void setDue(it) });
   if (itemIds(it).length) out.push({ icon: "promote", text: t("palette.act.promote"), hint: "git", run: () => void openPromotion([it.name]) });
-  out.push({ icon: "code", text: t("palette.act.editor"), hint: "", run: () => void api.openInEditor(it.name).catch(fail) });
+  out.push({ icon: "code", text: t("palette.act.editor"), hint: "", run: () => void api.openInVscode(it.name).catch(fail) });
   out.push({ icon: "folder", text: t("palette.act.folder"), hint: "", run: () => void api.reveal(it.name).catch(fail) });
   return out;
 }
