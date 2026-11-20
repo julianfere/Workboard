@@ -1,11 +1,11 @@
 // Controlador: carga de datos, navegación, refresco en vivo y acciones. Cada vista exporta `render()` y
 // registra sus acciones (`data-action="nombre"` en el HTML) con `onAction`.
 
-import { api } from "./api";
+import { api, inTauri } from "./api";
 import { $, esc, toast } from "./dom";
 import { errorText, setLang, t } from "./i18n";
 import { ico } from "./icons";
-import { S, type ViewId } from "./state";
+import { folderName, S, type ViewId } from "./state";
 import type { Theme } from "./types";
 
 type Handler = (el: HTMLElement, ev: Event) => void | Promise<void>;
@@ -67,6 +67,24 @@ const darkQuery = window.matchMedia("(prefers-color-scheme: dark)");
 export function applyTheme(theme: Theme): void {
   const dark = theme === "dark" || (theme === "system" && darkQuery.matches);
   document.documentElement.dataset.theme = dark ? "dark" : "light";
+  // La barra de título nativa sigue el tema elegido (`null` = la del sistema).
+  if (inTauri) void nativeWindow().then((w) => w.setTheme(theme === "system" ? null : theme)).catch(() => {});
+}
+
+/** La ventana de Tauri (import dinámico: en el navegador no hace falta). */
+async function nativeWindow() {
+  const { getCurrentWindow } = await import("@tauri-apps/api/window");
+  return getCurrentWindow();
+}
+
+let lastTitle = "";
+/** Título de la pestaña y de la ventana nativa (Tauri no copia `document.title` a la ventana). */
+function syncTitle(): void {
+  const title = S.root ? `${folderName(S.root)} · ${t("app.name")}` : t("app.name");
+  if (title === lastTitle) return;
+  lastTitle = title;
+  document.title = title;
+  if (inTauri) void nativeWindow().then((w) => w.setTitle(title)).catch(() => {});
 }
 darkQuery.addEventListener("change", () => S.settings && applyTheme(S.settings.theme));
 
@@ -87,6 +105,21 @@ export async function refresh(): Promise<void> {
     S.loadError = errorText(err);
   }
   render();
+}
+
+const fsHooks: (() => Promise<unknown>)[] = [];
+
+/** Lo que se relee además de los items cuando cambia algo en disco (bandeja, notas, sesiones). */
+export function onFsRefresh(fn: () => Promise<unknown>): void {
+  fsHooks.push(fn);
+}
+
+/** Refresco completo (cambio en disco o `F5`): items y detalle, más bandeja, notas y sesiones, como la v1.
+ *  Las sesiones terminadas se cierran solas al leer la lista (`sessions`, aviso con Deshacer). */
+export async function refreshAll(): Promise<void> {
+  if (!S.settings?.root) return;
+  await Promise.all(fsHooks.map((fn) => fn().catch(() => {})));
+  await refresh();
 }
 
 export async function loadDetail(name: string, rerender = true): Promise<void> {
@@ -114,7 +147,7 @@ export function startPolling(): void {
     if (document.hidden || !S.settings?.root || document.querySelector(".modal-back")) return;
     try {
       const sig = (await api.signature()).join(":");
-      if (sig !== S.signature) await refresh();
+      if (sig !== S.signature) await refreshAll();
     } catch {
       /* la carpeta pudo desaparecer: lo informa el próximo refresh */
     }
@@ -148,12 +181,12 @@ export function closeDetail(): void {
 // ---------- render ----------
 
 function renderNav(): string {
-  const projectName = S.root ? S.root.split(/[\\/]/).pop() : t("project.none");
+  const projectName = S.root ? folderName(S.root) : t("project.none");
   const item = (id: ViewId, icon: string, key: string) => {
     const badge = id === "alerts" ? `<span class="nav-count" id="alerts-count"></span>` : "";
     return `<button class="nav-item${S.view === id && !S.detail ? " sel" : ""}" data-action="nav" data-view="${id}">${ico(icon)}<span>${esc(t(`nav.${id}`))}</span>${badge}<span class="nav-key">${key}</span></button>`;
   };
-  return `<button class="brand" data-action="project-menu" title="${esc(S.root)}"><span class="brand-icon">${ico("folder")}</span><span class="brand-name">${esc(projectName)}</span>${ico("chevronDown", "chev")}</button>
+  return `<button class="brand" data-action="project-menu" title="${esc(S.root)}" aria-haspopup="menu"><span class="brand-icon">${ico("folder")}</span><span class="brand-name">${esc(projectName)}</span>${ico("chevronDown", "chev")}</button>
     ${NAV.map((v, i) => item(v.id, v.icon, String(i + 1))).join("")}
     ${navExtra()}
     <button class="nav-item" data-action="palette">${ico("search")}<span>${esc(t("palette.open"))}</span><span class="nav-key">Ctrl K</span></button>
@@ -177,7 +210,7 @@ export function render(): void {
   const count = alertCount();
   const badge = $("#alerts-count");
   if (badge) badge.textContent = count ? String(count) : "";
-  document.title = S.root ? `${S.root.split(/[\\/]/).pop()} · ${t("app.name")}` : t("app.name");
+  syncTitle();
   for (const fn of afterRenders) fn();
 }
 
@@ -190,6 +223,15 @@ function alertCount(): number {
 }
 
 // ---------- eventos ----------
+
+/** Corre una acción registrada sin un elemento en la página (paleta de comandos). `data` = su `dataset`. */
+export function runAction(name: string, data: Record<string, string> = {}): void {
+  const fn = ACTIONS[name];
+  if (!fn) return;
+  const el = document.createElement("button");
+  Object.assign(el.dataset, data);
+  void run(fn, el, { target: el, preventDefault() {}, stopPropagation() {} } as unknown as Event);
+}
 
 async function run(fn: Handler, el: HTMLElement, ev: Event): Promise<void> {
   try {

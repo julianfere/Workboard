@@ -83,3 +83,10 @@ export const itemByName = (name: string) => S.items.find((i) => i.name === name)
 
 /** Título para mostrar: el del README o la carpeta. */
 export const titleOf = (it: Item) => it.title || it.name.split("/").pop()!;
+
+/** Nombre para mostrar de una carpeta de trabajos: su alias (`settings.aliases`) o el nombre de la carpeta. */
+export function folderName(path: string): string {
+  const low = path.toLowerCase();
+  const alias = Object.entries(S.settings?.aliases ?? {}).find(([k]) => k.toLowerCase() === low)?.[1];
+  return alias || path.split(/[\\/]/).filter(Boolean).pop() || path;
+}

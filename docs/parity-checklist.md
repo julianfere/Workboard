@@ -30,7 +30,7 @@ Feature/Bug de Implementar) va al plugin privado y se marca **(privado)**.
 | [x] | Nuevo item con o sin WI (crea carpeta + README; con id trae título, tipo, descripción y criterios del tracker) | 3 / 7 | workspace_ops (create_folder), wb-api/tests/tracker |
 | [x] | Plan incompleto (`plan_gaps`) | 3 | misc |
 | [x] | Bandeja de tareas sin WI (`inbox.md` en la config) | 3 | tasks (mismas funciones) |
-| [~] | Watcher: refresco en vivo del filesystem y de `.git` de los repos | 4 | — |
+| [~] | Watcher: refresco en vivo del filesystem y de `.git` de los repos. Un cambio en disco (o `F5`) relee items, detalle, bandeja, notas (salvo una en edición) y sesiones; las terminadas se cierran solas con Deshacer (`refreshAll`). Falta el aviso del detalle con cambios sin guardar | 4 | — |
 
 ## MCP `workboard`
 
@@ -48,7 +48,7 @@ Feature/Bug de Implementar) va al plugin privado y se marca **(privado)**.
 | | Función | Fase | Golden |
 |---|---|---|---|
 | [~] | Vistas: Hoy, Trabajos, Pendientes, Horas, Alertas, Notas, Métricas, Tools, Ajustes | 4 | — |
-| [~] | Paleta `Ctrl+K` (buscar trabajos, tareas, archivos; comandos; acciones del trabajo de arriba) | 4 | — |
+| [x] | Paleta `Ctrl+K` (buscar trabajos, tareas, archivos; comandos; acciones del trabajo de arriba): varias palabras (`matchesText`), Recientes sin texto, secciones con encabezado y pie ↑↓ / Enter. Acciones: siguiente estado (el que sigue en el preset sin cancelado/desconocido: en `classic-es`, En curso → Diagnóstico, la v1 saltaba a Codeado), sesión, tarea, pactada, Promover, VS Code (`open_in_editor`), carpeta. ReleaseManual va al plugin; el comando de modo discreto, con esa feature | 4 | — |
 | [x] | Atajos (`Ctrl+J`, `/`, `1`…`6`, `Ctrl+S`, `Esc`, `F5`, `Supr`, `Alt+1`…`9`; también `Ctrl+A` en la grilla) | 4 | — |
 | [x] | Selección múltiple, barra y menú contextual en bulk; deshacer de 12 s | 4 | — |
 | [x] | Grilla: columnas configurables, orden, ancho, agrupar hasta 3 niveles, filtros con chips, densidad | 4 | — |
@@ -58,8 +58,8 @@ Feature/Bug de Implementar) va al plugin privado y se marca **(privado)**.
 | [~] | Pestañas del detalle: Resumen, README, Archivos, Git, Cómo deployar, Notas | 4 | — |
 | [x] | Visor: SQL coloreado, Markdown, imágenes, PDF, draw.io (visor local), Mermaid; offline | 4 | viewer_reads (límites y rutas) |
 | [x] | Alertas desestimables (sin README, número sin prefijo, duplicados, plan incompleto, git; también activos sin movimiento, sin estado y fecha vencida): por fila o todas por tipo, con huella de lo que la disparó (vuelve si cambia), por raíz en `<config>/alerts_off.json`; el badge no cuenta las desestimadas. Falta «MIGRATION / FIX sin correr en PROD» (necesita un dato nuevo en el preset) y «A _deleted» por carpeta en duplicados | 4 | wb-api alerts::tests |
-| [~] | Proyectos recientes con alias; cambiar de proyecto | 4 | — |
-| [~] | Tema claro / oscuro / sistema; variables de color; i18n en / es | 2 / 4 | — |
+| [x] | Proyectos recientes con alias (`settings.json` → `aliases`, `set_alias`; se migran de la v1); menú del nombre del proyecto con recientes («(no existe)», el actual resaltado, renombrar, quitar con Deshacer) y «Abrir carpeta…»; título de la ventana nativa con `setTitle`; `workboard <carpeta>` la abre. Título nativo y argumento sin probar en la ventana | 4 | wb-api settings / lib tests |
+| [x] | Tema claro / oscuro / sistema (también desde la paleta); sin colores fijos fuera de los tokens (`--on-accent`, `--backdrop`); fechas con el idioma de la app; barra de título nativa con `setTheme` (sin probar en la ventana); i18n en / es | 2 / 4 | — |
 | [x] | Prioridad, pactada, vencidas, agrupar por período, planificación local con marca **local** | 4 | misc (períodos) |
 
 ## Git

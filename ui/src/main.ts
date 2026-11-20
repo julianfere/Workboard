@@ -2,10 +2,11 @@
 
 import "./styles.css";
 import { api } from "./api";
-import { applyTheme, closeDetail, goView, installEvents, NAV, refresh, render, startPolling } from "./app";
+import { applyTheme, closeDetail, goView, installEvents, NAV, onFsRefresh, refresh, refreshAll, render, startPolling } from "./app";
 import { esc } from "./dom";
 import { errorText, setLang, t } from "./i18n";
 import { openPalette } from "./palette";
+import "./projects";
 import { loadSessions, startSessionPolling } from "./sessions";
 import { S } from "./state";
 import { installTerminalPanel, retheme, toggleTerminal } from "./terminal";
@@ -14,7 +15,7 @@ import "./views/detail";
 import "./views/hours";
 import { clearSelection, deleteSelection, selectAllVisible, selectionSize, switchSavedView } from "./views/items";
 import "./views/metrics";
-import { loadNotes } from "./views/notes";
+import { loadNotes, noteEditing } from "./views/notes";
 import "./views/settings";
 import { loadInbox } from "./views/tasks";
 import "./views/today";
@@ -22,6 +23,12 @@ import "./views/tools";
 import { loadPlugins } from "./plugins";
 
 installEvents();
+// Un cambio en disco relee también la bandeja, las notas (no mientras se edita una) y las sesiones.
+onFsRefresh(loadInbox);
+onFsRefresh(async () => {
+  if (!noteEditing()) await loadNotes();
+});
+onFsRefresh(loadSessions);
 installTerminalPanel();
 // La terminal no lee variables CSS: se le vuelve a pasar el tema cuando cambia.
 new MutationObserver(retheme).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
@@ -44,7 +51,7 @@ document.addEventListener("keydown", (ev) => {
   if (document.querySelector(".modal-back")) return;
   if (ev.key === "F5") {
     ev.preventDefault();
-    refresh();
+    void refreshAll();
     return;
   }
   const ctrl = ev.ctrlKey || ev.metaKey;
