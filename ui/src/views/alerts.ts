@@ -15,6 +15,7 @@ import { sessionsOf } from "../sessions";
 
 const KINDS = ["noReadme", "noPrefix", "dupes", "plan", "stale", "noStatus", "overdue", "gitDesync", "gitDirty"] as const;
 type Kind = (typeof KINDS)[number];
+export type AlertKind = Kind;
 
 interface Alert {
   kind: Kind;
@@ -202,6 +203,18 @@ async function setDismissed(alerts: Alert[], on: boolean): Promise<void> {
 }
 
 const findAlert = (key: string) => allAlerts().find((a) => keyOf(a) === key);
+
+/** ¿Está desestimada la alerta `kind` del item? Hoy la usa también para vencidas que solo tienen la fecha del
+ *  tracker (no figuran en Alertas: la huella queda vacía). */
+export function isAlertDismissed(item: Item, kind: Kind): boolean {
+  ensureDismissed();
+  return isDismissed({ kind, item, detail: "" });
+}
+
+/** Desestima la alerta `kind` del item (desde Hoy, «Necesita tu atención»). */
+export async function dismissAlert(item: Item, kind: Kind): Promise<void> {
+  await setDismissed([findAlert(`${item.name}|${kind}`) ?? { kind, item, detail: "" }], true);
+}
 
 onAction("alert-dismiss", async (el, ev) => {
   ev.stopPropagation();
