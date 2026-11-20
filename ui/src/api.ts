@@ -101,6 +101,15 @@ export const api = {
   noteSave: (id: string, body: string, mtime: number) => call<Note>("note_save", { id, body, mtime }),
   noteCreate: (title: string, items: string[]) => call<Note>("note_create", { title, items }),
 
+  // ---------- notas: título, vínculos, borrar (fase 4) y alertas desestimadas ----------
+  notesFolder: () => call<{ folder: string; isDefault: boolean }>("notes_folder"),
+  noteSetTitle: (id: string, title: string, mtime: number) => call<Note>("note_set_title", { id, title, mtime }),
+  noteLink: (id: string, key: string, add: boolean) => call<Note>("note_link", { id, key, add }),
+  noteReveal: (id: string) => call<null>("note_reveal", { id }),
+  noteDelete: (id: string) => call<{ trash: boolean; movedTo?: string }>("note_delete", { id }),
+  alertsDismissed: () => call<Record<string, string>>("alerts_dismissed"),
+  alertsDismiss: (entries: { key: string; fp: string }[], on: boolean) => call<Record<string, string>>("alerts_dismiss", { entries, on }),
+
   sessionsRev: () => call<number>("sessions_rev"),
   sessions: () => call<SessionList>("sessions"),
   sessionAgents: () => call<AgentsInfo>("session_agents"),
