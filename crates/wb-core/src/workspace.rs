@@ -417,24 +417,38 @@ impl Workspace {
         (count, (total * 1000.0).round() / 1000.0)
     }
 
-    pub fn read_file(&self, rel: &str) -> Result<String> {
+    /// Un archivo existente para leerlo (visor): además del chequeo de `safe_path`, la ruta real (con
+    /// enlaces simbólicos y junctions resueltos) tiene que seguir dentro de la raíz.
+    pub fn existing_file(&self, rel: &str) -> Result<PathBuf> {
         let p = self.safe_path(rel)?;
         if !p.is_file() {
             return Err(err(ErrorKind::NotFound, "core.ws.fileNotFound", vec![("path", rel.to_string())]));
         }
+        let real = dunce::canonicalize(&p)?;
+        if !real.starts_with(&self.root) {
+            return Err(err(ErrorKind::Permission, "core.ws.outsideRoot", vec![("rel", rel.to_string())]));
+        }
+        Ok(real)
+    }
+
+    /// Texto de un archivo de la raíz (hasta `MAX_TEXT_BYTES`), decodificado como los README.
+    pub fn read_file(&self, rel: &str) -> Result<String> {
+        let p = self.existing_file(rel)?;
         if std::fs::metadata(&p)?.len() > MAX_TEXT_BYTES {
             return Err(CoreError::invalid("core.ws.tooLarge", vec![]));
         }
         Ok(frontmatter::read(&p)?)
     }
 
+    /// Imagen o PDF de la raíz (hasta `MAX_MEDIA_BYTES`) en base64: viaja igual por el IPC de Tauri y por
+    /// el HTTP del devserver, y la UI lo convierte en un `blob:` local.
     pub fn read_media(&self, rel: &str) -> Result<Media> {
         let p = self.safe_path(rel)?;
         let ext = suffix(&p.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default());
-        let mime = MEDIA_TYPES.iter().find(|(e, _)| *e == ext).map(|(_, m)| *m);
-        let (Some(mime), true) = (mime, p.is_file()) else {
+        let Some(mime) = MEDIA_TYPES.iter().find(|(e, _)| *e == ext).map(|(_, m)| *m) else {
             return Err(err(ErrorKind::NotFound, "core.ws.fileNotFound", vec![("path", rel.to_string())]));
         };
+        let p = self.existing_file(rel)?;
         if std::fs::metadata(&p)?.len() > MAX_MEDIA_BYTES {
             return Err(CoreError::invalid("core.ws.tooLarge", vec![]));
         }
