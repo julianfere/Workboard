@@ -3,6 +3,8 @@
 import { label } from "./i18n";
 import type { AppInfo, Item, ItemDetail, MetaValue, Note, PresetSummary, Session, Settings, StateDef, Task, Workflow } from "./types";
 
+export type DetailTab = "summary" | "readme" | "files" | "git" | "deploy" | "notes" | "versions";
+
 export type ViewId = "today" | "items" | "tasks" | "hours" | "alerts" | "notes" | "metrics" | "tools" | "settings";
 
 export const S = {
@@ -19,7 +21,7 @@ export const S = {
   /** Detalle abierto (nombre del item) y sus datos. */
   detail: null as string | null,
   detailData: null as ItemDetail | null,
-  detailTab: "summary" as "summary" | "readme" | "files" | "versions" | "git",
+  detailTab: "summary" as DetailTab,
   /** Errores de validación por clave del frontmatter. */
   fieldErrors: {} as Record<string, string>,
   /** Lo que escribió el usuario en un campo que no pasó la validación (no se pierde al re-renderizar). */

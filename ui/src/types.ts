@@ -54,6 +54,8 @@ export interface Workflow {
   /** Títulos de las secciones que se completan al crear un item desde un tracker. */
   sections: { description: string; criteria: string };
   files: { kinds: string[]; categories: FileCategory[]; fallbackCategory: FileCategory };
+  /** Palabras que identifican la sección «cómo deployar» del README. */
+  deployKeywords?: string[];
 }
 
 export type MetaValue = string | string[];
