@@ -1,8 +1,21 @@
 // Markdown mínimo para los README y las notas: títulos, párrafos, listas (con casillas), citas, código,
 // tablas simples, énfasis y links. Todo el texto se escapa: el HTML del archivo nunca se interpreta.
+// Bloques ```sql coloreados y ```mermaid dibujados a pedido (ver `diagrams`).
 
+import { watchMermaidBlocks } from "./diagrams";
 import { esc } from "./dom";
+import { highlightSql } from "./highlight";
 import { ico } from "./icons";
+
+/** Bloque de código: SQL coloreado; Mermaid queda como código hasta que `diagrams` lo dibuja. */
+function fencedBlock(lang: string, code: string): string {
+  if (lang === "mermaid") {
+    watchMermaidBlocks();
+    return `<div class="mmd-block" data-mmd="${esc(code)}"><pre class="code"><code>${esc(code)}</code></pre></div>`;
+  }
+  const body = lang === "sql" ? highlightSql(code) : esc(code);
+  return `<pre class="code" data-lang="${esc(lang)}"><code>${body}</code></pre>`;
+}
 
 function inline(s: string): string {
   let out = esc(s);
@@ -25,7 +38,7 @@ export function renderMarkdown(src: string): string {
       i++;
       while (i < lines.length && !lines[i].startsWith("```")) code.push(lines[i++]);
       i++;
-      out.push(`<pre class="code" data-lang="${esc(fence[1])}"><code>${esc(code.join("\n"))}</code></pre>`);
+      out.push(fencedBlock(fence[1].toLowerCase(), code.join("\n")));
       continue;
     }
     const h = line.match(/^(#{1,6})\s+(.*)/);
