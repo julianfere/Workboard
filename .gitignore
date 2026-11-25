@@ -23,8 +23,5 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Copia de referencia de la v1 (no se publica)
-_v1/
-
 # Binarios auxiliares para el bundle (scripts/sidecars.mjs)
 src-tauri/binaries/

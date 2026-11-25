@@ -111,7 +111,7 @@ config real.
   vistas guardadas; se guardan con `ui_prefs`/`ui_pref_set` en `<config>/ui_prefs.json`, clave `grid`) y `planning.ts`
   (prioridad, pactada, período, horas y la marca «local» cuando el README pisa al tracker).
 - `tests/golden/` — comportamiento de la v1 capturado como JSON (ver su README y `KNOWN_ISSUES.md`).
-- `_v1/` — copia local de la v1 (ignorada por git, no se publica).
+- `_v1/` — copia de la v1 de referencia (versionada; se actualiza copiando la v1 en uso).
 
 ## Convenciones (no romper)
 
