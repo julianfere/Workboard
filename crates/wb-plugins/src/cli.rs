@@ -125,14 +125,13 @@ fn title(id: &str) -> String {
         .join(" ")
 }
 
-/// El intérprete para el manifiesto: `python` o, en Windows sin `python` en el PATH, el lanzador `py`.
+/// El intérprete para el manifiesto: `python` si está en el PATH; si no, el lanzador `py` (Windows) o
+/// `python3` (el único que suele haber en Linux y macOS).
 fn python_command() -> &'static str {
     let path = std::env::var("PATH").unwrap_or_default();
-    if cfg!(windows)
-        && wb_platform::which("python", &path).is_none()
-        && wb_platform::which("py", &path).is_some()
-    {
-        "py"
+    let fallback = if cfg!(windows) { "py" } else { "python3" };
+    if wb_platform::which("python", &path).is_none() && wb_platform::which(fallback, &path).is_some() {
+        fallback
     } else {
         "python"
     }
