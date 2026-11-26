@@ -11,7 +11,7 @@ import { sessionsOf } from "../sessions";
 import { S, effectiveStatus, envLabel, isClosed, matchesSearch, metaList, metaText, stateDef, stateLabel, stateRank, titleOf, trackerLookup, typeIcon, typeLabel, typeOf, wf } from "../state";
 import { label } from "../i18n";
 import { gitEnvSummary, gitPending } from "../git";
-import { activeAlerts, type AlertKind } from "./alerts";
+import { activeAlerts, type AlertKind, alertTitle } from "./alerts";
 import { hoursHidden } from "../discreet";
 import { fmtH, periodRange, timeReady, workedTotal } from "../stats";
 import { byUrgency, dueCell, dueOf, hoursCell, hoursOf, isOverdue, lateTag, passesDue, periodDiff, periodOf, periodRel, priorityBadge, priorityOf } from "../planning";
@@ -322,7 +322,7 @@ function alertsOf(it: Item): AlertKind[] {
 
 const alertsCell = (it: Item) =>
   alertsOf(it)
-    .map((k) => `<span class="chip alert-chip" title="${esc(t(`alerts.${k}`))}">${esc(t(`grid.alertShort.${k}`))}</span>`)
+    .map((k) => `<span class="chip alert-chip" title="${esc(alertTitle(k))}">${esc(t(`grid.alertShort.${k}`))}</span>`)
     .join("");
 
 /** Columna de un campo extra del flujo: el valor, o un link si el flujo dice qué es (`link`). */

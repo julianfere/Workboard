@@ -255,6 +255,7 @@
   "grid.alertShort.overdue": "overdue",
   "grid.alertShort.gitDesync": "repos out of sync",
   "grid.alertShort.gitDirty": "uncommitted",
+  "grid.alertShort.finalEnv": "scripts not run",
   "grid.groupItems": "{n} items",
   "grid.density": "Density",
   "grid.density.comfortable": "Comfortable",

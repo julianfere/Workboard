@@ -255,6 +255,7 @@
   "grid.alertShort.overdue": "vencida",
   "grid.alertShort.gitDesync": "repos desparejos",
   "grid.alertShort.gitDirty": "sin commitear",
+  "grid.alertShort.finalEnv": "scripts sin correr",
   "grid.groupItems": "{n} trabajos",
   "grid.density": "Densidad",
   "grid.density.comfortable": "Cómoda",
