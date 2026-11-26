@@ -268,7 +268,7 @@ function renderToday(): string {
   const hello = t(h < 13 ? "today.hello.morning" : h < 20 ? "today.hello.afternoon" : "today.hello.evening");
   return `<div class="page today"><div class="today-head"><span class="muted">${esc(date.charAt(0).toUpperCase() + date.slice(1))}</span><h1>${esc(hello)}</h1></div>
     ${periodCard()}
-    <div class="today-grid"><div>${attentionCard()}${tasksCard()}</div><div>${wipCard()}${datesCard()}</div></div>
+    <div class="today-grid"><div class="t-col">${attentionCard()}${tasksCard()}</div><div class="t-col">${wipCard()}</div><div class="t-col">${datesCard()}</div></div>
   </div>`;
 }
 

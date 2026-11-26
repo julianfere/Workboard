@@ -294,7 +294,7 @@ function renderAlerts(): string {
     ? `<label class="check"><input type="checkbox" data-change="alerts-show-dismissed" ${showDismissed ? "checked" : ""}>${esc(t("alerts.showDismissed", { n: off.length }))}</label>`
     : "";
   const dismissedBlock = showDismissed && off.length ? `<h2 class="muted">${esc(t("alerts.dismissedTitle"))}</h2>${blocks(off, true)}` : "";
-  return `<div class="page"><div class="toolbar"><h1>${esc(t("nav.alerts"))}</h1>${searchBox()}<span class="spacer"></span>${toggle}</div>
+  return `<div class="page alerts-page"><div class="toolbar"><h1>${esc(t("nav.alerts"))}</h1>${searchBox()}<span class="spacer"></span>${toggle}</div>
     ${blocks(on, false) || `<p class="empty">${noSearchResults() || esc(t("alerts.none"))}</p>`}${dismissedBlock}</div>`;
 }
 

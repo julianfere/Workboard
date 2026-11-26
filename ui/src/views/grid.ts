@@ -357,8 +357,8 @@ function titleCell(it: Item): string {
 }
 
 export const COLUMNS: Column[] = [
-  { id: "status", label: "items.status", w: 150, render: (it) => statusChipHtml(effectiveStatus(it)), sort: (it) => stateRank(effectiveStatus(it)) },
-  { id: "id", label: "items.id", w: 120, render: idCell, sort: (it) => it.ids[0] ?? null },
+  { id: "status", label: "items.status", w: 130, render: (it) => statusChipHtml(effectiveStatus(it)), sort: (it) => stateRank(effectiveStatus(it)) },
+  { id: "id", label: "items.id", w: 115, render: idCell, sort: (it) => it.ids[0] ?? null },
   { id: "type", label: "items.type", w: 130, render: (it) => typeBadge(typeOf(it), true), sort: (it) => (typeOf(it) ? wf().types.findIndex((x) => x.id === typeOf(it)) : null) },
   { id: "title", label: "items.title", w: 0, fixed: true, render: titleCell, sort: (it) => titleOf(it).toLowerCase() },
   { id: "folder", label: "grid.col.folder", w: 200, render: (it) => muted(it.name.split("/").pop()!), sort: (it) => it.name.toLowerCase() },
@@ -368,15 +368,15 @@ export const COLUMNS: Column[] = [
   { id: "due", label: "grid.col.due", w: 160, asc: true, render: dueCell, sort: (it) => dueOf(it).date || null },
   { id: "hours", label: "grid.col.hours", w: 110, render: (it) => hoursCell(it, fmtH), sort: (it) => hoursOf(it).hours },
   { id: "worked", label: "grid.col.worked", w: 110, render: workedCell, sort: (it) => (timeReady() ? workedTotal(it) || null : null) },
-  { id: "envs", label: "grid.col.envs", w: 130, render: (it) => metaList(it, wf().fields.environments).map((e) => `<span class="chip env">${esc(envLabel(e))}</span>`).join(""), sort: (it) => metaList(it, wf().fields.environments).length || null },
+  { id: "envs", label: "grid.col.envs", w: 120, render: (it) => metaList(it, wf().fields.environments).map((e) => `<span class="chip env">${esc(envLabel(e))}</span>`).join(""), sort: (it) => metaList(it, wf().fields.environments).length || null },
   { id: "branch", label: "grid.col.branch", w: 180, render: (it) => muted(metaText(it, wf().fields.branch)), sort: (it) => metaText(it, wf().fields.branch) || null },
-  { id: "kinds", label: "grid.col.kinds", w: 170, render: kindsOf, sort: (it) => it.kinds.join(",") || null },
+  { id: "kinds", label: "grid.col.kinds", w: 140, render: kindsOf, sort: (it) => it.kinds.join(",") || null },
   { id: "tasks", label: "items.tasks", w: 90, render: (it) => muted(it.tasks.length ? `${it.tasks.filter((x) => !x.done).length}/${it.tasks.length}` : ""), sort: (it) => it.tasks.filter((x) => !x.done).length || null },
-  { id: "sessions", label: "grid.col.sessions", w: 180, render: sessionCell, sort: (it) => openSessions(it) || null },
-  { id: "git", label: "grid.col.git", w: 190, render: gitCell, sort: gitRank },
-  { id: "alerts", label: "grid.col.alerts", w: 170, render: alertsCell, sort: (it) => alertsOf(it).length || null },
+  { id: "sessions", label: "grid.col.sessions", w: 150, render: sessionCell, sort: (it) => openSessions(it) || null },
+  { id: "git", label: "grid.col.git", w: 150, render: gitCell, sort: gitRank },
+  { id: "alerts", label: "grid.col.alerts", w: 150, render: alertsCell, sort: (it) => alertsOf(it).length || null },
   { id: "files", label: "grid.col.files", w: 80, render: (it) => muted(String(it.files.length)), sort: (it) => it.files.length },
-  { id: "last", label: "items.activity", w: 120, render: (it) => `<span class="muted" title="${esc(fmtDate(it.last))}">${esc(fmtAgo(it.last))}</span>`, sort: (it) => it.last },
+  { id: "last", label: "items.activity", w: 110, render: (it) => `<span class="muted" title="${esc(fmtDate(it.last))}">${esc(fmtAgo(it.last))}</span>`, sort: (it) => it.last },
   { id: "created", label: "grid.col.created", w: 120, render: (it) => muted(it.created ? fmtDate(it.created) : ""), sort: (it) => it.created || null },
 ];
 

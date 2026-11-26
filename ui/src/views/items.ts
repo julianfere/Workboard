@@ -169,10 +169,10 @@ function toolbar(): string {
       <button class="btn${chips.length ? " has" : ""}" data-action="grid-pop" data-kind="filters" aria-haspopup="true">${ico("filter")}${esc(t("grid.filters"))}${chips.length ? `<b class="fcount">${chips.length}</b>` : ""}${ico("chevronDown")}</button>
       ${groupSelects()}
       <span class="spacer"></span>
-      <button class="btn ghost" data-action="show-deleted" title="${esc(t("grid.deletedHint"))}" aria-label="${esc(t("items.deleted"))}">${ico("trash")}${S.deletedCount ? S.deletedCount : ""}</button>
+      <div class="tb-end"><button class="btn ghost" data-action="show-deleted" title="${esc(t("grid.deletedHint"))}" aria-label="${esc(t("items.deleted"))}">${ico("trash")}${S.deletedCount ? S.deletedCount : ""}</button>
       <button class="icon-btn" data-action="grid-reload" title="${esc(t("grid.reload"))}" aria-label="${esc(t("grid.reload"))}">${ico("refresh")}</button>
       ${trackerToolbar()}
-      <button class="btn primary" data-action="new-item">${ico("plus")}${esc(t("items.new"))}</button>
+      <button class="btn primary" data-action="new-item">${ico("plus")}${esc(t("items.new"))}</button></div>
     </div>
     <div class="toolbar sub">
       <div class="fchips">${chips.map(([k, l]) => `<span class="chip fchip">${esc(l)}<button data-action="grid-chip" data-k="${k}" title="${esc(t("grid.chip.remove"))}" aria-label="${esc(t("grid.chip.remove"))}">${ico("x")}</button></span>`).join("")}

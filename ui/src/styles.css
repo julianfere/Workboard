@@ -64,7 +64,7 @@ svg.chev { width: 14px; height: 14px; color: var(--nav-fg-2); }
 
 /* ---------- página ---------- */
 #content { display: flex; flex-direction: column; min-width: 0; min-height: 0; height: 100vh; }
-#main-wrap { position: relative; display: flex; flex: 1; min-width: 0; min-height: 0; }
+#main-wrap { position: relative; display: flex; flex: 1; min-width: 0; min-height: 0; overflow: clip; }
 #main { overflow: auto; min-width: 0; flex: 1; min-height: 0; }
 .page { max-width: 920px; padding: 24px 32px 48px; }
 .page.wide { max-width: none; }
@@ -80,6 +80,8 @@ svg.chev { width: 14px; height: 14px; color: var(--nav-fg-2); }
 @media (max-width: 760px) { .st-nav { position: static; flex-direction: row; flex-wrap: wrap; flex-basis: 100%; } }
 .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; margin-bottom: 16px; }
 .toolbar h1 { margin-right: 8px; }
+/* Botones del final de una barra: si no entran, bajan juntos y a la derecha. */
+.tb-end { display: flex; align-items: center; gap: 8px; margin-left: auto; }
 .spacer, .grow { flex: 1; min-width: 0; }
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 16px 20px; margin-bottom: 16px; box-shadow: var(--shadow-4); }
 .card h2 { font-size: 15px; margin: 0 0 12px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
@@ -168,7 +170,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
 .items-grid .title { display: flex; align-items: center; gap: 6px; font-weight: 500; min-width: 0; }
 .items-grid .t-main { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .items-grid .title > .chip, .items-grid .title > .tag-late, .items-grid .title > .grp-tw { flex: none; }
-.items-page .toolbar .search { width: 280px; }
+.items-page .toolbar .search { width: 340px; }
 .items-grid .sub { font-size: 12px; color: var(--fg-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .items-grid tr.group .t-main { font-weight: 600; }
 .items-grid tr.nested .gc-title { padding-left: 34px; }
@@ -272,7 +274,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
 .step:hover { background: var(--hover); color: var(--fg); }
 .step.current { border-color: var(--blue); background: var(--selected); color: var(--fg); font-weight: 600; }
 .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin-bottom: 16px; }
-.tab { background: none; border: 0; padding: 8px 12px; cursor: pointer; color: var(--fg-2); border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.tab { flex: none; white-space: nowrap; background: none; border: 0; padding: 8px 12px; cursor: pointer; color: var(--fg-2); border-bottom: 2px solid transparent; margin-bottom: -1px; }
 .tab.sel { color: var(--fg); border-bottom-color: var(--blue); font-weight: 600; }
 .detail-top { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; min-height: 24px; }
 .detail-top .link { display: inline-flex; align-items: center; gap: 4px; }
@@ -617,9 +619,14 @@ pre.tool-code { max-height: 40vh; }
 
 
 /* ---------- Hoy ---------- */
-.page.today, .page.tasks-page { max-width: 1180px; }
+.page.today { max-width: 1760px; }
+.page.tasks-page { max-width: 1400px; }
+.page.alerts-page { max-width: 1200px; }
 .today-head { display: flex; flex-direction: column; margin-bottom: 16px; }
-.today-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 0 16px; align-items: start; }
+.today-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 16px; align-items: start; }
+/* Como la v1: tres columnas en pantallas anchas, dos (las tarjetas en orden) en las medianas y una en las chicas. */
+@media (max-width: 1440px) { .today-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .today-grid > .t-col { display: contents; } }
+@media (max-width: 960px) { .today-grid { grid-template-columns: minmax(0, 1fr); } }
 .today-period { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 32px; }
 .tp-main { display: flex; flex-direction: column; gap: 6px; flex: 1 1 260px; }
 .tp-title { font-size: 17px; font-weight: 600; }
@@ -684,7 +691,8 @@ body.resizing { cursor: col-resize; user-select: none; }
 .dp-head .detail-top .icon-btn { flex: none; }
 .d-main { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 340px; }
 .d-content { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
-.d-content > .tabs { flex: none; padding: 0 24px; margin-bottom: 0; overflow-x: auto; }
+.d-content > .tabs { flex: none; gap: 0; padding: 0 24px; margin-bottom: 0; overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; }
+.d-content > .tabs .tab { padding: 8px 10px; }
 .d-body { flex: 1; min-height: 0; overflow: auto; padding: 16px 24px 32px; }
 .d-side { min-height: 0; overflow: auto; padding: 16px; border-left: 1px solid var(--line); background: var(--surface-2); }
 .d-side .card { padding: 12px 14px; margin-bottom: 12px; }
@@ -709,6 +717,8 @@ body.resizing { cursor: col-resize; user-select: none; }
 .file-list { min-height: 0; overflow: auto; }
 .file-list .card { margin-bottom: 12px; }
 .file-list .file .size, .file-list .file .envs { display: none; }
+.files > li.file .grow { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.files > li.file > :not(.grow) { flex: none; }
 .files > li.file.sel { background: var(--selected); margin: 0 -8px; padding-left: 8px; padding-right: 8px; border-radius: var(--r-sm); }
 .viewer-slot { min-width: 0; min-height: 0; display: flex; }
 .viewer.inline { flex: 1; min-width: 0; display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px; }
