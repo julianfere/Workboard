@@ -206,6 +206,18 @@ mod tests {
     }
 
     #[test]
+    fn claude_plans_with_go_by_default() {
+        let s = Settings::default();
+        assert_eq!(s.agents.plan_prefix.get("claude").map(String::as_str), Some("/go "));
+        assert_eq!(s.agents.plan_prefix.len(), 1);
+        let s: Settings = serde_json::from_str(r#"{"agents": {"default": "copilot"}}"#).unwrap();
+        assert_eq!(s.agents.plan_prefix.get("claude").map(String::as_str), Some("/go "));
+        // Vaciado a propósito por el usuario: se respeta.
+        let s: Settings = serde_json::from_str(r#"{"agents": {"planPrefix": {}}}"#).unwrap();
+        assert!(s.agents.plan_prefix.is_empty());
+    }
+
+    #[test]
     fn aliases_and_display_names() {
         let mut s = Settings::default();
         assert_eq!(s.display_name("C:/x/_work"), "_work");

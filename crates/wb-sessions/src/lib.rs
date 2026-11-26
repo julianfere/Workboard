@@ -65,14 +65,25 @@ const CLAUDE_SESSION_VARS: [&str; 7] = [
 const CLAUDE_SESSION_PREFIXES: [&str; 2] = ["CLAUDE_CODE_SESSION_", "CLAUDE_CODE_MESSAGING_"];
 
 /// Preferencias de agentes (`settings.json` → `agents`).
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
 pub struct AgentSettings {
     /// Agente por defecto (el último elegido).
     pub default: String,
     pub custom: CustomAgent,
     /// Con qué empieza el pedido de una sesión de planificación, por agente (una skill, por ejemplo).
+    /// Sin el campo: los de cada agente (`/go ` para Claude, como la v1).
     pub plan_prefix: BTreeMap<String, String>,
+}
+
+impl Default for AgentSettings {
+    fn default() -> Self {
+        Self {
+            default: String::new(),
+            custom: CustomAgent::default(),
+            plan_prefix: agents::default_plan_prefixes(),
+        }
+    }
 }
 
 impl AgentSettings {

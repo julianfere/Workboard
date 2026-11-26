@@ -33,16 +33,28 @@ pub struct AgentDef {
     pub fork: bool,
     /// Lee el transcript para el peso de la sesión.
     pub transcript: bool,
+    /// Con qué empieza por defecto el pedido de una sesión de planificación (`/go ` es la skill de
+    /// planificación de Claude, como en la v1). El usuario lo cambia en Ajustes.
+    pub plan_prefix: &'static str,
 }
 
 pub const AGENTS: [AgentDef; 3] = [
-    AgentDef { id: CLAUDE, exe: "claude", hooks: true, fork: true, transcript: true },
-    AgentDef { id: COPILOT, exe: "copilot", hooks: false, fork: false, transcript: false },
-    AgentDef { id: CUSTOM, exe: "", hooks: false, fork: false, transcript: false },
+    AgentDef { id: CLAUDE, exe: "claude", hooks: true, fork: true, transcript: true, plan_prefix: "/go " },
+    AgentDef { id: COPILOT, exe: "copilot", hooks: false, fork: false, transcript: false, plan_prefix: "" },
+    AgentDef { id: CUSTOM, exe: "", hooks: false, fork: false, transcript: false, plan_prefix: "" },
 ];
 
 pub fn agent(id: &str) -> Option<&'static AgentDef> {
     AGENTS.iter().find(|a| a.id == id)
+}
+
+/// Prefijos de planificación por defecto (los agentes que tienen uno).
+pub fn default_plan_prefixes() -> BTreeMap<String, String> {
+    AGENTS
+        .iter()
+        .filter(|a| !a.plan_prefix.is_empty())
+        .map(|a| (a.id.to_string(), a.plan_prefix.to_string()))
+        .collect()
 }
 
 /// Comando propio (`settings.json` → `agents.custom`).
