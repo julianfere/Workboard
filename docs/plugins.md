@@ -56,6 +56,8 @@ Which plugins are enabled is stored in `<config>/plugins.json`.
   **Settings → Workflow** while the plugin is enabled. An id that clashes with a built-in preset is ignored.
 - `actions[].placements`: `item` (detail of one item), `items` (bulk bar, one or more selected items),
   `palette` (command palette, no items) and `settings` (a button in the plugin's row in Settings).
+  The grid's context menu (right click on a row, or «More» in the bulk bar) lists `items` actions too and,
+  when a single row is selected, also its `item` actions (once each); `context.placement` says which one ran.
 - `actions[].when` (optional, only for `item`/`items`): `kind` (`item` or `group`), `hasIds` (boolean),
   `categories` (state categories, e.g. `["active", "review"]`). Every selected item must match. State
   conditions go through categories so they follow the active preset: `["planned"]` is the plan state in
