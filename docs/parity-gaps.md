@@ -124,15 +124,15 @@ Referencias: `v1 app.js:N` = `_v1/ui/app.js`.
 
 ## US-07 Nuevo item y grupo
 
-- [ ] «Crear y planear» en un paso: crea en el estado de planificación y abre la sesión de Planear (v1 `app.py:482-516`,
+- [x] «Crear y planear» en un paso: crea en el estado de planificación y abre la sesión de Planear (v1 `app.py:482-516`,
       app.js:3966, 3991-4003). Desde Nuevo item con WI y sin WI.
-- [ ] Descripción y criterios editables (con WI: los de Azure; sin WI: «Qué hay que hacer / contexto»).
-- [ ] Sin id: título obligatorio, tipo por defecto el de «arreglo» del preset, carpeta `<tipo>-<slug>`.
-- [ ] README nuevo con línea de origen («> Arreglo del proyecto (sin work item)» / «> {tipo} #id · Azure: estado»),
+- [x] Descripción y criterios editables (con WI: los de Azure; sin WI: «Qué hay que hacer / contexto»).
+- [x] Sin id: título obligatorio, tipo por defecto el de «arreglo» del preset, carpeta `<tipo>-<slug>`.
+- [x] README nuevo con línea de origen («> Arreglo del proyecto (sin work item)» / «> {tipo} #id · Azure: estado»),
       sección de plan con el texto de relleno y sección de pendientes (títulos del preset; v1 `app.py:506-512`). También
       los importados de Asignados (`tracker.rs:1011`).
-- [ ] «Traer» con PAT inválido sigue en manual (`fromAzure: false`, v1 `app.py:476`).
-- [ ] Crear grupo: título obligatorio, al menos un item, README con «> Grupo de WI: #ids», «## Cómo deployar» y
+- [x] «Traer» con PAT inválido sigue en manual (`fromAzure: false`, v1 `app.py:476`).
+- [x] Crear grupo: título obligatorio, al menos un item, README con «> Grupo de WI: #ids», «## Cómo deployar» y
       pendientes, errores por carpeta sin cortar; se puede reagrupar items de otro grupo (v1 `app.py:852-871`).
 
 ## US-08 Detalle del item

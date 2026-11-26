@@ -8,7 +8,8 @@ import { $, confirmDialog, daysUntil, esc, fmtAgo, promptDialog, toast } from ".
 import { errorText, label, t } from "../i18n";
 import { ico } from "../icons";
 import { hasSessions, reflectItems } from "../reflect";
-import { addToSessionModal, newSessionModal } from "../sessions";
+import { addToSessionModal, launched, newSessionModal } from "../sessions";
+import { termSize } from "../terminal";
 import { S, effectiveStatus, isClosed, itemByName, metaList, metaText, titleOf, wf } from "../state";
 import { exportCsv, toCsv } from "../stats";
 import { dueOf } from "../planning";
@@ -477,7 +478,15 @@ document.addEventListener("click", (ev) => {
 
 // ---------- nuevo item ----------
 
+/** Slug como `wb_core::text::slugify` (y la v1): minúsculas ASCII, guiones, 40 caracteres. */
+const slugOf = (text: string): string =>
+  text.normalize("NFKD").replace(/[^\x00-\x7f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40).replace(/-+$/, "") || "wi";
+
+/** Nuevo item (v1 «Nuevo item»): con id del tracker (Traer completa título, tipo, descripción y criterios) o sin
+ * id (el arreglo del proyecto: tipo y carpeta del preset). «Crear y planear» lo crea en el estado de
+ * planificación y abre la sesión de Planear; «Solo cargar» lo deja en el estado inicial. */
 function newItemModal(): void {
+  const rules = wf().newItem;
   const types = wf().types.map((x) => `<option value="${esc(x.id)}">${esc(label(x.labels, x.id))}</option>`).join("");
   const back = document.createElement("div");
   back.className = "modal-back";
@@ -485,33 +494,53 @@ function newItemModal(): void {
     ${trackerConnected() ? `<p class="muted"><button type="button" class="link" data-assigned>${ico("calendar")} ${esc(t("tracker.assigned.fromNewItem"))}</button></p>` : ""}
     <label>${esc(t("newItem.id"))}<span class="add-row"><input name="id" placeholder="${esc(t("newItem.idHint"))}"><button type="button" class="btn" data-fetch title="${esc(t("tracker.fetchHint"))}">${ico("cloud")}${esc(t("tracker.fetch"))}</button></span></label>
     <p class="muted" data-fetched></p>
-    <label>${esc(t("items.title"))}<input name="title" required></label>
+    <label>${esc(t("items.title"))}<input name="title"></label>
     <label>${esc(t("items.type"))}<select name="type"><option value=""></option>${types}</select></label>
-    <label>${esc(t("newItem.folder"))}<input name="folder" required></label>
+    <label>${esc(t("newItem.folder"))}<input name="folder"></label>
+    <label><span data-desc-label></span><textarea name="description" rows="6"></textarea></label>
+    <label data-criteria>${esc(t("newItem.criteria"))}<textarea name="criteria" rows="4"></textarea></label>
     <p class="error" data-error></p>
-    <div class="modal-actions"><button type="button" class="btn" data-cancel>${esc(t("common.cancel"))}</button><button class="btn primary">${esc(t("newItem.create"))}</button></div></form>`;
+    <div class="modal-actions"><button type="button" class="btn" data-cancel>${esc(t("common.cancel"))}</button>
+      <button type="submit" class="btn" data-mode="pending" title="${esc(t("newItem.pendingHint"))}">${ico("plus")}${esc(t("newItem.pending"))}</button>
+      <button type="submit" class="btn primary" data-mode="plan" title="${esc(t("newItem.planHint"))}">${ico("plan")}${esc(t("newItem.plan"))}</button></div></form>`;
   document.body.append(back);
   const form = back.querySelector("form")!;
   const field = (n: string) => form.elements.namedItem(n) as HTMLInputElement;
+  const typeSel = form.elements.namedItem("type") as HTMLSelectElement;
+  const idOf = () => field("id").value.trim().replace(/^#/, "");
   let touched = false;
+  let typeTouched = false;
+  // Sin id: el tipo «arreglo» del preset, la descripción como «qué hay que hacer» y sin criterios.
+  const syncMode = () => {
+    const id = idOf();
+    if (!typeTouched) typeSel.value = id ? (fetched?.localType ?? "") : rules.defaultType;
+    back.querySelector("[data-desc-label]")!.textContent = t(id ? "newItem.description" : "newItem.fixContext");
+    back.querySelector<HTMLElement>("[data-criteria]")!.hidden = !id;
+  };
   const suggest = () => {
     if (touched) return;
-    const slug = field("title").value.normalize("NFKD").replace(/[^\x00-\x7f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40).replace(/-$/, "");
-    const id = field("id").value.trim();
-    const tpl = id ? wf().folders.newItemTemplate : "{slug}";
-    field("folder").value = tpl.replace("{id}", id).replace("{slug}", slug).replace(/^-+|-+$/g, "");
+    const title = field("title").value.trim();
+    const id = idOf();
+    const slug = title ? slugOf(title) : "";
+    const tpl = id ? wf().folders.newItemTemplate : title ? rules.folderTemplate || "{slug}" : "";
+    field("folder").value = tpl.replace("{id}", id).replace("{type}", typeSel.value).replace("{slug}", slug).replace(/^-+|-+$/g, "");
   };
   field("title").oninput = suggest;
   field("folder").oninput = () => (touched = true);
+  typeSel.onchange = () => {
+    typeTouched = true;
+    suggest();
+  };
   const close = () => back.remove();
-  // Con id: el tracker completa título, tipo y carpeta (y la descripción y los criterios del README).
+  // Con id: el tracker completa título, tipo y carpeta, y la descripción y los criterios (editables).
   let fetched: TrackerItem | null = null;
   const info = back.querySelector<HTMLElement>("[data-fetched]")!;
   field("id").oninput = () => {
-    if (fetched && fetched.id !== field("id").value.trim().replace(/^#/, "")) {
+    if (fetched && fetched.id !== idOf()) {
       fetched = null;
       info.textContent = "";
     }
+    syncMode();
     suggest();
   };
   back.querySelector<HTMLElement>("[data-fetch]")!.onclick = async () => {
@@ -523,11 +552,15 @@ function newItemModal(): void {
       fetched = d.fromTracker ? d : null;
       if (d.fromTracker) {
         field("title").value = d.title;
-        (form.elements.namedItem("type") as HTMLSelectElement).value = d.localType;
+        typeSel.value = d.localType;
+        typeTouched = false;
+        (form.elements.namedItem("description") as HTMLTextAreaElement).value = d.description;
+        (form.elements.namedItem("criteria") as HTMLTextAreaElement).value = d.criteria;
         if (!touched) field("folder").value = d.folder;
       }
       const have = d.existing.length ? ` · ${t("tracker.alreadyIn", { folders: d.existing.join(", ") })}` : "";
-      info.textContent = (d.fromTracker ? t("tracker.fetched", { type: d.type, state: d.state, source: d.source }) : t("tracker.fetchOffline")) + have;
+      const manual = d.error ? t("tracker.fetchManual", { reason: errorText(d.error) }) : t("tracker.fetchOffline");
+      info.textContent = (d.fromTracker ? t("tracker.fetched", { type: d.type, state: d.state, source: d.source }) : manual) + have;
     } catch (err) {
       fetched = null;
       info.textContent = errorText(err);
@@ -541,19 +574,35 @@ function newItemModal(): void {
   back.addEventListener("keydown", (e) => e.key === "Escape" && close());
   form.onsubmit = async (e) => {
     e.preventDefault();
+    const btn = (e.submitter as HTMLButtonElement | null) ?? form.querySelector<HTMLButtonElement>("[data-mode=plan]")!;
+    const plan = btn.dataset.mode === "plan";
+    const error = back.querySelector<HTMLElement>("[data-error]")!;
+    const id = idOf();
+    const title = field("title").value.trim();
+    if (!id && !title) {
+      error.textContent = t("newItem.titleRequired");
+      field("title").focus();
+      return;
+    }
+    const text = (n: string) => (form.elements.namedItem(n) as HTMLTextAreaElement).value;
+    const { cols, rows } = termSize();
+    form.querySelectorAll<HTMLButtonElement>("[type=submit]").forEach((b) => (b.disabled = true));
     try {
-      const id = field("id").value.trim();
-      const type = (form.elements.namedItem("type") as HTMLSelectElement).value;
-      const it = id
-        ? await createTrackedItem({ id, title: field("title").value, type, folder: field("folder").value.trim(), fetched })
-        : await api.createItem(field("folder").value.trim(), field("title").value, type);
+      const base = { title, type: typeSel.value, folder: field("folder").value.trim(), description: text("description"), plan, cols, rows };
+      const out = id
+        ? await createTrackedItem({ ...base, id, criteria: text("criteria"), fetched })
+        : await api.createItem(base);
       close();
       await refresh();
-      await openDetail(it.name);
+      toast(t(out.session ? "newItem.createdPlan" : "newItem.created", { folder: out.item.name }));
+      if (out.session) await launched(out.session);
+      else await openDetail(out.item.name);
     } catch (err) {
-      back.querySelector("[data-error]")!.textContent = errorText(err);
+      form.querySelectorAll<HTMLButtonElement>("[type=submit]").forEach((b) => (b.disabled = false));
+      error.textContent = errorText(err);
     }
   };
+  syncMode();
   field("id").focus();
 }
 
@@ -814,14 +863,17 @@ onAction("bulk-promote", () => openPromotion(selectedNames()));
 onAction("show-deleted", () => deletedModal());
 onAction("bulk-reflect", () => reflectItems(selectedNames()));
 onAction("bulk-group", async () => {
-  const names = selectedNames().filter((n) => !itemByName(n)?.group && itemByName(n)?.kind === "item");
-  if (!names.length) return;
+  // Los de otro grupo también (se reagrupan, como la v1); los grupos no se anidan.
+  const names = selectedNames().filter((n) => itemByName(n)?.kind === "item");
+  if (!names.length) return toast(t("group.pickItems"), undefined, "error");
   const title = await promptDialog(t("items.groupTitle"));
-  if (!title) return;
+  if (title === null) return;
+  if (!title.trim()) return toast(t("group.titleRequired"), undefined, "error");
   const res = await api.createGroup(title, names);
   G.selected.clear();
   await refresh();
-  toast(t("items.grouped", { n: res.members.length }), {
+  const errors = res.errors.length ? ` · ${t("grid.bulk.errors", { n: res.errors.length, list: res.errors.map((e) => `${e.name}: ${errorText(e.error)}`).join(", ") })}` : "";
+  toast(t("items.grouped", { n: res.members.length }) + errors, {
     label: t("common.undo"),
     run: async () => {
       for (const m of res.members) await api.moveFolder(m, "");

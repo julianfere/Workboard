@@ -339,12 +339,15 @@ fn assigned_import_and_new_item_from_the_tracker() {
         json!({"id": "123456", "title": d["title"], "type": d["localType"], "folder": d["folder"],
             "description": d["description"], "criteria": d["criteria"], "trackerType": d["type"], "trackerState": d["state"]}),
     );
-    assert_eq!(it["name"], "wi123456-titulo-123456");
+    assert_eq!(it["item"]["name"], "wi123456-titulo-123456");
+    assert_eq!(it["session"], Json::Null);
     let readme = file_text(&env.root.join("wi123456-titulo-123456/README.md"));
+    // Como la v1 (`_plan_wi_create`): origen «Azure: estado», plan con el texto de relleno y pendientes.
     assert_eq!(
         readme,
-        "---\nestado: pendiente\nwi: 123456\ntipo: bug\n---\n# Título 123456\n\n> Bug #123456 · Azure DevOps: New\n\n\
-         ## Descripción\n\nDescripción de prueba\n\n## Criterios de aceptación\n\n- uno\n- dos\n"
+        "---\nestado: pendiente\nwi: 123456\ntipo: bug\n---\n# Título 123456\n\n> Bug #123456 · Azure: New\n\n\
+         ## Descripción\n\nDescripción de prueba\n\n## Criterios de aceptación\n\n- uno\n- dos\n\n\
+         ## Plan\n\n*(lo completa la sesión de planificación)*\n\n## Pendientes\n\n"
     );
     // Sin conexión: vuelve vacío para completarlo a mano.
     env.call("tracker_disconnect", json!({}));

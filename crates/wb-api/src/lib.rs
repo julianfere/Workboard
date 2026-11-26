@@ -26,6 +26,7 @@ use wb_core::notes::Notes;
 use wb_core::records::{Inbox, RunLog};
 use wb_core::text::slugify;
 use wb_core::validate::validate_fields;
+use wb_core::workspace::{Item, ItemKind};
 use wb_core::write::Change;
 use wb_core::{StateCategory, Workflow, Workspace};
 
@@ -270,9 +271,7 @@ impl Api {
             "list_versions" => to_json(self.workspace()?.list_versions(a.str("name")?)?),
             "read_version" => to_json(self.workspace()?.read_version(a.str("name")?, a.str("id")?)?),
             "restore_version" => to_json(self.workspace()?.restore_version(a.str("name")?, a.str("id")?)?),
-            "create_item" => {
-                self.create_item(a.str("folder")?, a.str("title")?, a.opt_str("type").unwrap_or(""))
-            }
+            "create_item" => self.create_item(&a),
             "create_group" => self.create_group(a.str("title")?, a.get("members")),
             "move_folder" => {
                 self.moved(a.str("name")?, |ws| Ok(ws.move_folder(a.str("name")?, a.str("dest")?)?))
@@ -412,51 +411,200 @@ impl Api {
         Ok(json!(true))
     }
 
-    /// Carpeta nueva con su README: estado inicial (el primero "por hacer" del flujo) y tipo.
-    fn create_item(&self, folder: &str, title: &str, item_type: &str) -> ApiResult<Json> {
+    /// Item nuevo sin id del tracker (un arreglo del proyecto): título obligatorio, tipo por defecto el
+    /// del preset (`newItem.defaultType`) y carpeta `newItem.folderTemplate`. Con `plan`, queda en el
+    /// estado de planificación y se abre la sesión de Planear; si no, en el estado inicial.
+    /// Devuelve `{item, session}`.
+    fn create_item(&self, a: &Args) -> ApiResult<Json> {
         let ws = self.workspace()?;
         let wf = ws.workflow();
-        let initial = wf
-            .states
-            .iter()
-            .find(|s| s.category == StateCategory::Backlog)
-            .unwrap_or(&wf.states[0])
-            .id
-            .clone();
+        let title = squash(a.opt_str("title").unwrap_or(""));
+        if title.is_empty() {
+            return Err(ApiError::new("newItem.titleRequired", &[]));
+        }
+        let item_type = match a.opt_str("type").map(str::trim).unwrap_or("") {
+            "" => wf.new_item.default_type.clone(),
+            t => t.to_string(),
+        };
         if !item_type.is_empty() && !wf.types.iter().any(|t| t.id == item_type) {
             return Err(ApiError::new("error.badArgument", &[("name", "type")]));
         }
-        let path = ws.create_folder(folder)?;
-        let name = ws.rel(&path);
-        let (status_key, type_key) = (wf.fields.status.clone(), wf.fields.kind.clone());
-        let title = title.trim().to_string();
-        let item = ws.write_readme(&name, |_, _| {
-            let mut meta = Meta::new();
-            meta.insert(status_key.clone(), Value::Text(initial.clone()));
-            if !item_type.is_empty() {
-                meta.insert(type_key.clone(), Value::Text(item_type.to_string()));
-            }
-            Ok(Change::Parts(meta, format!("# {}\n", if title.is_empty() { &name } else { &title })))
-        })?;
-        to_json(item)
+        let folder = match a.opt_str("folder").map(str::trim).unwrap_or("") {
+            "" => folder_without_id(wf, &item_type, &title),
+            f => f.to_string(),
+        };
+        let new = NewItem {
+            id: String::new(),
+            title,
+            local_type: item_type,
+            folder,
+            description: a.opt_str("description").unwrap_or("").trim().to_string(),
+            criteria: a.opt_str("criteria").unwrap_or("").trim().to_string(),
+            tracker_type: String::new(),
+            tracker_state: String::new(),
+            source: String::new(),
+        };
+        self.create_new_item(&ws, &new, a.bool("plan").then_some(a))
     }
 
-    /// Grupo nuevo (`<prefijo><slug>`) con su README, y los items elegidos adentro.
+    /// Escribe el README de un item nuevo (con o sin id) y, con `plan`, abre la sesión de Planear
+    /// (`plan_item`, con `cols`/`rows` de los argumentos). Devuelve `{item, session}`.
+    pub(crate) fn create_new_item(
+        &self,
+        ws: &Workspace,
+        d: &NewItem,
+        plan: Option<&Args>,
+    ) -> ApiResult<Json> {
+        let wf = ws.workflow();
+        let category = if plan.is_some() { StateCategory::Planned } else { StateCategory::Backlog };
+        let state = match wf.states.iter().find(|s| s.category == category) {
+            Some(s) => s.id.clone(),
+            None if plan.is_some() => return Err(ApiError::new("error.noPlanState", &[])),
+            None => wf.states[0].id.clone(),
+        };
+        let path = ws.create_folder(&d.folder)?;
+        let name = ws.rel(&path);
+        let mut meta = Meta::new();
+        meta.insert(wf.fields.status.clone(), Value::Text(state));
+        if !d.id.is_empty() {
+            meta.insert(wf.fields.item_ids.clone(), Value::Text(d.id.clone()));
+        }
+        if !d.local_type.is_empty() {
+            meta.insert(wf.fields.kind.clone(), Value::Text(d.local_type.clone()));
+        }
+        let body = new_item_body(wf, &name, d);
+        let item = ws.write_readme(&name, |_, _| Ok(Change::Parts(meta.clone(), body.clone())))?;
+        let session = match plan {
+            Some(a) => {
+                let args = json!({"name": name, "cols": a.get("cols"), "rows": a.get("rows")});
+                self.dispatch("plan_item", &args)?["session"].take()
+            }
+            None => Json::Null,
+        };
+        Ok(json!({"item": to_json(item)?, "session": session}))
+    }
+
+    /// Grupo nuevo (`<prefijo><slug>`) con su README, y los items elegidos adentro (también los que
+    /// están en otro grupo; los grupos no se anidan). Un item que no se puede mover no corta el resto:
+    /// vuelve en `errors`.
     fn create_group(&self, title: &str, members: &Json) -> ApiResult<Json> {
         let ws = self.workspace()?;
-        let base = format!("{}{}", ws.workflow().folders.group_prefix, slugify(title, 40, "group"));
+        let wf = ws.workflow();
+        let title = squash(title);
+        if title.is_empty() {
+            return Err(ApiError::new("group.titleRequired", &[]));
+        }
+        let items: IndexMap<String, Item> =
+            ws.list_items()?.into_iter().map(|it| (it.name.clone(), it)).collect();
+        let picked: Vec<&Item> = members
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter_map(Json::as_str)
+            .filter_map(|n| items.get(n))
+            .filter(|it| it.kind != ItemKind::Group)
+            .collect();
+        if picked.is_empty() {
+            return Err(ApiError::new("group.pickItems", &[]));
+        }
+        let base = format!("{}{}", wf.folders.group_prefix, slugify(&title, 40, "wi"));
         let path = ws.create_folder(&base)?;
         let name = ws.rel(&path);
-        let title = title.trim().to_string();
-        ws.write_readme(&name, |meta, _| Ok(Change::Parts(meta, format!("# {title}\n"))))?;
-        let mut moved = vec![];
-        for m in members.as_array().into_iter().flatten().filter_map(Json::as_str) {
-            let new = ws.move_folder(m, &name)?;
-            self.follow_move(&ws, m, &new)?;
-            moved.push(new);
+        let ids: Vec<String> =
+            picked.iter().flat_map(|it| it.ids.iter().map(|id| format!("#{id}"))).collect();
+        let body = group_body(wf, &title, &ids);
+        ws.write_readme(&name, |_, _| Ok(Change::Parts(Meta::new(), body.clone())))?;
+        let (mut moved, mut errors) = (vec![], vec![]);
+        for it in picked {
+            let res = ws.move_folder(&it.name, &name).map_err(ApiError::from).and_then(|new| {
+                self.follow_move(&ws, &it.name, &new)?;
+                Ok(new)
+            });
+            match res {
+                Ok(new) => moved.push(new),
+                Err(e) => errors.push(json!({"name": it.name, "error": e})),
+            }
         }
-        Ok(json!({"group": name, "members": moved}))
+        Ok(json!({"group": name, "members": moved, "errors": errors}))
     }
+}
+
+/// Datos de un item nuevo para su README.
+pub(crate) struct NewItem {
+    /// Id del tracker (vacío: un item sin id).
+    pub id: String,
+    pub title: String,
+    pub local_type: String,
+    pub folder: String,
+    pub description: String,
+    pub criteria: String,
+    /// Tipo y estado en el tracker, y su nombre, para la línea de origen.
+    pub tracker_type: String,
+    pub tracker_state: String,
+    pub source: String,
+}
+
+/// Espacios repetidos a uno, sin los de los extremos.
+pub(crate) fn squash(text: &str) -> String {
+    text.split_whitespace().collect::<Vec<_>>().join(" ")
+}
+
+/// Carpeta de un item sin id: `newItem.folderTemplate` con el tipo y el slug del título.
+pub(crate) fn folder_without_id(wf: &Workflow, item_type: &str, title: &str) -> String {
+    let slug = slugify(title, 40, "wi");
+    let tpl = &wf.new_item.folder_template;
+    let tpl = if tpl.is_empty() { "{slug}" } else { tpl.as_str() };
+    tpl.replace("{type}", item_type).replace("{slug}", &slug).trim_matches('-').to_string()
+}
+
+/// README de un item nuevo como la v1: título, línea de origen, descripción y criterios (si hay),
+/// la sección de plan con su texto de relleno y la de tareas. Títulos y textos salen del preset.
+pub(crate) fn new_item_body(wf: &Workflow, name: &str, d: &NewItem) -> String {
+    let rules = &wf.new_item;
+    let origin = if d.id.is_empty() {
+        rules.origin_no_id.clone()
+    } else {
+        let kind = if d.tracker_type.is_empty() { &rules.unknown_type } else { &d.tracker_type };
+        let mut line = rules.origin.replace("{type}", kind).replace("{id}", &d.id);
+        if !d.tracker_state.is_empty() {
+            line.push_str(
+                &rules.origin_state.replace("{source}", &d.source).replace("{state}", &d.tracker_state),
+            );
+        }
+        line
+    };
+    let mut body = format!("# {}\n\n", if d.title.is_empty() { name } else { &d.title });
+    if !origin.trim().is_empty() {
+        body.push_str(&format!("{}\n\n", origin.trim_end()));
+    }
+    for (heading, text) in [(&wf.sections.description, &d.description), (&wf.sections.criteria, &d.criteria)]
+    {
+        if !text.is_empty() {
+            body.push_str(&format!("## {heading}\n\n{text}\n\n"));
+        }
+    }
+    body.push_str(&format!(
+        "## {}\n\n{}\n\n## {}\n\n",
+        wf.plan.heading, wf.plan.placeholder, wf.tasks.heading
+    ));
+    body
+}
+
+/// README de un grupo nuevo como la v1: título, línea de origen con los ids, la sección de deploy y la
+/// de tareas.
+pub(crate) fn group_body(wf: &Workflow, title: &str, ids: &[String]) -> String {
+    let g = &wf.group;
+    let list = if ids.is_empty() { String::new() } else { g.ids.replace("{list}", &ids.join(", ")) };
+    let mut body = format!("# {title}\n\n");
+    let origin = g.origin.replace("{ids}", &list);
+    if !origin.trim().is_empty() {
+        body.push_str(&format!("{}\n\n", origin.trim_end()));
+    }
+    if !g.deploy_heading.is_empty() {
+        body.push_str(&format!("## {}\n\n", g.deploy_heading));
+    }
+    body.push_str(&format!("## {}\n\n", wf.tasks.heading));
+    body
 }
 
 #[cfg(test)]
@@ -546,7 +694,8 @@ mod tests {
         let created = api
             .dispatch("create_item", &json!({"folder": "wi123456-nuevo", "title": "Nuevo", "type": "bug"}))
             .unwrap();
-        assert_eq!(created["meta"]["estado"], "pendiente");
+        assert_eq!(created["item"]["meta"]["estado"], "pendiente");
+        assert_eq!(created["session"], Json::Null);
         let group = api
             .dispatch("create_group", &json!({"title": "Pagos y más", "members": ["wi123456-nuevo"]}))
             .unwrap();
@@ -687,6 +836,151 @@ mod tests {
         assert_eq!(
             api.dispatch("session_prompt", &json!({"id": sid, "kind": "x"})).unwrap_err().code,
             "session.unknownPrompt"
+        );
+        api.shutdown();
+        std::fs::remove_dir_all(&base).ok();
+    }
+
+    fn readme(root: &Path, name: &str) -> String {
+        std::fs::read_to_string(root.join(name).join("README.md")).unwrap()
+    }
+
+    #[test]
+    fn new_item_without_id_writes_the_v1_readme() {
+        let (root, base) = fixture_copy("new-fix");
+        let api = Api::new(base.join("cfg"));
+        api.dispatch("set_settings", &json!({"settings": {"workflow": "classic-es"}})).unwrap();
+        api.dispatch("open_root", &json!({"path": root})).unwrap();
+
+        let err = api.dispatch("create_item", &json!({"title": "   "})).unwrap_err();
+        assert_eq!(err.code, "newItem.titleRequired");
+
+        // Sin tipo ni carpeta: el tipo «arreglo» del preset y `<tipo>-<slug>` (v1 `_plan_wi_create`).
+        let out = api
+            .dispatch(
+                "create_item",
+                &json!({"title": " Ajustar  timeout del job ", "description": " Sube a 60 s.\n", "criteria": ""}),
+            )
+            .unwrap();
+        assert_eq!(out["item"]["name"], "fix-ajustar-timeout-del-job");
+        assert_eq!(
+            readme(&root, "fix-ajustar-timeout-del-job"),
+            "---\nestado: pendiente\ntipo: fix\n---\n# Ajustar timeout del job\n\n\
+             > Arreglo del proyecto (sin work item)\n\n## Descripción\n\nSube a 60 s.\n\n\
+             ## Plan\n\n*(lo completa la sesión de planificación)*\n\n## Pendientes\n\n"
+        );
+
+        // Tipo y carpeta elegidos, sin descripción.
+        api.dispatch("create_item", &json!({"title": "Otro", "type": "task", "folder": "task-a-mano"}))
+            .unwrap();
+        assert_eq!(
+            readme(&root, "task-a-mano"),
+            "---\nestado: pendiente\ntipo: task\n---\n# Otro\n\n> Arreglo del proyecto (sin work item)\n\n\
+             ## Plan\n\n*(lo completa la sesión de planificación)*\n\n## Pendientes\n\n"
+        );
+        let bad = api.dispatch("create_item", &json!({"title": "x", "type": "nope"})).unwrap_err();
+        assert_eq!(bad.code, "error.badArgument");
+        std::fs::remove_dir_all(&base).ok();
+    }
+
+    #[test]
+    fn tracked_readme_matches_v1() {
+        let wf = Workflow::preset("classic-es").unwrap();
+        let mut d = NewItem {
+            id: "123456".into(),
+            title: "Login".into(),
+            local_type: "bug".into(),
+            folder: "wi123456-login".into(),
+            description: "Falla el SSO".into(),
+            criteria: "- entra".into(),
+            tracker_type: "Bug".into(),
+            tracker_state: "Active".into(),
+            source: "Azure DevOps".into(),
+        };
+        assert_eq!(
+            new_item_body(&wf, "wi123456-login", &d),
+            "# Login\n\n> Bug #123456 · Azure: Active\n\n## Descripción\n\nFalla el SSO\n\n\
+             ## Criterios de aceptación\n\n- entra\n\n## Plan\n\n*(lo completa la sesión de planificación)*\n\n\
+             ## Pendientes\n\n"
+        );
+        // A mano (sin datos del tracker): «Work item» y sin estado, título = carpeta.
+        d.tracker_type.clear();
+        d.tracker_state.clear();
+        d.title.clear();
+        d.description.clear();
+        d.criteria.clear();
+        assert_eq!(
+            new_item_body(&wf, "wi123456", &d),
+            "# wi123456\n\n> Work item #123456\n\n## Plan\n\n*(lo completa la sesión de planificación)*\n\n\
+             ## Pendientes\n\n"
+        );
+        // El preset genérico usa el nombre del tracker.
+        let wf = Workflow::preset("default").unwrap();
+        d.tracker_state = "Active".into();
+        assert!(new_item_body(&wf, "x", &d).contains("> Work item #123456 · Azure DevOps: Active\n"));
+    }
+
+    #[test]
+    fn create_group_like_v1() {
+        let (root, base) = fixture_copy("new-group");
+        let api = Api::new(base.join("cfg"));
+        api.dispatch("set_settings", &json!({"settings": {"workflow": "classic-es"}})).unwrap();
+        api.dispatch("open_root", &json!({"path": root})).unwrap();
+
+        let err = api.dispatch("create_group", &json!({"title": " ", "members": ["wi111111-login-con-sso"]}));
+        assert_eq!(err.unwrap_err().code, "group.titleRequired");
+        // Sin items válidos (un grupo no cuenta): no se crea nada.
+        let err =
+            api.dispatch("create_group", &json!({"title": "Vacío", "members": ["grp-checkout", "nope"]}));
+        assert_eq!(err.unwrap_err().code, "group.pickItems");
+        assert!(!root.join("grp-vacio").exists());
+
+        // Un item suelto y uno de otro grupo (se reagrupa); cada uno se mueve por su cuenta.
+        let out = api
+            .dispatch(
+                "create_group",
+                &json!({"title": "Pagos", "members": ["grp-checkout/wi444444-carrito", "wi222222-333333-pagos"]}),
+            )
+            .unwrap();
+        assert_eq!(out["members"], json!(["grp-pagos/wi444444-carrito", "grp-pagos/wi222222-333333-pagos"]));
+        assert_eq!(out["errors"], json!([]));
+        assert_eq!(
+            readme(&root, "grp-pagos"),
+            "# Pagos\n\n> Grupo de WI: #444444, #222222, #333333. Cada WI tiene su carpeta (y su estado) \
+             adentro; acá va lo compartido entre ellos.\n\n## Cómo deployar\n\n## Pendientes\n\n"
+        );
+        std::fs::remove_dir_all(&base).ok();
+    }
+
+    #[test]
+    fn create_and_plan_in_one_step() {
+        let (root, base) = fixture_copy("new-plan");
+        let exe = std::env::current_exe().unwrap();
+        let api = Api::new(base.join("cfg"));
+        api.set_session_bins(exe.clone(), exe);
+        api.dispatch("set_settings", &json!({"settings": {"workflow": "classic-es", "lang": "es"}})).unwrap();
+        api.dispatch("open_root", &json!({"path": root})).unwrap();
+        let (cmd, args) =
+            if cfg!(windows) { ("cmd", "/c echo {session_id}") } else { ("sh", "-c \"echo {session_id}\"") };
+        api.dispatch("set_agents", &json!({"default": "custom", "custom": {"command": cmd, "args": args}}))
+            .unwrap();
+
+        let out = api
+            .dispatch("create_item", &json!({"title": "Arreglar job", "plan": true, "cols": 80, "rows": 24}))
+            .unwrap();
+        assert_eq!(out["item"]["meta"]["estado"], "plan");
+        assert_eq!(out["session"]["mode"], "plan");
+        assert_eq!(out["session"]["name"], "Planear fix-arreglar-job");
+        // Ya se crea en el estado de plan (como la v1); después solo se suma la sesión.
+        let text = readme(&root, "fix-arreglar-job");
+        let sid = out["session"]["id"].as_str().unwrap();
+        assert_eq!(
+            text,
+            format!(
+                "---\nestado: plan\ntipo: fix\nsesiones: [{sid}]\n---\n# Arreglar job\n\n\
+                 > Arreglo del proyecto (sin work item)\n\n## Plan\n\n*(lo completa la sesión de planificación)*\n\n\
+                 ## Pendientes\n\n"
+            )
         );
         api.shutdown();
         std::fs::remove_dir_all(&base).ok();

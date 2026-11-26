@@ -53,6 +53,8 @@ export interface Workflow {
   plan: { heading: string; placeholder: string; minChars: number };
   /** Títulos de las secciones que se completan al crear un item desde un tracker. */
   sections: { description: string; criteria: string };
+  newItem: { defaultType: string; folderTemplate: string; origin: string; originState: string; unknownType: string; originNoId: string };
+  group: { origin: string; ids: string; deployHeading: string };
   files: { kinds: string[]; categories: FileCategory[]; fallbackCategory: FileCategory };
   /** Palabras que identifican la sección «cómo deployar» del README. */
   deployKeywords?: string[];
@@ -384,6 +386,14 @@ export interface TrackerItem {
   existing: string[];
   fromTracker: boolean;
   source: string;
+  /** Por qué quedó en manual (credencial faltante o rechazada). */
+  error: ApiError | null;
+}
+
+/** Lo que devuelven `create_item` y `tracker_create_item`. */
+export interface NewItemResult {
+  item: Item;
+  session: Session | null;
 }
 
 export interface TrackerFailure {

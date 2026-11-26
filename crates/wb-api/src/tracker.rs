@@ -18,12 +18,11 @@ use indexmap::IndexMap;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value as Json, json};
-use wb_core::frontmatter::{Meta, Value};
+use wb_core::frontmatter::Value;
 use wb_core::records::RunLog;
 use wb_core::text::slugify;
 use wb_core::validate::validate_fields;
 use wb_core::workspace::Item;
-use wb_core::write::Change;
 use wb_core::{StateCategory, Workflow, Workspace};
 use wb_platform::secrets::{OsSecrets, SecretStore};
 use wb_tracker::{
@@ -31,7 +30,7 @@ use wb_tracker::{
     WorkItem, azure,
 };
 
-use crate::{Api, ApiError, ApiResult, Args, to_json};
+use crate::{Api, ApiError, ApiResult, Args, NewItem, squash, to_json};
 
 pub const TRACKERS_FILE: &str = "trackers.json";
 /// El mismo archivo que lee el MCP (`wb_mcp::TRACKER_CACHE`).
@@ -384,18 +383,6 @@ fn preview(
         "requested": cache.requested.len(),
         "syncedAt": cache.synced_at,
     })
-}
-
-/// Datos para crear la carpeta de un work item del tracker.
-struct NewTracked {
-    id: String,
-    title: String,
-    local_type: String,
-    folder: String,
-    description: String,
-    criteria: String,
-    tracker_type: String,
-    tracker_state: String,
 }
 
 /// Contexto de un comando: la carpeta abierta, su conexión y la config de su proyecto.
@@ -861,19 +848,20 @@ impl Api {
                 errors.push(json!({"id": id, "error": ApiError::new("tracker.itemMissing", &[("id", id)])}));
                 continue;
             };
-            let new = NewTracked {
+            let new = NewItem {
                 id: id.clone(),
                 title: w.title.clone(),
                 local_type: local_type(wf, &w.kind),
-                folder: String::new(),
+                folder: folder_for(wf, id, &w.title),
                 description: w.description.clone().unwrap_or_default(),
                 criteria: w.criteria.clone().unwrap_or_default(),
                 tracker_type: w.kind.clone(),
                 tracker_state: w.state.clone(),
+                source: source.to_string(),
             };
-            match create_tracked(&ctx.ws, source, &new) {
-                Ok(item) => {
-                    done.push(item.name);
+            match self.create_new_item(&ctx.ws, &new, None) {
+                Ok(out) => {
+                    done.push(out["item"]["name"].as_str().unwrap_or_default().to_string());
                     have.insert(id.clone());
                 }
                 Err(e) => errors.push(json!({"id": id, "error": e})),
@@ -902,8 +890,8 @@ impl Api {
         Ok(json!({"done": done, "skipped": skipped, "errors": errors}))
     }
 
-    /// Datos de un work item para «Nuevo item». Sin conexión (o sin credencial) vuelve vacío, para
-    /// completarlo a mano.
+    /// Datos de un work item para «Nuevo item». Sin conexión, sin credencial o con una credencial
+    /// rechazada vuelve vacío, para completarlo a mano (como la v1); `error` dice por qué.
     fn tracker_item(&self, ctx: &Ctx, id: &str) -> ApiResult<Json> {
         let wf = ctx.ws.workflow();
         let id = clean_id(id);
@@ -913,8 +901,16 @@ impl Api {
         let existing: Vec<String> =
             ctx.ws.list_items()?.into_iter().filter(|it| it.ids.contains(&id)).map(|it| it.name).collect();
         let connected = ctx.conn.as_ref().is_some_and(|c| self.has_secret(c, false));
+        let mut error = Json::Null;
         let detail = if connected && is_numeric_id(&id) {
-            Some(self.tracker_client(ctx, false)?.detail(&id)?)
+            match self.tracker_client(ctx, false).and_then(|c| Ok(c.detail(&id)?)) {
+                Ok(d) => Some(d),
+                Err(e) if MANUAL_ON.contains(&e.code.as_str()) => {
+                    error = json!(e);
+                    None
+                }
+                Err(e) => return Err(e),
+            }
         } else {
             None
         };
@@ -931,11 +927,13 @@ impl Api {
             "existing": existing,
             "fromTracker": detail.is_some(),
             "source": ctx.conn.as_ref().map_or(azure::SOURCE, Connection::source),
+            "error": error,
         }))
     }
 
-    /// Nuevo item con id del tracker: la carpeta con su README (estado inicial, id, tipo, descripción y
-    /// criterios). Lo único que se escribe en la carpeta de trabajos.
+    /// Nuevo item con id del tracker: la carpeta con su README (estado inicial, id, tipo, línea de origen,
+    /// descripción, criterios, plan y tareas). Con `plan`, en el estado de planificación y con la sesión
+    /// de Planear abierta. Lo único que se escribe en la carpeta de trabajos. Devuelve `{item, session}`.
     fn tracker_create_item(&self, ctx: &Ctx, a: &Args) -> ApiResult<Json> {
         let wf = ctx.ws.workflow();
         let id = clean_id(a.str("id")?);
@@ -947,18 +945,23 @@ impl Api {
             return Err(ApiError::new("error.badArgument", &[("name", "type")]));
         }
         let s = |k: &str| a.opt_str(k).unwrap_or("").trim().to_string();
-        let new = NewTracked {
+        let title = squash(&s("title"));
+        let folder = match s("folder") {
+            f if f.is_empty() => folder_for(wf, &id, &title),
+            f => f,
+        };
+        let new = NewItem {
             id,
-            title: s("title").split_whitespace().collect::<Vec<_>>().join(" "),
+            title,
             local_type,
-            folder: s("folder"),
+            folder,
             description: s("description"),
             criteria: s("criteria"),
             tracker_type: s("trackerType"),
             tracker_state: s("trackerState"),
+            source: ctx.conn.as_ref().map_or(azure::SOURCE, Connection::source).to_string(),
         };
-        let source = ctx.conn.as_ref().map_or(azure::SOURCE, Connection::source);
-        to_json(create_tracked(&ctx.ws, source, &new)?)
+        self.create_new_item(&ctx.ws, &new, a.bool("plan").then_some(a))
     }
 
     /// ESCRIBE en el tracker: cambia el estado de cada work item (`[{id, state}]`). Usa la credencial de
@@ -1002,42 +1005,13 @@ impl Api {
     }
 }
 
+/// Errores del tracker con los que «Traer» sigue en manual (como el `PermissionError` de la v1).
+const MANUAL_ON: &[&str] = &["tracker.noSecret", "tracker.auth", "tracker.loginPage"];
+
 /// Carpeta sugerida: la plantilla del flujo con el id y el título.
 fn folder_for(wf: &Workflow, id: &str, title: &str) -> String {
     let slug = if title.trim().is_empty() { String::new() } else { slugify(title, 40, "item") };
     wf.folders.new_item_template.replace("{id}", id).replace("{slug}", &slug).trim_matches('-').to_string()
-}
-
-fn create_tracked(ws: &Workspace, source: &str, d: &NewTracked) -> ApiResult<Item> {
-    let wf = ws.workflow();
-    let initial =
-        wf.states.iter().find(|s| s.category == StateCategory::Backlog).unwrap_or(&wf.states[0]).id.clone();
-    let folder = if d.folder.is_empty() { folder_for(wf, &d.id, &d.title) } else { d.folder.clone() };
-    let path = ws.create_folder(&folder)?;
-    let name = ws.rel(&path);
-    let mut meta = Meta::new();
-    meta.insert(wf.fields.status.clone(), Value::Text(initial));
-    meta.insert(wf.fields.item_ids.clone(), Value::Text(d.id.clone()));
-    if !d.local_type.is_empty() {
-        meta.insert(wf.fields.kind.clone(), Value::Text(d.local_type.clone()));
-    }
-    let mut origin = format!(
-        "> {}#{}",
-        if d.tracker_type.is_empty() { String::new() } else { format!("{} ", d.tracker_type) },
-        d.id
-    );
-    if !d.tracker_state.is_empty() {
-        origin.push_str(&format!(" · {source}: {}", d.tracker_state));
-    }
-    let mut body = format!("# {}\n\n{origin}\n\n", if d.title.is_empty() { &name } else { &d.title });
-    for (heading, text) in [(&wf.sections.description, &d.description), (&wf.sections.criteria, &d.criteria)]
-    {
-        if !text.is_empty() {
-            body.push_str(&format!("## {heading}\n\n{text}\n\n"));
-        }
-    }
-    let body = format!("{}\n", body.trim_end());
-    Ok(ws.write_readme(&name, |_, _| Ok(Change::Parts(meta.clone(), body.clone())))?)
 }
 
 #[cfg(test)]
@@ -1102,6 +1076,61 @@ estado: {estado}
         assert_eq!(rows[0]["why"], json!({"env": "qa", "repos": ["app"]}));
         // Las filas de git van al final.
         assert_eq!(out["rows"].as_array().unwrap().last().unwrap()["kind"], "git");
+        let _ = std::fs::remove_dir_all(&base);
+    }
+
+    /// Responde siempre lo mismo (un 401 = credencial rechazada).
+    struct Fixed(u16);
+
+    impl Transport for Fixed {
+        fn send(&self, _req: &wb_tracker::HttpRequest) -> Result<wb_tracker::HttpResponse, String> {
+            Ok(wb_tracker::HttpResponse {
+                status: self.0,
+                content_type: "application/json".into(),
+                body: b"{}".to_vec(),
+            })
+        }
+    }
+
+    #[test]
+    fn fetch_with_a_rejected_secret_stays_manual_and_creates_the_v1_readme() {
+        let base = std::env::temp_dir().join(format!("wb-trk-new-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&base);
+        std::fs::create_dir_all(base.join("work")).unwrap();
+        let api = Api::new(base.join("cfg"));
+        api.set_tracker_backend(
+            Arc::new(wb_platform::secrets::MemorySecrets::default()),
+            Arc::new(Fixed(401)),
+        );
+        api.dispatch("set_settings", &json!({"settings": {"workflow": "classic-es"}})).unwrap();
+        api.dispatch("open_root", &json!({"path": base.join("work")})).unwrap();
+        api.dispatch(
+            "tracker_connect",
+            &json!({"org": "https://dev.azure.com/acme", "project": "Shop", "secret": "bad"}),
+        )
+        .unwrap();
+
+        // v1 `plan_wi_fetch`: PAT inválido = se completa a mano.
+        let d = api.dispatch("tracker_item", &json!({"id": "#123456"})).unwrap();
+        assert_eq!(d["fromTracker"], false);
+        assert_eq!(d["error"]["code"], "tracker.auth");
+        assert_eq!(d["folder"], "wi123456");
+
+        let out = api
+            .dispatch(
+                "tracker_create_item",
+                &json!({"id": "123456", "title": "Login  SSO", "type": "bug", "description": "Falla",
+                        "criteria": "", "trackerType": "Bug", "trackerState": "Active"}),
+            )
+            .unwrap();
+        assert_eq!(out["item"]["name"], "wi123456-login-sso");
+        assert_eq!(out["session"], Json::Null);
+        let text = std::fs::read_to_string(base.join("work/wi123456-login-sso/README.md")).unwrap();
+        assert_eq!(
+            text,
+            "---\nestado: pendiente\nwi: 123456\ntipo: bug\n---\n# Login SSO\n\n> Bug #123456 · Azure: Active\n\n\
+             ## Descripción\n\nFalla\n\n## Plan\n\n*(lo completa la sesión de planificación)*\n\n## Pendientes\n\n"
+        );
         let _ = std::fs::remove_dir_all(&base);
     }
 }

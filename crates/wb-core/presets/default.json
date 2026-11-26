@@ -50,6 +50,19 @@
   "inboxTitle": "Inbox",
   "plan": { "heading": "Plan", "placeholder": "*(filled in by the planning session)*", "minChars": 40 },
   "sections": { "description": "Description", "criteria": "Acceptance criteria" },
+  "newItem": {
+    "defaultType": "chore",
+    "folderTemplate": "{type}-{slug}",
+    "origin": "> {type} #{id}",
+    "originState": " · {source}: {state}",
+    "unknownType": "Work item",
+    "originNoId": "> Project fix (no work item)"
+  },
+  "group": {
+    "origin": "> Group of items{ids}. Each item keeps its own folder (and status) inside; what they share goes here.",
+    "ids": ": {list}",
+    "deployHeading": "How to deploy"
+  },
   "files": {
     "kinds": ["ROLLBACK", "MIGRATION", "FIX", "SEED", "DIAG", "VERIF", "PLAN", "HANDOFF", "QA"],
     "categories": [
