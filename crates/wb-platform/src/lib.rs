@@ -124,15 +124,52 @@ pub fn open_in_vscode(target: &Path) -> io::Result<()> {
     cmd.spawn().map(drop)
 }
 
-/// Abre una URL `https://` en el navegador del sistema. Otros esquemas se rechazan.
-pub fn open_url(url: &str) -> io::Result<()> {
-    let ok = url.strip_prefix("https://").is_some_and(|rest| {
+/// ¿Es un link que se puede abrir afuera? `https://` y `http://` con algo después, o `mailto:` con una
+/// dirección; sin espacios, controles ni caracteres que una consola interpretaría.
+pub fn is_external_url(url: &str) -> bool {
+    let rest = url
+        .strip_prefix("https://")
+        .or_else(|| url.strip_prefix("http://"))
+        .or_else(|| url.strip_prefix("mailto:"));
+    rest.is_some_and(|rest| {
         !rest.is_empty()
-            && !rest.chars().any(|c| c.is_whitespace() || c.is_control() || "\"'<>^`|".contains(c))
-    });
-    if !ok {
-        return Err(io::Error::new(io::ErrorKind::InvalidInput, "not an https URL"));
+            && !rest.chars().any(|c| c.is_whitespace() || c.is_control() || "\"'<>^`|\\".contains(c))
+    })
+}
+
+/// Abre una URL `https://`, `http://` o `mailto:` en el navegador (o el cliente de correo) del sistema.
+/// Otros esquemas se rechazan.
+pub fn open_url(url: &str) -> io::Result<()> {
+    if !is_external_url(url) {
+        return Err(io::Error::new(io::ErrorKind::InvalidInput, "not an http(s) or mailto URL"));
     }
+    launch_uri(url)
+}
+
+/// URI que abre un archivo en Obsidian (`obsidian://open?path=…`), con la ruta codificada como
+/// `urllib.parse.quote` de Python (la v1): solo quedan sin codificar las letras, dígitos, `-._~` y `/`.
+pub fn obsidian_uri(path: &Path) -> String {
+    let mut out = String::from("obsidian://open?path=");
+    for b in path.to_string_lossy().bytes() {
+        if b.is_ascii_alphanumeric() || b"-._~/".contains(&b) {
+            out.push(b as char);
+        } else {
+            out.push_str(&format!("%{b:02X}"));
+        }
+    }
+    out
+}
+
+/// Abre un archivo en Obsidian (si su carpeta es, o está dentro de, un vault; si no, Obsidian lo avisa).
+pub fn open_in_obsidian(path: &Path) -> io::Result<()> {
+    if !path.exists() {
+        return Err(io::Error::new(io::ErrorKind::NotFound, path.display().to_string()));
+    }
+    launch_uri(&obsidian_uri(path))
+}
+
+/// Le pasa una URI ya validada al manejador del sistema para su esquema.
+fn launch_uri(url: &str) -> io::Result<()> {
     let mut cmd = if cfg!(windows) {
         // Sin `cmd /C start`: el `&` de una URL se interpretaría como otro comando.
         let mut c = command("rundll32");
@@ -321,10 +358,34 @@ mod tests {
     }
 
     #[test]
-    fn only_https_urls_are_opened() {
-        for bad in ["http://x.com", "file:///c:/x", "https://", "https://a b", "javascript:alert(1)"] {
+    fn only_web_and_mail_urls_are_opened() {
+        for bad in [
+            "file:///c:/x",
+            "https://",
+            "http://",
+            "mailto:",
+            "https://a b",
+            "http://x.com/a\"b",
+            "javascript:alert(1)",
+            "obsidian://open?path=x",
+            "HTTPS://x.com",
+        ] {
+            assert!(!is_external_url(bad), "{bad}");
             assert_eq!(open_url(bad).unwrap_err().kind(), io::ErrorKind::InvalidInput, "{bad}");
         }
+        for good in ["https://x.com/a?b=1&c=2", "http://intranet/x", "mailto:someone@example.com"] {
+            assert!(is_external_url(good), "{good}");
+        }
+    }
+
+    #[test]
+    fn obsidian_uris_quote_the_path_like_python() {
+        assert_eq!(
+            obsidian_uri(Path::new("C:\\Vault\\Notas/a b-ñ.md")),
+            "obsidian://open?path=C%3A%5CVault%5CNotas/a%20b-%C3%B1.md"
+        );
+        let missing = Path::new("definitely/not/here.md");
+        assert_eq!(open_in_obsidian(missing).unwrap_err().kind(), io::ErrorKind::NotFound);
     }
 
     #[test]
