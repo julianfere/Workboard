@@ -134,11 +134,14 @@ export function trackerBadge(it: Item): string {
   return `<span class="chip trk-chip" title="${esc(`${TR.cfg!.source} · ${w.type} · ${w.state}\n${w.title}`)}">${trackerDot(w.state)}${esc(w.state)}</span>`;
 }
 
-/** Botones de la barra de la grilla: sincronizar y asignados del período. */
+/** Botones de la barra de la grilla: asignados del período (con conexión) y sincronizar, siempre (sin
+ * configurar abre el asistente, como «Sincronizar Azure» de la v1). */
 export function trackerToolbar(): string {
-  if (!trackerConnected()) return "";
-  return `<button class="btn" data-action="trk-assigned" title="${esc(t("tracker.assigned.title"))}">${ico("calendar")}${esc(t("tracker.assigned.short"))}</button>
-    <button class="btn" data-action="trk-sync" title="${esc(t("tracker.sync.hint", { source: TR.cfg!.source }))}">${ico("cloud")}${esc(t("tracker.sync.button"))}</button>`;
+  if (!S.root) return "";
+  const cfg = ensureLoaded();
+  const source = cfg?.source ?? "Azure DevOps";
+  return `${cfg?.connected ? `<button class="btn" data-action="trk-assigned" title="${esc(t("tracker.assigned.title"))}">${ico("calendar")}${esc(t("tracker.assigned.short"))}</button>` : ""}
+    <button class="btn" data-action="trk-sync" title="${esc(t("tracker.sync.hint", { source }))}">${ico("cloud")}${esc(t("tracker.sync.button"))}</button>`;
 }
 
 /** Acción en lote: cambiar el estado en el tracker de los seleccionados. */
@@ -169,6 +172,7 @@ export function trackerCard(it: Item): string {
         w.estimate !== null && hrs(t("tracker.estimate", { hours: fmtHours(w.estimate) })),
         w.completed !== null && hrs(t("tracker.completed", { hours: fmtHours(w.completed) })),
         w.changed && esc(t("tracker.changed", { date: fmtIso(w.changed) })),
+        esc(t("tracker.mapsTo", { state: cfg.map[w.state] ? stateLabel(cfg.map[w.state]) : "—" })),
       ].filter((f): f is string => !!f);
       return `<li><span class="grow"><span class="chip">${trackerDot(w.state)}${esc(w.state)}</span> #${esc(id)} ${esc(w.title)}
         <div class="muted tr-facts">${facts.map((f) => (f.startsWith("<span") ? f : `<span>${f}</span>`)).join("")}</div></span>${open}</li>`;
@@ -285,6 +289,7 @@ onAction("trk-refetch", async () => {
   for (const s of TR.newStates) if (!(s in map) && TR.cfg.suggested[s]) map[s] = TR.cfg.suggested[s];
   toast(t("tracker.refetched", { n: TR.cfg.states.length, added: TR.newStates.size }));
   render();
+  rerender();
 });
 onChange("trk-map", (el) => {
   const map = (TR.draftMap ??= initialMap(TR.cfg!));
@@ -299,15 +304,28 @@ onAction("trk-save-map", async () => {
   toast(t("tracker.map.saved"));
   render();
 });
+// Como la v1: la fecha pactada se relee al momento solo desde el modal del sync (si no, en el próximo
+// sync); las horas releen siempre todos los work items.
 onChange("trk-field", async (el) => {
   const sel = el as HTMLSelectElement;
-  TR.cfg = await trackerApi.setField(el.dataset.which as "due" | "hours", sel.value);
-  // Releer todos los work items para completar fechas u horas con el campo nuevo.
-  if (TR.cfg.cache) {
-    sel.disabled = true;
-    toast(t("tracker.rereading"));
-    TR.cfg = await trackerApi.sync();
-    if (sync) await loadPreview();
+  const which = el.dataset.which as "due" | "hours";
+  try {
+    TR.cfg = await trackerApi.setField(which, sel.value);
+    const inSync = !!sync && modal?.view === syncView;
+    if (which === "due" && !inSync) {
+      toast(t(sel.value ? "tracker.field.dueSaved" : "tracker.field.dueNone"));
+    } else {
+      sel.disabled = true;
+      toast(t("tracker.rereading"));
+      TR.cfg = await trackerApi.sync();
+      if (inSync) await loadPreview();
+      const n = Object.values(TR.cfg.cache?.items ?? {}).filter((w) => (w.estimate ?? 0) > 0).length;
+      if (which === "due") toast(t(sel.value ? "tracker.field.dueUpdated" : "tracker.field.dueNone"));
+      else toast(sel.value ? t("tracker.field.hoursRead", { n }) : t("tracker.field.hoursNone", { source: TR.cfg.source }));
+    }
+  } catch (err) {
+    toast(errorText(err), undefined, "error");
+    sel.disabled = false;
   }
   render();
   rerender();
@@ -317,15 +335,122 @@ onAction("trk-clear-secret", async (el) => {
   if (!(await confirmDialog(t(write ? "tracker.clearWriteSecretConfirm" : "tracker.clearSecretConfirm"), t("common.delete")))) return;
   TR.cfg = await trackerApi.clearSecret(write);
   render();
+  rerender();
 });
 onAction("trk-disconnect", async () => {
   if (!(await confirmDialog(t("tracker.disconnectConfirm", { org: TR.cfg!.org, project: TR.cfg!.project }), t("tracker.disconnect")))) return;
   TR.cfg = await trackerApi.disconnect();
   TR.draftMap = null;
+  if (wizard) {
+    wizard = null;
+    closeModal();
+  }
   toast(t("tracker.disconnected"));
   render();
 });
 onAction("trk-open", (el) => trackerApi.open(el.dataset.id!).then(() => undefined));
+
+// ---------- asistente: 1 conexión · 2 mapeo (como la v1) ----------
+
+let wizard: { step: 1 | 2; thenSync: boolean; only: string[] | null } | null = null;
+
+/** Abre el asistente de conexión y mapeo. Con `thenSync`, guardar el mapeo sincroniza. */
+export function openWizard(step: 1 | 2, thenSync = false, only: string[] | null = null): void {
+  wizard = { step: step === 2 && TR.cfg?.states.length ? 2 : 1, thenSync, only };
+  TR.draftMap = null;
+  openModal(wizardView);
+}
+
+const wizardButton = () => `<button class="btn ghost" data-action="trk-wizard">${ico("settings")}${esc(t("tracker.wizard.open"))}</button>`;
+
+function wizardView(): string {
+  const cfg = TR.cfg!;
+  const w = wizard!;
+  const can2 = cfg.states.length > 0;
+  const steps = `<div class="trk-steps"><button class="chip${w.step === 1 ? " on" : ""}" data-action="trk-wz-step" data-step="1">1 · ${esc(t("tracker.wizard.connection"))}</button>
+    <button class="chip${w.step === 2 ? " on" : ""}" data-action="trk-wz-step" data-step="2"${can2 ? "" : " disabled"}>2 · ${esc(t("tracker.map.title"))}</button></div>`;
+  if (w.step === 1) {
+    const kinds: [string, string][] = cfg.kinds.map((k) => [k, t(`tracker.kind.${k}`)]);
+    return `<h2>${ico("cloud")}${esc(cfg.source)}</h2>${steps}
+      <p class="muted">${esc(t("tracker.readOnly"))}</p>
+      <div class="trk-body">
+        <div class="set-row"><label for="trkw-kind">${esc(t("tracker.kind"))}</label><select id="trkw-kind">${options(kinds, cfg.kind)}</select></div>
+        <div class="set-row"><label for="trkw-org">${esc(t("tracker.org"))}</label><input id="trkw-org" value="${esc(cfg.org)}" placeholder="https://dev.azure.com/my-org"></div>
+        <div class="set-row"><label for="trkw-project">${esc(t("tracker.project"))}</label><input id="trkw-project" value="${esc(cfg.project)}"></div>
+        <div class="set-row"><label for="trkw-secret">${esc(t("tracker.secret"))}</label><input id="trkw-secret" type="password" autocomplete="off" placeholder="${esc(t(cfg.hasSecret ? "tracker.secretSaved" : "tracker.secretHint"))}"></div>
+        <p class="muted">${esc(t("tracker.secretHelp"))}
+          ${cfg.connected && cfg.hasSecret ? `<button class="link" data-action="trk-clear-secret">${esc(t("tracker.clearSecret"))}</button>` : ""}
+          ${cfg.connected ? ` · <button class="link" data-action="trk-disconnect">${esc(t("tracker.disconnect"))}</button>` : ""}</p>
+      </div>
+      <div class="modal-actions"><span class="spacer"></span><button class="btn" data-action="trk-close">${esc(t("common.cancel"))}</button>
+        <button class="btn primary" data-action="trk-wz-connect">${ico("cloud")}${esc(t("tracker.connect"))}</button></div>`;
+  }
+  const fetched = cfg.statesFetchedAt ? fmtDate(cfg.statesFetchedAt) : "";
+  return `<h2>${ico("cloud")}${esc(cfg.source)} <span class="muted">${esc(cfg.org)} / ${esc(cfg.project)}</span></h2>${steps}
+    <p class="muted">${esc(t("tracker.map.help", { n: cfg.states.length, date: fetched }))} <button class="link" data-action="trk-refetch">${esc(t("tracker.refetch"))}</button></p>
+    <div class="trk-body">
+      <div class="set-row"><label>${esc(t("tracker.field.due"))}</label>${fieldSelect("due", cfg)}</div>
+      <div class="set-row"><label>${esc(t("tracker.field.hours"))}</label>${fieldSelect("hours", cfg)}</div>
+      <p class="muted">${esc(t("tracker.field.help"))}${cfg.hasPriority ? "" : ` ${esc(t("tracker.field.noPriority"))}`}</p>
+      ${cfg.mapSaved ? "" : `<p class="muted">${esc(t("tracker.map.reviewSuggestions"))}</p>`}
+      ${mappingTable(cfg)}
+    </div>
+    <div class="modal-actions"><button class="btn ghost" data-action="trk-wz-step" data-step="1">${esc(t("tracker.wizard.back"))}</button><span class="spacer"></span>
+      <button class="btn" data-action="trk-close">${esc(t("common.cancel"))}</button>
+      <button class="btn primary" data-action="trk-wz-save">${esc(t(w.thenSync ? "tracker.map.saveAndSync" : "tracker.map.save"))}</button></div>`;
+}
+
+onAction("trk-wizard", async () => {
+  try {
+    TR.cfg = await trackerApi.config();
+  } catch (err) {
+    toast(errorText(err), undefined, "error");
+    return;
+  }
+  openWizard(TR.cfg.states.length ? 2 : 1);
+});
+onAction("trk-wz-step", (el) => {
+  if (!wizard) return;
+  wizard.step = el.dataset.step === "2" && TR.cfg?.states.length ? 2 : 1;
+  rerender();
+});
+onAction("trk-wz-connect", async (el) => {
+  const done = busy(el, t("tracker.connecting"));
+  try {
+    const v = (id: string) => $<HTMLInputElement>(`#${id}`)!.value;
+    await trackerApi.connect(v("trkw-kind"), v("trkw-org"), v("trkw-project"), v("trkw-secret"));
+    const before = new Set(TR.cfg?.states.map((s) => s.name) ?? []);
+    TR.cfg = await trackerApi.fetch();
+    TR.newStates = before.size ? new Set(TR.cfg.states.filter((s) => !before.has(s.name)).map((s) => s.name)) : new Set();
+    TR.draftMap = null;
+    if (wizard) wizard.step = 2;
+    toast(t("tracker.connected", { n: TR.cfg.states.length }));
+  } catch (err) {
+    toast(errorText(err), undefined, "error");
+    done();
+    return;
+  }
+  render();
+  rerender();
+});
+onAction("trk-wz-save", async (el) => {
+  const done = busy(el, t("tracker.saving"));
+  try {
+    TR.cfg = await trackerApi.setMap(TR.draftMap ?? initialMap(TR.cfg!));
+  } catch (err) {
+    toast(errorText(err), undefined, "error");
+    done();
+    return;
+  }
+  TR.draftMap = null;
+  TR.newStates.clear();
+  const w = wizard;
+  wizard = null;
+  closeModal();
+  render();
+  toast(t("tracker.map.saved"));
+  if (w?.thenSync) await startSync(w.only);
+});
 
 // ---------- sincronizar con previsualización ----------
 
@@ -338,15 +463,40 @@ async function loadPreview(): Promise<void> {
   sync.preview = await trackerApi.preview(sync.includeDiffer, sync.only);
 }
 
+/** Errores que se arreglan en la conexión: reabren el asistente (la v1 miraba PAT/organización/proyecto). */
+const SETUP_ERRORS = new Set([
+  "tracker.noSecret",
+  "tracker.noSecretFor",
+  "tracker.notConnected",
+  "tracker.auth",
+  "tracker.loginPage",
+  "tracker.orgNotFound",
+  "tracker.projectNotFound",
+  "tracker.badOrg",
+  "tracker.noOrg",
+  "tracker.noProject",
+]);
+
+/** Sincronizar (todo o solo unas carpetas). Sin configurar abre el asistente y sincroniza al guardar. */
 async function startSync(only: string[] | null): Promise<void> {
-  const cfg = TR.cfg ?? (await trackerApi.config());
-  if (!cfg.connected || !cfg.hasSecret || !cfg.states.length || !cfg.mapSaved) {
-    toast(t("tracker.sync.setupFirst"), undefined, "error");
-    goView("settings");
+  if (!S.root) return;
+  let cfg: TrackerConfig;
+  try {
+    cfg = TR.cfg = await trackerApi.config();
+  } catch (err) {
+    toast(errorText(err), undefined, "error");
     return;
   }
+  if (!cfg.connected || !cfg.hasSecret) return openWizard(1, true, only);
+  if (!cfg.states.length || !cfg.mapSaved) return openWizard(2, true, only);
   toast(t("tracker.sync.reading", { source: cfg.source }));
-  TR.cfg = await trackerApi.sync();
+  try {
+    TR.cfg = await trackerApi.sync();
+  } catch (err) {
+    toast(errorText(err), undefined, "error");
+    if (SETUP_ERRORS.has((err as ApiError)?.code)) openWizard(1, true, only);
+    return;
+  }
   sync = { preview: null, includeDiffer: false, toggled: new Set(), only };
   await loadPreview();
   render();
@@ -400,7 +550,7 @@ function syncView(): string {
       ${sync!.includeDiffer ? `<p class="muted">${esc(t("tracker.sync.backHelp"))}</p>` : ""}
       ${table}
     </div>
-    <div class="modal-actions"><span class="spacer"></span><button class="btn" data-action="trk-close">${esc(t("common.close"))}</button>
+    <div class="modal-actions">${wizardButton()}<span class="spacer"></span><button class="btn" data-action="trk-close">${esc(t("common.close"))}</button>
       <button class="btn primary" data-action="trk-sync-apply"${picked.length ? "" : " disabled"}>${esc(t("tracker.sync.apply", { n: picked.length }))}</button></div>`;
 }
 
@@ -411,6 +561,11 @@ function stateChip(id: string): string {
 
 onAction("trk-close", () => closeModal());
 onAction("trk-sync", (el) => startSync(el.dataset.only ? (JSON.parse(el.dataset.only) as string[]) : null));
+
+/** Sincronizar solo esas carpetas (para el menú de la selección). */
+export function syncSelection(names: string[]): Promise<void> {
+  return startSync(names.length ? names : null);
+}
 onChange("trk-sync-row", (el) => {
   const key = el.dataset.key!;
   if (sync!.toggled.has(key)) sync!.toggled.delete(key);
@@ -599,10 +754,13 @@ const statesFor = (type: string | undefined) => (TR.cfg?.states ?? []).filter((s
 export async function openPush(names: string[]): Promise<void> {
   TR.cfg = await trackerApi.config();
   const cfg = TR.cfg;
-  if (!cfg.connected || !cfg.states.length || !cfg.mapSaved) {
-    toast(t("tracker.sync.setupFirst"), undefined, "error");
-    goView("settings");
-    return;
+  if (!cfg.connected) {
+    toast(t("tracker.push.setupConn", { source: cfg.source }), undefined, "error");
+    return openWizard(1);
+  }
+  if (!cfg.states.length || !cfg.mapSaved) {
+    toast(t("tracker.push.setupMap", { source: cfg.source }), undefined, "error");
+    return openWizard(cfg.states.length ? 2 : 1);
   }
   const expand = (n: string): Item[] => {
     const it = itemByName(n);
@@ -653,7 +811,7 @@ function pushView(): string {
       <table class="grid trk-table"><thead><tr><th></th><th>${esc(t("tracker.sync.folder"))}</th><th>${esc(t("tracker.sync.ids"))}</th><th>${esc(t("tracker.push.local"))}</th>
         <th>${esc(t("tracker.push.now", { source: cfg.source }))}</th><th>${esc(t("tracker.push.new", { source: cfg.source }))}</th></tr></thead><tbody>${rows}</tbody></table>
     </div>
-    <div class="modal-actions"><button class="btn" data-action="trk-close">${esc(t("common.cancel"))}</button>
+    <div class="modal-actions">${wizardButton()}<span class="spacer"></span><button class="btn" data-action="trk-close">${esc(t("common.cancel"))}</button>
       <button class="btn primary" data-action="trk-push-go"${n ? "" : " disabled"}>${esc(t("tracker.push.go", { n, source: cfg.source }))}</button></div>`;
 }
 
