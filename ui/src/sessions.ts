@@ -28,6 +28,16 @@ export const sessionById = (id: string) => all().find((s) => s.id === id);
 /** Sesiones (no cerradas) que tienen el item. */
 export const sessionsOf = (name: string) => S.sessions.filter((s) => inSession(s, name));
 
+/** Antes de mover, renombrar o eliminar carpetas: si una sesión corriendo trabaja en alguna (o adentro, o
+ *  en su grupo), se confirma, porque con un archivo abierto el sistema puede no dejar moverla (v1
+ *  `busyGuard`). Devuelve `true` si hay que frenar. */
+export async function busyGuard(names: string[]): Promise<boolean> {
+  const touches = (w: string, n: string) => w === n || w.startsWith(`${n}/`) || n.startsWith(`${w}/`);
+  const running = S.sessions.filter((s) => s.running && s.items.some((w) => names.some((n) => touches(w, n))));
+  if (!running.length) return false;
+  return !(await confirmDialog(t("session.busyMove", { names: running.map((s) => `«${s.name}»`).join(", "), n: running.length }), t("session.busyGoOn")));
+}
+
 function epoch(local: string): number {
   const ms = Date.parse(local);
   return Number.isNaN(ms) ? 0 : ms / 1000;
@@ -337,6 +347,15 @@ export async function agentsInfo(force = false): Promise<AgentsInfo> {
 
 export function agentLabel(a: { id: string; label?: string }): string {
   return a.id === "custom" ? a.label || t("agent.custom") : t(`agent.${a.id}`);
+}
+
+/** Nombre del agente por defecto, si ya se leyó la lista (si no, "" y se la pide para la próxima). */
+export function defaultAgentLabel(): string {
+  if (!agentsCache) {
+    agentsInfo().catch(() => {});
+    return "";
+  }
+  return agentLabel({ id: agentsCache.default, label: agentsCache.custom?.label });
 }
 
 /** Nombre por defecto (como la v1): un item «WI 123 · título», un grupo su título, varios «WI a + WI b». */
