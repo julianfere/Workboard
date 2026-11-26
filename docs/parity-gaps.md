@@ -154,13 +154,13 @@ Referencias: `v1 app.js:N` = `_v1/ui/app.js`.
 
 ## US-09 Git
 
-- [ ] Botón para copiar el nombre de la rama de promoción (app.js:2628, 2650).
-- [ ] Merge de ramas prefiere `origin/<rama>`, después el remote destino (app.js:2555).
-- [ ] Nombre de la rama: orden de selección y sufijo como la v1 (`y{n}mas`) (app.js:2533, 2551).
-- [ ] Comentario de conflicto también en modo merge (app.js:2581).
-- [ ] Revisar fuerza un overview nuevo (v1 `app.py:725`); marca «… (diff recortado)» (`gitpanel.py:360`).
-- [ ] Repo sin `[remote]` en `.git/config`: fallback (v1 `git remote`, `gitpanel.py:386`).
-- [ ] «Repos y entornos» desde la pestaña Git abre un modal encima (app.js:2488).
+- [x] Botón para copiar el nombre de la rama de promoción (app.js:2628, 2650).
+- [x] Merge de ramas prefiere `origin/<rama>`, después el remote destino (app.js:2555).
+- [x] Nombre de la rama: orden de selección y sufijo como la v1 (`y{n}mas`) (app.js:2533, 2551).
+- [x] Comentario de conflicto también en modo merge (app.js:2581).
+- [x] Revisar fuerza un overview nuevo (v1 `app.py:725`); marca «… (diff recortado)» (`gitpanel.py:360`).
+- [x] Repo sin `[remote]` en `.git/config`: fallback (v1 `git remote`, `gitpanel.py:386`).
+- [x] «Repos y entornos» desde la pestaña Git abre un modal encima (app.js:2488).
 
 ## US-10 Azure DevOps
 

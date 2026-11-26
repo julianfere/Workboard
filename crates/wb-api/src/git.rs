@@ -105,7 +105,7 @@ impl Api {
             }
             "git_overview" => self.git_overview(a.bool("refresh")),
             "git_promotion" => self.git_promotion(a),
-            "git_branch_diff" => self.git_branch_diff(a.str("name").unwrap_or_default()),
+            "git_branch_diff" => self.git_branch_diff(a.str("name").unwrap_or_default(), false),
             "review_item" => self.review_item(a),
             _ => return None,
         };
@@ -235,13 +235,14 @@ impl Api {
         to_json(self.git_panel().promotion(&repos, &ids, target, &rules(&wf)?))
     }
 
-    /// Diff de los commits propios de cada rama de un item (para revisarlo con otro modelo).
-    fn git_branch_diff(&self, name: &str) -> ApiResult<Json> {
+    /// Diff de los commits propios de cada rama de un item (para revisarlo con otro modelo). Con `fresh`, las
+    /// ramas salen de una vista general recalculada (Revisar, como la v1) y no de la última.
+    fn git_branch_diff(&self, name: &str, fresh: bool) -> ApiResult<Json> {
         let wf = self.workflow()?;
         let ws = self.workspace()?;
         let folder = ws.folder_of(name)?;
         let item = ws.build_item(&folder)?;
-        let ov = self.git_overview(false)?;
+        let ov = self.git_overview(fresh)?;
         let repos = self.git_repos(&wf)?;
         let rules = rules(&wf)?;
         let mut seen = BTreeSet::new();
@@ -280,7 +281,7 @@ impl Api {
         else {
             return Err(ApiError::new("review.noId", &[]));
         };
-        let diffs = self.git_branch_diff(&item.name)?;
+        let diffs = self.git_branch_diff(&item.name, true)?;
         let lang = wb_i18n::resolve_lang(self.settings().lang.as_deref().unwrap_or(wb_i18n::DEFAULT_LANG));
         let t = |k: &str, p: &[(&str, &str)]| wb_i18n::t(lang, k, p);
         let stamp = chrono::Local::now().format("%Y%m%d-%H%M%S");
@@ -300,8 +301,10 @@ impl Api {
                 n += 1;
             }
             let diff_path = dir.join(format!("{file}.diff"));
-            std::fs::write(&diff_path, d["diff"]["diff"].as_str().unwrap_or(""))
-                .map_err(wb_core::error::CoreError::from)?;
+            let cut = d["diff"]["cut"].as_bool().unwrap_or(false);
+            let text =
+                diff_file(d["diff"]["diff"].as_str().unwrap_or(""), cut, &t("agent.review.diffCut", &[]));
+            std::fs::write(&diff_path, text).map_err(wb_core::error::CoreError::from)?;
             let short = |k: &str| d["diff"][k].as_str().unwrap_or("").chars().take(10).collect::<String>();
             let commits = d["diff"]["commits"].as_u64().unwrap_or(0).to_string();
             packet.push(format!("## {repo} · {}", d["branch"].as_str().unwrap_or("")));
@@ -311,7 +314,7 @@ impl Api {
                 "agent.review.packetCommits",
                 &[("n", &commits), ("range", &format!("{}..{}", short("base"), short("tip")))],
             );
-            if d["diff"]["cut"].as_bool().unwrap_or(false) {
+            if cut {
                 line.push_str(&t("agent.review.packetCut", &[]));
             }
             packet.push(line);
@@ -437,6 +440,12 @@ fn valid_model(m: &str) -> bool {
 }
 
 /// Parte segura para un nombre de archivo.
+/// El `.diff` del paquete de Revisar: si se recortó, termina con la marca (como la v1, para que el agente sepa
+/// que falta el resto).
+fn diff_file(diff: &str, cut: bool, marker: &str) -> String {
+    if cut { format!("{diff}\n{marker}\n") } else { diff.to_string() }
+}
+
 fn file_part(s: &str) -> String {
     let out: String =
         s.chars().map(|c| if c.is_alphanumeric() || matches!(c, '.' | '-') { c } else { '_' }).collect();
@@ -575,6 +584,15 @@ mod tests {
         let no_id = api.dispatch("review_item", &json!({"name": "fix-sin-id"}));
         assert_eq!(no_id.unwrap_err().code, "review.noId");
 
+        // Revisar recalcula la vista general (v1 `app.py:725`): una rama nueva desde la última ya entra.
+        api.dispatch("git_overview", &json!({})).unwrap();
+        let app = base.join("proyecto/app");
+        git(&app, &["checkout", "-q", "-b", "Feature/111111-extra", "origin/development"], None);
+        std::fs::write(app.join("extra.txt"), "extra\n").unwrap();
+        git(&app, &["add", "extra.txt"], None);
+        let who = ["-c", "user.name=Test", "-c", "user.email=test@example.com"];
+        git(&app, &[&who[..], &["commit", "-q", "-m", "WI 111111 extra"]].concat(), None);
+
         let out = api
             .dispatch(
                 "review_item",
@@ -587,6 +605,7 @@ mod tests {
         assert!(text.starts_with("# Revisión de wi111111-login-con-sso"), "{text}");
         assert!(text.contains("## app · Feature/111111-login"), "{text}");
         assert!(text.contains("3 commits propios"), "{text}");
+        assert!(text.contains("## app · Feature/111111-extra"), "{text}");
         let diff = packet.parent().unwrap().join("app.diff");
         assert!(std::fs::read_to_string(diff).unwrap().starts_with("diff --git"));
         let sess = &out["session"];
@@ -597,6 +616,16 @@ mod tests {
         assert_eq!(sess["items"], json!(["wi111111-login-con-sso"]));
         api.shutdown();
         let _ = std::fs::remove_dir_all(&base);
+    }
+
+    #[test]
+    fn a_cut_diff_ends_with_the_marker() {
+        assert_eq!(diff_file("diff --git a b", false, "… (diff recortado)"), "diff --git a b");
+        assert_eq!(
+            diff_file("diff --git a b", true, "… (diff recortado)"),
+            "diff --git a b\n… (diff recortado)\n"
+        );
+        assert_eq!(wb_i18n::t("es", "agent.review.diffCut", &[]), "… (diff recortado)");
     }
 
     #[test]
