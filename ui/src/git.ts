@@ -10,6 +10,7 @@ import { onAction, onChange, render } from "./app";
 import { esc, fmtAgo, toast } from "./dom";
 import { errorText, label, t } from "./i18n";
 import { ico } from "./icons";
+import { type Mode, type PromoOpts, type Shell, promoCommands as promoCommandsFor, promoSteps as promoStepsFor } from "./promo";
 import { S, envLabel, itemByName, titleOf, wf } from "./state";
 import type { GitBranch, GitConfig, GitMention, GitOverview, Item, Msg, PromoRepo, PromoRow, Promotion, RepoConfig } from "./types";
 
@@ -329,9 +330,6 @@ onAction("git-refs-reset", () => saveConfig({ envRefs: null }));
 
 // ---------- promoción ----------
 
-type Mode = "cherry" | "merge";
-type Shell = "ps" | "bash";
-
 const PR = {
   names: [] as string[],
   ids: [] as string[],
@@ -373,78 +371,29 @@ function stamp(): string {
 
 const promoOn = (c: PromoRow) => (PR.toggled.has(c.sha) ? !c.on : c.on);
 
-function promoBranch(): string {
-  const prefix = (wf() as { git?: { promotePrefix?: string } }).git?.promotePrefix ?? "promote/";
-  const ids = PR.ids.length > 3 ? [...PR.ids.slice(0, 3), `and${PR.ids.length - 3}`] : PR.ids;
-  // Con la hora: volver a generar el mismo día no choca con la rama anterior.
-  return `${prefix}cp-${PR.target.toLowerCase()}-${ids.join("-")}-${PR.stamp}`.replace(/[^\w./-]+/g, "-");
+/** Opciones de los comandos con el estado de la promoción y los textos del idioma actual. */
+function promoOpts(): PromoOpts {
+  return {
+    mode: PR.mode,
+    shell: PR.shell,
+    target: PR.target,
+    targetLabel: envLabel(PR.target),
+    ids: PR.ids,
+    stamp: PR.stamp,
+    prefix: (wf() as { git?: { promotePrefix?: string } }).git?.promotePrefix ?? "promote/",
+    isOn: promoOn,
+    text: {
+      more: (n) => t("promo.branchMore", { n }),
+      conflictCherry: t("promo.cmd.conflict"),
+      conflictMerge: t("promo.cmd.conflictMerge"),
+      pr: t("promo.cmd.pr"),
+      failed: t("promo.cmd.failed"),
+    },
+  };
 }
 
-function branchRef(b: { name: string; locations: string[] }, remote: string): string {
-  const loc = b.locations.includes(remote) ? remote : b.locations.find((l) => l !== "local");
-  return loc ? `${loc}/${b.name}` : b.name;
-}
-
-/** Pasos de git de un repo. Los commits seguidos van en un solo `cherry-pick -x a b c`: ante un conflicto
- *  frena ahí. Los merges van aparte con `-m 1`. */
-function promoSteps(r: PromoRepo): { steps: string[]; notes: string[]; branch: string } | null {
-  const branch = promoBranch();
-  const steps = ["git fetch --all --prune", `git switch -c ${branch} ${r.targetRef}`];
-  const notes: string[] = [];
-  if (PR.mode === "cherry") {
-    const commits = (r.commits ?? []).filter(promoOn);
-    if (!commits.length) return null;
-    let run: string[] = [];
-    const flush = () => {
-      if (run.length) steps.push(`git cherry-pick -x ${run.join(" ")}`);
-      run = [];
-    };
-    for (const c of commits) {
-      if (c.merge) {
-        flush();
-        steps.push(`git cherry-pick -x -m 1 ${c.short}`);
-      } else run.push(c.short);
-    }
-    flush();
-    for (const c of commits) notes.push(`${c.short}  ${c.ids.map((i) => `#${i}`).join(" ")} · ${c.subject.replace(/[\r\n]+/g, " ").slice(0, 80)}`);
-  } else {
-    const brs = (r.branches ?? []).filter((b) => b.commits.length && !b.fromEnv);
-    if (!brs.length) return null;
-    for (const b of brs) steps.push(`git merge --no-ff ${branchRef(b, r.remote ?? "")}`);
-  }
-  steps.push(`git push -u ${r.remote} ${branch}`);
-  return { steps, notes, branch };
-}
-
-function prUrl(r: PromoRepo, branch: string): string | null {
-  if (!r.webUrl) return null;
-  const src = encodeURIComponent(branch);
-  const dst = encodeURIComponent(r.targetBranch ?? "");
-  if (r.forge === "azure") return `${r.webUrl}/pullrequestcreate?sourceRef=${src}&targetRef=${dst}`;
-  if (r.forge === "github") return `${r.webUrl}/compare/${dst.replace(/%2F/g, "/")}...${src.replace(/%2F/g, "/")}?expand=1`;
-  if (r.forge === "gitlab") return `${r.webUrl}/-/merge_requests/new?merge_request[source_branch]=${src}&merge_request[target_branch]=${dst}`;
-  return null;
-}
-
-function promoCommands(r: PromoRepo): string | null {
-  const x = promoSteps(r);
-  if (!x) return null;
-  const head = [`# ${r.name} → ${envLabel(PR.target)} (${r.targetRef})`, ...x.notes.map((n) => `#   ${n}`)];
-  if (PR.mode === "cherry") head.push(`# ${t("promo.cmd.conflict")}`);
-  const url = prUrl(r, x.branch);
-  const pr = url ? [`# ${t("promo.cmd.pr")}: ${url}`] : [];
-  if (PR.shell === "bash") return [...head, [`cd "${(r.path ?? "").replace(/\\/g, "/")}"`, ...x.steps].join(" && \\\n  "), ...pr].join("\n");
-  // PowerShell 5.1 no tiene &&: un bloque que corta en el primer comando que falla (nunca llega al push).
-  const failed = t("promo.cmd.failed").replace(/"/g, "'");
-  return [
-    ...head,
-    "& {",
-    `  Set-Location "${r.path}"`,
-    ...x.steps.map((c) => `  ${c}; if ($LASTEXITCODE -ne 0) { Write-Warning "${failed}: ${c.split(" ").slice(0, 2).join(" ")}"; return }`),
-    "}",
-    ...pr,
-  ].join("\n");
-}
+const promoSteps = (r: PromoRepo) => promoStepsFor(r, promoOpts());
+const promoCommands = (r: PromoRepo) => promoCommandsFor(r, promoOpts());
 
 const FLAG_SHORT: Record<string, string> = { otherItem: "promo.flagShort.otherItem", shared: "promo.flagShort.shared", likely: "promo.flagShort.likely", merge: "promo.flagShort.merge" };
 
@@ -471,7 +420,8 @@ function repoBlock(r: PromoRepo): string {
   return `<div class="promo-repo">
     <div class="pr-head"><b>${esc(r.name)}</b><span class="muted">→ ${esc(r.targetRef)}</span><span class="grow"></span>
       ${cmds ? `<button class="btn" data-action="promo-copy" data-repo="${esc(r.name)}">${ico("copy")}${esc(t("promo.copyRepo"))}</button>` : ""}</div>
-    ${x ? `<div class="pr-branch"><span class="muted">${esc(t("promo.newBranch"))}</span><code>${esc(x.branch)}</code><span class="muted">${esc(t("promo.from", { ref: r.targetRef ?? "" }))}</span></div>` : ""}
+    ${x ? `<div class="pr-branch"><span class="muted">${esc(t("promo.newBranch"))}</span><code>${esc(x.branch)}</code><span class="muted">${esc(t("promo.from", { ref: r.targetRef ?? "" }))}</span>
+      <button class="icon-btn" data-action="promo-copy-branch" data-branch="${esc(x.branch)}" title="${esc(t("promo.copyBranch"))}" aria-label="${esc(t("promo.copyBranch"))}">${ico("copy")}</button></div>` : ""}
     <div class="pr-commits">${
       on.length
         ? groups.map((g) => `<div class="pr-src">${esc(g)}</div>${on.filter((c) => origin(c) === g).map(commitRow).join("")}`).join("")
@@ -544,7 +494,8 @@ function closePromotion(): void {
 /** Abre la promoción de estos items (por nombre de carpeta). */
 export async function openPromotion(names: string[]): Promise<void> {
   const items = names.map(itemByName).filter((x): x is Item => !!x);
-  const ids = [...new Set(items.flatMap(itemIds))].sort();
+  // En el orden en que se eligieron (el nombre de la rama nueva lleva los tres primeros, como la v1).
+  const ids = [...new Set(items.flatMap(itemIds))];
   if (!ids.length) return toast(t("promo.noIds"), undefined, "error");
   const envs = targets();
   if (!envs.length) return toast(t("promo.noTargets"), undefined, "error");
@@ -611,6 +562,7 @@ onChange("promo-toggle", (el) => {
   if (c) (el as HTMLInputElement).checked === c.on ? PR.toggled.delete(sha) : PR.toggled.add(sha);
   renderPromotion();
 });
+onAction("promo-copy-branch", (el) => copy(el.dataset.branch ?? "", t("promo.branchCopied")));
 onAction("promo-copy", (el) => {
   const which = el.dataset.repo;
   const repos = (PR.data?.repos ?? []).filter((r) => !r.error && (which === "*" || r.name === which));
