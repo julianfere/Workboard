@@ -196,7 +196,7 @@ export async function pickSavePath(name: string): Promise<string | null | undefi
   return res ?? null;
 }
 
-// ---------- trackers (Azure DevOps): comandos `tracker_*` ----------
+// ---------- trackers (Azure DevOps o de plugins): comandos `tracker_*` ----------
 
 export const trackerApi = {
   config: () => call<TrackerConfig>("tracker_config"),
