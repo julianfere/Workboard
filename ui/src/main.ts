@@ -8,9 +8,9 @@ import { errorText, setLang, t } from "./i18n";
 import { loadDiscreet, toggleDiscreet } from "./discreet";
 import { openPalette } from "./palette";
 import "./projects";
-import { loadSessions, startSessionPolling } from "./sessions";
+import { loadSessions, startSessionPolling, toggleDock } from "./sessions";
 import { S } from "./state";
-import { installTerminalPanel, retheme, toggleTerminal } from "./terminal";
+import { installTerminalPanel, retheme } from "./terminal";
 import "./views/alerts";
 import "./views/detail";
 import "./views/hours";
@@ -44,7 +44,7 @@ document.addEventListener("keydown", (ev) => {
   }
   if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === "j") {
     ev.preventDefault();
-    toggleTerminal();
+    toggleDock();
     return;
   }
   // Dentro de la terminal las teclas son del agente.
