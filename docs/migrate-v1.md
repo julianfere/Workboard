@@ -29,9 +29,11 @@ Rules:
   what is not migrated and a summary. Exit code 1 if something failed, 2 for bad arguments.
 - Only Windows: on other systems the command says there is no v1 to migrate.
 
-In a release build the app is a GUI program, so Windows does not attach the console it was started from.
-Pipe the output to see it and to wait for it: `workboard.exe migrate-v1 --dry-run | more` in `cmd`, or
-`& .\workboard.exe migrate-v1 --dry-run | Out-Host` in PowerShell. Development builds print normally.
+In a release build the app is a GUI program: it attaches itself to the console it was started from, so the
+output shows there, but `cmd` and PowerShell don't wait for a GUI program and the prompt may come back before
+the output. To wait for it (and get the exit code), pipe it: `workboard.exe migrate-v1 --dry-run | more` in
+`cmd`, or `& .\workboard.exe migrate-v1 --dry-run | Out-Host` in PowerShell. The same goes for
+`workboard plugin`.
 
 ## What is migrated
 

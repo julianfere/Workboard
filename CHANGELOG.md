@@ -114,5 +114,3 @@ golden files captured from the original.
 ### Known gaps
 
 - The Trello reference plugin is tested only against a fake API, not against Trello itself.
-- On Windows, the installed app is a windowed program: `workboard migrate-v1` and `workboard plugin`
-  print nothing in an interactive console unless the output is redirected (for example `| Out-Host`).

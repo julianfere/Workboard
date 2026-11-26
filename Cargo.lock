@@ -5286,6 +5286,7 @@ dependencies = [
  "keyring",
  "trash",
  "windows-dpapi",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]

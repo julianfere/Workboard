@@ -2,6 +2,7 @@
 //! carpetas y URLs, terminar un árbol de procesos, buscar ejecutables, correr scripts y el almacén de
 //! credenciales (`secrets`). El resto del código no usa `cfg(windows)`.
 
+pub mod console;
 pub mod dpapi;
 pub mod secrets;
 

@@ -46,6 +46,10 @@ fn session_attach(
 fn main() {
     // Subcomandos de consola, antes de abrir la ventana.
     let args: Vec<String> = std::env::args().skip(1).collect();
+    if matches!(args.first().map(String::as_str), Some("migrate-v1" | "plugin")) {
+        // La app de release no tiene consola propia: se engancha a la de quien la lanzó.
+        wb_platform::console::attach_parent();
+    }
     if args.first().map(String::as_str) == Some("migrate-v1") {
         let code = wb_api::migrate::cli(&args[1..], &mut std::io::stdout().lock());
         std::process::exit(code);
