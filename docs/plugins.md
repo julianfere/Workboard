@@ -394,7 +394,8 @@ A Workboard that does not know `trackers` yet reports them as not validated inst
 
 `examples/plugins/hello/` is a minimal plugin written with the Python SDK; it carries its own copy of
 `workboard_plugin.py`, so the folder works on its own (copy it into `<config>/plugins/`; on Windows, if
-`python` is not on the `PATH`, change `command` to `py`). A test checks that the copy matches
-`sdk/python/workboard_plugin.py`. Plugins written in Rust can use
+`python` is not on the `PATH`, change `command` to `py`). `examples/plugins/trello/` is a tracker plugin
+(Trello boards) built on the same SDK. Tests check that both copies match `sdk/python/workboard_plugin.py`.
+Plugins written in Rust can use
 `wb_plugins::sdk::serve`, which handles the framing and `initialize`; the tests in
 `crates/wb-plugins/tests/rpc.rs` and `crates/wb-api/tests/plugins.rs` use it.
