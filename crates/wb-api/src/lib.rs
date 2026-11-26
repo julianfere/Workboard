@@ -4,6 +4,7 @@
 
 mod alerts;
 mod detail;
+pub mod errlog;
 pub mod error;
 mod git;
 pub mod migrate;
@@ -45,6 +46,8 @@ pub struct Api {
     git: git::GitState,
     /// Serializa las escrituras de `ui_prefs.json`.
     prefs_lock: Mutex<()>,
+    /// Archivos exportados con «Guardar como» en esta ejecución (los únicos fuera de Descargas que se muestran).
+    exports: Mutex<Vec<PathBuf>>,
 }
 
 fn to_json<T: Serialize>(v: T) -> ApiResult<Json> {
@@ -90,6 +93,7 @@ impl Api {
             tracker: Default::default(),
             git: Default::default(),
             prefs_lock: Mutex::new(()),
+            exports: Mutex::new(Vec::new()),
         }
     }
 
@@ -126,8 +130,17 @@ impl Api {
         RunLog::new(self.config_dir.join("runs.json"))
     }
 
-    /// Ejecuta un comando. Los errores siempre vuelven como `ApiError` (nunca un panic ni texto armado).
+    /// Ejecuta un comando. Los errores siempre vuelven como `ApiError` (nunca un panic ni texto armado) y
+    /// quedan en `<config>/workboard.log`.
     pub fn dispatch(&self, cmd: &str, args: &Json) -> ApiResult<Json> {
+        let out = self.run_command(cmd, args);
+        if let Err(e) = &out {
+            errlog::write(&self.config_dir, cmd, e);
+        }
+        out
+    }
+
+    fn run_command(&self, cmd: &str, args: &Json) -> ApiResult<Json> {
         let a = Args(args);
         match cmd {
             // ---------- app ----------
@@ -286,14 +299,13 @@ impl Api {
             "list_deleted" => to_json(self.workspace()?.list_deleted()?),
             "mark_ran" => {
                 let ws = self.workspace()?;
-                let marks = self.runs().mark(
-                    ws.workflow(),
-                    ws.root(),
-                    a.str("path")?,
-                    a.str("env")?,
-                    a.bool("on"),
-                    None,
-                )?;
+                let rel = a.str("path")?;
+                // Como la v1: solo archivos que existen dentro de la raíz.
+                if !ws.safe_path(rel)?.is_file() {
+                    return Err(ApiError::new("core.ws.fileNotFound", &[("path", rel)]));
+                }
+                let marks =
+                    self.runs().mark(ws.workflow(), ws.root(), rel, a.str("env")?, a.bool("on"), None)?;
                 to_json(marks)
             }
             "reveal" | "open_path" => {

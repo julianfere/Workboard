@@ -1493,5 +1493,12 @@
   "viewer.drawio.render": "Could not draw the page",
   "viewer.diagram.empty": "The page is empty",
   "viewer.mermaid.error": "Mermaid: {msg}",
-  "settings.shortcuts": "Shortcuts: Ctrl+K search or do · Ctrl+J terminal · / search the list · 1…6 views · Ctrl+S save · Esc close · F5 reload · Del delete the selection · Ctrl+A select all · Alt+1…9 saved views · Ctrl+Shift+H discreet mode"
+  "settings.shortcuts": "Shortcuts: Ctrl+K search or do · Ctrl+J terminal · / search the list · 1…6 views · Ctrl+S save · Esc close · F5 reload · Del delete the selection · Ctrl+A select all · Alt+1…9 saved views · Ctrl+Shift+H discreet mode",
+  "prefs.saveFailed": "Could not save the preference: {message}",
+  "hours.groupItems": "{n} WI",
+  "hours.sessionsHint": "Hours by session and by period",
+  "hours.csv.due": "Due date",
+  "hours.csv.source": "Source",
+  "settings.sections": "Settings sections",
+  "export.insideRoot": "Exports cannot be saved inside the work folder: choose another folder"
 }
