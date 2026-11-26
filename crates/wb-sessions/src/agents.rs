@@ -80,7 +80,7 @@ impl CustomAgent {
 #[serde(rename_all = "camelCase")]
 pub struct Available {
     pub id: &'static str,
-    /// Solo el comando propio (los demás se traducen en la UI).
+    /// Solo el comando propio con etiqueta propia (los demás, y el propio sin etiqueta, se traducen en la UI).
     #[serde(skip_serializing_if = "String::is_empty")]
     pub label: String,
     pub found: bool,
@@ -172,11 +172,9 @@ pub fn available(custom: &CustomAgent, env: &BTreeMap<String, String>) -> Vec<Av
         .iter()
         .filter(|a| a.id != CUSTOM || custom.is_set())
         .map(|a| {
+            // Sin etiqueta, la UI muestra la del agente («Comando propio»).
             let (label, cmd) = if a.id == CUSTOM {
-                (
-                    if custom.label.is_empty() { custom.command.clone() } else { custom.label.clone() },
-                    custom.command.as_str(),
-                )
+                (custom.label.clone(), custom.command.as_str())
             } else {
                 (String::new(), a.exe)
             };

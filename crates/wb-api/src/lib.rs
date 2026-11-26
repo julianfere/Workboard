@@ -660,6 +660,9 @@ mod tests {
             .unwrap();
         assert_eq!(info["default"], "custom");
         assert_eq!(info["planPrefix"], json!({"claude": "/go "}));
+        // Sin etiqueta, la UI muestra la del agente («Comando propio»), no el comando.
+        let custom = info["agents"].as_array().unwrap().iter().find(|a| a["id"] == "custom").unwrap();
+        assert!(custom.get("label").is_none(), "{custom}");
         assert_eq!(
             api.dispatch("set_agents", &json!({"default": "zzz"})).unwrap_err().code,
             "session.agent.unknown"
@@ -688,6 +691,12 @@ mod tests {
             api.dispatch("session_prompt", &json!({"id": sid, "kind": "x"})).unwrap_err().code,
             "session.unknownPrompt"
         );
+        // Comando propio vacío = borrar su configuración (y deja de ser el de por defecto).
+        let info = api
+            .dispatch("set_agents", &json!({"custom": {"command": " ", "label": "Mío", "args": "-x"}}))
+            .unwrap();
+        assert_eq!(info["custom"], json!({"label": "", "command": "", "args": "", "resumeArgs": ""}));
+        assert_eq!(info["default"], "claude");
         api.shutdown();
         std::fs::remove_dir_all(&base).ok();
     }

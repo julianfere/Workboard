@@ -177,12 +177,14 @@ impl Api {
         let clean = |v: &Json| wb_core::py::split_ws(v.as_str().unwrap_or("")).collect::<Vec<_>>().join(" ");
         if let Some(c) = a.get("custom").as_object() {
             let c = Json::Object(c.clone());
-            s.agents.custom = agents::CustomAgent {
+            let custom = agents::CustomAgent {
                 label: clean(&c["label"]),
                 command: clean(&c["command"]),
                 args: clean(&c["args"]),
                 resume_args: clean(&c["resumeArgs"]),
             };
+            // Sin comando no hay agente propio: se borra toda su configuración (como la v1).
+            s.agents.custom = if custom.is_set() { custom } else { agents::CustomAgent::default() };
         }
         if let Some(p) = a.get("planPrefix").as_object() {
             s.agents.plan_prefix = p
