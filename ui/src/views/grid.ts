@@ -8,12 +8,19 @@ import { esc, fmtAgo, fmtDate } from "../dom";
 import { lang, t } from "../i18n";
 import { ico } from "../icons";
 import { sessionsOf } from "../sessions";
-import { S, effectiveStatus, envLabel, isClosed, metaList, metaText, stateDef, stateLabel, stateRank, titleOf, typeLabel, wf } from "../state";
+import { S, effectiveStatus, envLabel, isClosed, matchesSearch, metaList, metaText, stateDef, stateLabel, stateRank, titleOf, trackerLookup, typeIcon, typeLabel, typeOf, wf } from "../state";
+import { label } from "../i18n";
+import { gitEnvSummary, gitPending } from "../git";
+import { activeAlerts, type AlertKind } from "./alerts";
 import { hoursHidden } from "../discreet";
 import { fmtH, periodRange, timeReady, workedTotal } from "../stats";
 import { byUrgency, dueCell, dueOf, hoursCell, hoursOf, isOverdue, lateTag, passesDue, periodDiff, periodOf, periodRel, priorityBadge, priorityOf } from "../planning";
-import type { Item } from "../types";
+import type { ExtraField, Item, Session } from "../types";
 import { TR, trackerBadge, trackerConnected } from "./tracker";
+
+// La caché del tracker de la carpeta abierta, para los helpers de `state.ts` (título y tipo del tracker).
+trackerLookup.item = (id) => (TR.loadedFor === S.root ? TR.cfg?.cache?.items[id] : undefined);
+trackerLookup.localType = (type) => (TR.loadedFor === S.root ? (TR.cfg?.localTypes[type] ?? "") : "");
 
 // ---------- tipos ----------
 
@@ -50,6 +57,8 @@ interface GridPrefs {
   current: Snap;
   /** Grupos cuyo estado (abierto / cerrado) difiere del de por defecto, por carpeta de trabajos. */
   flipped: Record<string, string[]>;
+  /** Grupos de primer nivel abiertos (salvo por período), por carpeta de trabajos: sin entrada, los dos primeros. */
+  open: Record<string, string[]>;
 }
 
 export const GROUP_KEYS: GroupKey[] = ["status", "type", "period", "priority", "tracker", "weekLast", "weekCreated"];
@@ -63,7 +72,7 @@ const DEFAULT_SNAP: Snap = {
   type: "",
   due: "",
   activity: "all",
-  groupBy: [],
+  groupBy: ["weekLast"],
   columns: null,
   sort: null,
   density: "comfortable",
@@ -79,14 +88,15 @@ export const G = {
     active: "",
     current: { ...DEFAULT_SNAP } as Snap,
     flipped: {} as Record<string, string[]>,
+    open: {} as Record<string, string[]>,
   } as GridPrefs,
-  /** Búsqueda de texto (no se guarda en la vista). */
-  text: "",
   selected: new Set<string>(),
   /** Última fila marcada (para `Shift+click`). */
   anchor: "",
   /** Filas visibles en el orden de la grilla (para rangos y «seleccionar todo»). */
   order: [] as string[],
+  /** Claves de los grupos de primer nivel que se ven (para recordar cuáles quedan abiertos). */
+  topKeys: [] as string[],
 };
 
 export const snap = (): Snap => G.prefs.current;
@@ -108,11 +118,16 @@ function clean(raw: Partial<Snap> | undefined): Snap {
 
 const sameSnap = (a: Snap, b: Snap) => JSON.stringify(clean(a)) === JSON.stringify(clean(b));
 
+/** Vistas de fábrica, las de la v1 (Mi vista, Activos, En QA, Todo) más «Por período». La de revisión es el último
+ *  estado de la categoría `review` del flujo (`qa` en classic-es: «En QA»). */
 function defaultViews(): SavedView[] {
+  const review = [...wf().states].reverse().find((s) => s.category === "review");
   return [
-    { id: "active", name: t("grid.view.active"), ...DEFAULT_SNAP },
-    { id: "period", name: t("grid.view.period"), ...DEFAULT_SNAP, groupBy: ["period"] },
-    { id: "all", name: t("grid.view.all"), ...DEFAULT_SNAP, hideClosed: false, groupBy: ["status"] },
+    { id: "mine", name: t("grid.view.mine"), ...DEFAULT_SNAP },
+    { id: "active", name: t("grid.view.active"), ...DEFAULT_SNAP, status: [], hideClosed: true },
+    ...(review ? [{ id: "review", name: stateLabel(review.id), ...DEFAULT_SNAP, status: [review.id], groupBy: [] }] : []),
+    { id: "all", name: t("grid.view.all"), ...DEFAULT_SNAP, hideClosed: false, groupBy: ["status"] as GroupKey[] },
+    { id: "period", name: t("grid.view.period"), ...DEFAULT_SNAP, groupBy: ["period"] as GroupKey[] },
   ];
 }
 
@@ -129,6 +144,7 @@ export function ensurePrefs(): void {
       G.prefs.active = G.prefs.views.some((v) => v.id === raw.active) ? raw.active! : G.prefs.views[0].id;
       G.prefs.current = raw.current ? clean(raw.current) : clean(G.prefs.views.find((v) => v.id === G.prefs.active));
       G.prefs.flipped = raw.flipped && typeof raw.flipped === "object" ? raw.flipped : {};
+      G.prefs.open = raw.open && typeof raw.open === "object" ? raw.open : {};
     })
     .catch(() => {
       G.prefs.views = defaultViews();
@@ -228,8 +244,10 @@ export function deleteView(id: string): void {
 
 export interface Column {
   id: string;
-  /** Clave de i18n del encabezado. */
+  /** Clave de i18n del encabezado (o el texto, con `raw`). */
   label: string;
+  /** `label` ya es el texto (columnas de campos extra del flujo). */
+  raw?: boolean;
   /** Ancho por defecto en px (0 = flexible). */
   w: number;
   /** No se puede ocultar. */
@@ -247,9 +265,83 @@ const kindsOf = (it: Item) => it.kinds.map((k) => `<span class="chip kind">${esc
 const openSessions = (it: Item) => sessionsOf(it.name).filter((s) => s.state !== "closed").length;
 const muted = (s: string) => (s ? `<span class="muted">${esc(s)}</span>` : "");
 
+/** Ícono del tipo (el del flujo) con el nombre de tooltip; con `withLabel` (o sin ícono), también el nombre. */
+function typeBadge(type: string, withLabel = false): string {
+  if (!type) return "";
+  const icon = typeIcon(type);
+  return `<span class="tbadge" title="${esc(typeLabel(type))}">${icon ? ico(icon) : ""}${withLabel || !icon ? `<span>${esc(typeLabel(type))}</span>` : ""}</span>`;
+}
+
 function idCell(it: Item): string {
-  if (it.kind === "group") return `<span class="id-cell">${ico("layers")}<span>${esc(t("grid.groupItems", { n: it.members.length }))}</span></span>`;
-  return `<span class="id-cell">${esc(it.ids.join(", ") || "—")}</span>`;
+  if (it.kind === "group") {
+    const tip = it.members
+      .map((m) => S.items.find((x) => x.name === m))
+      .map((m) => (m ? m.ids.join(" ") || m.name.split("/").pop() : ""))
+      .join(" · ");
+    return `<span class="id-cell" title="${esc(tip)}">${ico("layers")}<span>${esc(t("grid.groupItems", { n: it.members.length }))}</span></span>`;
+  }
+  const ids = it.ids.length ? esc(it.ids.join(" ")) : `<span class="muted">${esc(t("grid.noId"))}</span>`;
+  return `<span class="id-cell">${typeBadge(typeOf(it))}<span class="wi-id">${ids}</span></span>`;
+}
+
+/** Sesión abierta del item (la que corre primero): punto de estado y nombre; click la abre (v1 `sessionCell`). */
+function sessionCell(it: Item): string {
+  const s: Session | undefined = sessionsOf(it.name)
+    .filter((x) => x.state !== "closed")
+    .sort((a, b) => Number(b.running) - Number(a.running))[0];
+  if (!s) return "";
+  return `<button class="sess-cell" data-action="sess-open" data-id="${esc(s.id)}" title="${esc(`${t(`session.status.${s.status}`)} · ${t("grid.sessionOpen")}`)}"><span class="sdot ${esc(s.status)}"></span><span>${esc(s.name)}</span></button>`;
+}
+
+/** Git por ambiente: completo (check), parcial (medio círculo) o ninguno (punto), con los repos (v1 `gitCell`). */
+function gitCell(it: Item): string {
+  const sum = gitEnvSummary(it);
+  if (!sum) return gitPending() && it.ids.length ? `<span class="muted">…</span>` : "";
+  return sum
+    .map((s) => {
+      const tip = t("grid.git.tip", { env: envLabel(s.env), n: s.ok.length, total: s.all.length, repos: s.ok.join(", ") || t("grid.git.none") });
+      const mark = s.state === "ok" ? ico("check") : `<span class="gmark"></span>`;
+      return `<span class="genv ${s.state}" title="${esc(tip)}">${esc(envLabel(s.env))}${mark}</span>`;
+    })
+    .join("");
+}
+
+const gitRank = (it: Item) => gitEnvSummary(it)?.reduce((n, s) => n + (s.state === "ok" ? 2 : s.state === "partial" ? 1 : 0), 0) ?? null;
+
+// Alertas vigentes por item: se calculan una vez por render (`queueMicrotask` limpia la caché).
+let alertCache: Map<string, AlertKind[]> | null = null;
+function alertsOf(it: Item): AlertKind[] {
+  if (!alertCache) {
+    const map = new Map<string, AlertKind[]>();
+    for (const a of activeAlerts()) for (const n of a.names ?? [a.item.name]) map.set(n, [...(map.get(n) ?? []), a.kind]);
+    alertCache = map;
+    queueMicrotask(() => (alertCache = null));
+  }
+  return alertCache.get(it.name) ?? [];
+}
+
+const alertsCell = (it: Item) =>
+  alertsOf(it)
+    .map((k) => `<span class="chip alert-chip" title="${esc(t(`alerts.${k}`))}">${esc(t(`grid.alertShort.${k}`))}</span>`)
+    .join("");
+
+/** Columna de un campo extra del flujo: el valor, o un link si el flujo dice qué es (`link`). */
+function extraColumn(f: ExtraField): Column {
+  const value = (it: Item) => metaText(it, f.key);
+  return {
+    id: `x:${f.key}`,
+    label: f.labels ? label(f.labels, f.key) : f.key,
+    raw: true,
+    w: 130,
+    render: (it) => {
+      const v = value(it);
+      if (!v) return "";
+      const icon = f.icon ? ico(f.icon) : "";
+      if (f.link === "tracker") return `<button class="link xlink" data-action="trk-open" data-id="${esc(v)}" title="${esc(t("grid.openTracker"))}">${icon}#${esc(v)}</button>`;
+      return `<span class="xval">${icon}${esc(v)}</span>`;
+    },
+    sort: (it) => value(it) || null,
+  };
 }
 
 function titleCell(it: Item): string {
@@ -267,7 +359,7 @@ function titleCell(it: Item): string {
 export const COLUMNS: Column[] = [
   { id: "status", label: "items.status", w: 150, render: (it) => statusChipHtml(effectiveStatus(it)), sort: (it) => stateRank(effectiveStatus(it)) },
   { id: "id", label: "items.id", w: 120, render: idCell, sort: (it) => it.ids[0] ?? null },
-  { id: "type", label: "items.type", w: 110, render: (it) => muted(it.type ? typeLabel(it.type) : ""), sort: (it) => (it.type ? wf().types.findIndex((x) => x.id === it.type) : null) },
+  { id: "type", label: "items.type", w: 130, render: (it) => typeBadge(typeOf(it), true), sort: (it) => (typeOf(it) ? wf().types.findIndex((x) => x.id === typeOf(it)) : null) },
   { id: "title", label: "items.title", w: 0, fixed: true, render: titleCell, sort: (it) => titleOf(it).toLowerCase() },
   { id: "folder", label: "grid.col.folder", w: 200, render: (it) => muted(it.name.split("/").pop()!), sort: (it) => it.name.toLowerCase() },
   { id: "notes", label: "items.notes", w: 260, render: (it) => muted(metaText(it, wf().fields.notes)), sort: (it) => metaText(it, wf().fields.notes) || null },
@@ -280,14 +372,23 @@ export const COLUMNS: Column[] = [
   { id: "branch", label: "grid.col.branch", w: 180, render: (it) => muted(metaText(it, wf().fields.branch)), sort: (it) => metaText(it, wf().fields.branch) || null },
   { id: "kinds", label: "grid.col.kinds", w: 170, render: kindsOf, sort: (it) => it.kinds.join(",") || null },
   { id: "tasks", label: "items.tasks", w: 90, render: (it) => muted(it.tasks.length ? `${it.tasks.filter((x) => !x.done).length}/${it.tasks.length}` : ""), sort: (it) => it.tasks.filter((x) => !x.done).length || null },
-  { id: "sessions", label: "grid.col.sessions", w: 90, render: (it) => muted(openSessions(it) ? String(openSessions(it)) : ""), sort: (it) => openSessions(it) || null },
+  { id: "sessions", label: "grid.col.sessions", w: 180, render: sessionCell, sort: (it) => openSessions(it) || null },
+  { id: "git", label: "grid.col.git", w: 190, render: gitCell, sort: gitRank },
+  { id: "alerts", label: "grid.col.alerts", w: 170, render: alertsCell, sort: (it) => alertsOf(it).length || null },
   { id: "files", label: "grid.col.files", w: 80, render: (it) => muted(String(it.files.length)), sort: (it) => it.files.length },
   { id: "last", label: "items.activity", w: 120, render: (it) => `<span class="muted" title="${esc(fmtDate(it.last))}">${esc(fmtAgo(it.last))}</span>`, sort: (it) => it.last },
   { id: "created", label: "grid.col.created", w: 120, render: (it) => muted(it.created ? fmtDate(it.created) : ""), sort: (it) => it.created || null },
 ];
 
-const DEFAULT_COLUMNS = ["status", "id", "type", "title", "notes", "due", "tasks", "last"];
-const COL_BY_ID = Object.fromEntries(COLUMNS.map((c) => [c.id, c]));
+/** Las de la v1: estado, id, título, sesión, tracker, git, scripts, ambientes, alertas y actividad. */
+const DEFAULT_COLUMNS = ["status", "id", "title", "sessions", "tracker", "git", "kinds", "envs", "alerts", "last"];
+
+/** Todas las columnas: las fijas más una por campo extra del flujo. */
+const allColumns = (): Column[] => [...COLUMNS, ...wf().fields.extra.map(extraColumn)];
+const colById = (id: string): Column | undefined => COLUMNS.find((c) => c.id === id) ?? allColumns().find((c) => c.id === id);
+
+/** Encabezado de una columna. */
+export const colLabel = (c: Column) => (c.raw ? c.label : t(c.label));
 
 function workedCell(it: Item): string {
   const report = timeReady();
@@ -310,7 +411,7 @@ export function statusChipHtml(status: string): string {
 }
 
 /** Columnas que se pueden mostrar ahora (la del tracker, solo con tracker). */
-export const availableColumns = () => COLUMNS.filter((c) => (!c.tracker || trackerConnected()) && !hiddenHours(c.id));
+export const availableColumns = () => allColumns().filter((c) => (!c.tracker || trackerConnected()) && !hiddenHours(c.id));
 
 /** Columnas de horas: en modo discreto no se muestran (siguen guardadas en la vista). */
 const HOUR_COLUMNS = ["hours", "worked"];
@@ -319,20 +420,23 @@ const hiddenHours = (id: string) => hoursHidden() && HOUR_COLUMNS.includes(id);
 /** Columnas visibles, en orden, con su ancho. El título siempre está. */
 export function visibleColumns(): (Column & { width: number })[] {
   const saved: ColPref[] = snap().columns ?? DEFAULT_COLUMNS.map((id) => ({ id }));
-  const list = saved.filter((c) => COL_BY_ID[c.id] && (!COL_BY_ID[c.id].tracker || trackerConnected()) && !hiddenHours(c.id));
+  const list = saved.filter((c) => colById(c.id) && (!colById(c.id)!.tracker || trackerConnected()) && !hiddenHours(c.id));
   if (!list.some((c) => c.id === "title")) list.splice(Math.min(2, list.length), 0, { id: "title" });
-  return list.map((c) => ({ ...COL_BY_ID[c.id], width: c.w ?? COL_BY_ID[c.id].w }));
+  return list.map((c) => {
+    const col = colById(c.id)!;
+    return { ...col, width: c.w ?? col.w };
+  });
 }
 
 function setColumns(cols: ColPref[]): void {
-  update((s) => (s.columns = cols.map((c) => (c.w && c.w !== COL_BY_ID[c.id]?.w ? { id: c.id, w: c.w } : { id: c.id }))));
+  update((s) => (s.columns = cols.map((c) => (c.w && c.w !== colById(c.id)?.w ? { id: c.id, w: c.w } : { id: c.id }))));
 }
 
-const currentCols = (): ColPref[] => (snap().columns ?? DEFAULT_COLUMNS.map((id) => ({ id }))).filter((c) => COL_BY_ID[c.id]);
+const currentCols = (): ColPref[] => (snap().columns ?? DEFAULT_COLUMNS.map((id) => ({ id }))).filter((c) => colById(c.id));
 
 export function toggleColumn(id: string, on: boolean): void {
   const cols = currentCols();
-  if (COL_BY_ID[id]?.fixed) return;
+  if (colById(id)?.fixed) return;
   setColumns(on ? (cols.some((c) => c.id === id) ? cols : [...cols, { id }]) : cols.filter((c) => c.id !== id));
 }
 
@@ -360,7 +464,7 @@ export function resetColumns(): void {
 
 /** Click en un encabezado: primer sentido, el otro y sin orden. */
 export function cycleSort(id: string): void {
-  const col = COL_BY_ID[id];
+  const col = colById(id);
   if (!col) return;
   const first: 1 | -1 = col.asc ? 1 : -1;
   update((s) => {
@@ -372,15 +476,8 @@ export function cycleSort(id: string): void {
 
 // ---------- filtros ----------
 
-/** Búsqueda: todas las palabras en carpeta, título, ids, resumen, rama, estado, archivos o tareas. */
-export function matchesText(it: Item, q = G.text): boolean {
-  if (!q.trim()) return true;
-  const f = wf().fields;
-  const hay = [it.name, titleOf(it), it.ids.join(" "), metaText(it, f.notes), metaText(it, f.branch), stateLabel(effectiveStatus(it)), ...it.files.map((x) => x.name), ...it.tasks.map((x) => x.text)]
-    .join(" ")
-    .toLowerCase();
-  return q.toLowerCase().split(/\s+/).filter(Boolean).every((w) => hay.includes(w));
-}
+/** Búsqueda global (la misma de Alertas y Pendientes; ver `matchesSearch`). */
+export const matchesText = (it: Item, q = S.search): boolean => matchesSearch(it, q);
 
 const WEEK = 7 * 86400;
 
@@ -427,7 +524,7 @@ export function visibleRows(): Row[] {
       continue;
     }
     const subs = it.members.map((m) => S.items.find((x) => x.name === m)).filter(Boolean) as Item[];
-    const groupHit = !!G.text.trim() && matchesText(it);
+    const groupHit = !!S.search.trim() && matchesText(it);
     const shown = subs.filter((m) => passesFilters(m, groupHit));
     if (shown.length || (!subs.length && passesFilters(it))) out.push({ item: it, shown });
   }
@@ -574,7 +671,7 @@ export function groupTree(rows: Row[], levels: GroupKey[], parent = ""): Group[]
 /** Orden de las filas: el de la columna elegida (sin valor, al final) o el de por defecto. */
 export function sortRows<T>(list: T[], get: (x: T) => Item): T[] {
   const s = snap().sort;
-  const col = s ? COL_BY_ID[s.id] : null;
+  const col = s ? colById(s.id) : null;
   if (s && col) {
     return [...list].sort((a, b) => {
       const x = col.sort(get(a));
@@ -591,8 +688,48 @@ export function sortRows<T>(list: T[], get: (x: T) => Item): T[] {
 
 const flips = () => new Set(G.prefs.flipped[S.root] ?? []);
 
-export const groupOpen = (g: Group) => (G.text.trim() ? true : g.open !== flips().has(g.key));
-export const folderOpen = (name: string) => !flips().has(`f:${name}`) || (!!G.text.trim());
+/** Grupos de la grilla (anota los de primer nivel para el plegado). */
+export function gridGroups(rows: Row[]): Group[] {
+  const gs = groupTree(rows, snap().groupBy);
+  G.topKeys = gs.map((g) => g.key);
+  return gs;
+}
+
+/** El primer nivel recuerda los grupos abiertos (salvo por período, que se abre según la fecha). */
+const remembersTop = () => snap().groupBy.length > 0 && snap().groupBy[0] !== "period";
+
+function topOpen(key: string): boolean {
+  const saved = G.prefs.open[S.root];
+  return saved ? saved.includes(key) : G.topKeys.indexOf(key) < 2;
+}
+
+/** Abierto: con búsqueda o un único grupo, siempre; en el primer nivel, los dos primeros o los que dejaste abiertos;
+ *  en los demás (y por período), el de por defecto salvo que lo hayas cambiado (v1 app.js:622-629). */
+export function groupOpen(g: Group, depth: number): boolean {
+  if (S.search.trim() || (depth === 0 && G.topKeys.length === 1)) return true;
+  if (depth === 0 && remembersTop()) return topOpen(g.key);
+  return g.open !== flips().has(g.key);
+}
+
+export const folderOpen = (name: string) => !flips().has(`f:${name}`) || !!S.search.trim();
+
+/** Plegar o desplegar un grupo de la grilla. */
+export function toggleGroup(key: string, depth: number): void {
+  if (depth !== 0 || !remembersTop()) return toggleFlip(key);
+  const open = G.topKeys.filter(topOpen);
+  G.prefs.open = { ...G.prefs.open, [S.root]: open.includes(key) ? open.filter((k) => k !== key) : [...open, key] };
+  savePrefs();
+  render();
+}
+
+/** Barra de colores por estado de las filas de un grupo (hasta 80). */
+export function distBar(g: Group): string {
+  const its = g.rows.flatMap((r) => (r.item.kind === "group" && r.shown.length ? r.shown : [r.item])).slice(0, 80);
+  return `<span class="dist">${its.map((it) => `<i class="${esc(stateDef(effectiveStatus(it))?.category ?? "unknown")}" title="${esc(titleOf(it))}"></i>`).join("")}</span>`;
+}
+
+/** Categoría del estado de un item (franja de color de la fila). */
+export const rowCategory = (it: Item) => stateDef(effectiveStatus(it))?.category ?? (effectiveStatus(it) ? "unknown" : "none");
 
 export function toggleFlip(key: string): void {
   const f = flips();
@@ -617,7 +754,7 @@ const textOf = (html: string) => {
 /** Lo que pasa los filtros (los items de los grupos incluidos) con las columnas visibles, en texto. */
 export function exportRows(): string[][] {
   const cols = visibleColumns();
-  const out = [[t("grid.col.folder"), t("grid.col.group"), ...cols.map((c) => t(c.label))]];
+  const out = [[t("grid.col.folder"), t("grid.col.group"), ...cols.map(colLabel)]];
   const cell = (c: Column, it: Item) => (c.id === "title" ? titleOf(it) : textOf(c.render(it)));
   for (const r of sortRows(visibleRows(), (x) => x.item)) {
     for (const it of [r.item, ...sortRows(r.shown, (x) => x)]) out.push([it.name, it.group, ...cols.map((c) => cell(c, it))]);

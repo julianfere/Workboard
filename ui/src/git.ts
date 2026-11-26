@@ -147,6 +147,29 @@ export function gitUncommitted(it: Item): { repo: string; branch: string; count:
     .map((r) => ({ repo: r.name, branch: r.current ?? "", count: r.dirtyCount ?? 0, files: r.dirty ?? [] }));
 }
 
+// ---------- resumen por ambiente (columna Git de la grilla; solo lectura) ----------
+
+export type GitEnvState = "ok" | "partial" | "no";
+
+/** ¿La vista general está cargando (y todavía no hay datos)? */
+export const gitPending = () => !G.data && (G.loading || !G.error);
+
+/** Por ambiente: `ok` si todos los repos del item ya tienen el trabajo, `partial` si algunos, `no` si ninguno
+ *  (v1 `gitEnvSummary`). `null` = git sin cargar o el item sin ramas ni commits. */
+export function gitEnvSummary(it: Item): { env: string; state: GitEnvState; ok: string[]; all: string[] }[] | null {
+  const info = gitInfo(it);
+  if (!info || !G.data || (!info.branches.length && !Object.keys(info.mentions).length)) return null;
+  const repos = G.data.repos.filter((r) => info.branches.some((b) => b.repo === r.name) || info.mentions[r.name]);
+  const present = new Set(repos.flatMap((r) => Object.keys(r.envs ?? {})));
+  const order = wf().environments.map((e) => e.id);
+  const envs = [...order.filter((e) => present.has(e)), ...[...present].filter((e) => !order.includes(e))];
+  return envs.map((env) => {
+    const rs = repos.filter((r) => r.envs?.[env]);
+    const ok = rs.filter((r) => info.branches.some((b) => b.repo === r.name && OK_STATES.has(b.envs[env]?.state ?? "")) || !!info.mentions[r.name]?.[env]).map((r) => r.name);
+    return { env, state: ok.length === rs.length ? "ok" : ok.length ? "partial" : "no", ok, all: rs.map((r) => r.name) };
+  });
+}
+
 /** Alertas de git de todos los items (para la vista de alertas). */
 export function gitAlerts(): { kind: "gitDesync" | "gitDirty"; item: Item; detail: string }[] {
   if (!G.data) return [];
