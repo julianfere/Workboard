@@ -332,15 +332,81 @@ function viewMenu(id: string): string {
     ${sepHtml}${menuItem("grid-view-delete", "trash", t("grid.view.delete"), { id })}`;
 }
 
-/** Submenús abiertos del menú de la selección (se abren en el lugar, como acordeón). */
+/** Submenús abiertos del menú de la selección: flotan al costado y se abren al pasar el mouse (o con clic/teclado). */
 const subOpen = new Set<string>();
 
-/** Entrada que abre o cierra un submenú; `body` son sus entradas (nada = no se muestra). */
+/** Entrada que abre un submenú; `body` son sus entradas (nada = no se muestra). */
 function subMenu(key: string, icon: string, text: string, body: string): string {
   if (!body) return "";
   const open = subOpen.has(key);
-  return `<button class="menu-item has-sub${open ? " open" : ""}" data-action="grid-sub" data-k="${esc(key)}" aria-expanded="${open}">${ico(icon)}<span>${esc(text)}</span>${ico("chevronRight", "sub-chev")}</button>${open ? `<div class="menu-sub">${body}</div>` : ""}`;
+  return `<div class="sub-wrap${open ? " open" : ""}" data-k="${esc(key)}"><button class="menu-item has-sub${open ? " open" : ""}" data-action="grid-sub" data-k="${esc(key)}" aria-haspopup="true" aria-expanded="${open}">${ico(icon)}<span>${esc(text)}</span>${ico("chevronRight", "sub-chev")}</button><div class="menu menu-sub" role="menu">${body}</div></div>`;
 }
+
+/** Aplica `subOpen` a los submenús ya dibujados y los ubica al lado de su entrada (o del otro lado si no entran). */
+function syncSubs(): void {
+  const el = $("#grid-pop");
+  if (!el) return;
+  for (const w of el.querySelectorAll<HTMLElement>(".sub-wrap")) {
+    const open = subOpen.has(w.dataset.k!);
+    w.classList.toggle("open", open);
+    const btn = w.querySelector<HTMLElement>(":scope > .has-sub")!;
+    btn.classList.toggle("open", open);
+    btn.setAttribute("aria-expanded", String(open));
+  }
+  // De afuera hacia adentro: un submenú anidado se ubica después que su padre.
+  for (const w of el.querySelectorAll<HTMLElement>(".sub-wrap.open")) {
+    const btn = w.querySelector<HTMLElement>(":scope > .has-sub")!.getBoundingClientRect();
+    const fly = w.querySelector<HTMLElement>(":scope > .menu-sub")!;
+    const host = w.parentElement!.closest<HTMLElement>(".menu")!.getBoundingClientRect();
+    const fw = fly.offsetWidth;
+    const fh = fly.offsetHeight;
+    const right = host.right + 1;
+    const x = right + fw <= innerWidth - 8 ? right : Math.max(8, host.left - fw - 1);
+    fly.style.left = `${x}px`;
+    fly.style.top = `${Math.max(8, Math.min(btn.top - 7, innerHeight - fh - 8))}px`;
+  }
+}
+
+/** Submenús que tienen que quedar abiertos con el mouse sobre `target`: el suyo y los que lo contienen. */
+function subsFor(target: HTMLElement): Set<string> {
+  const keys = new Set<string>();
+  for (let w = target.closest<HTMLElement>(".sub-wrap"); w; w = w.parentElement?.closest<HTMLElement>(".sub-wrap") ?? null) {
+    keys.add(w.dataset.k!);
+  }
+  return keys;
+}
+
+let subTimer = 0;
+// Si el menú se desplaza, los submenús quedarían desubicados: se cierran.
+document.addEventListener(
+  "scroll",
+  (ev) => {
+    if (subOpen.size && (ev.target as HTMLElement).id === "grid-pop") {
+      subOpen.clear();
+      syncSubs();
+    }
+  },
+  true,
+);
+// Abrir es inmediato; cerrar espera un poco, para poder cruzar en diagonal hasta el submenú.
+document.addEventListener("mouseover", (ev) => {
+  const target = ev.target as HTMLElement;
+  if (!pop || !target.closest("#grid-pop")) return;
+  const want = subsFor(target);
+  const same = want.size === subOpen.size && [...want].every((k) => subOpen.has(k));
+  if (same) {
+    window.clearTimeout(subTimer);
+    return;
+  }
+  const apply = () => {
+    subOpen.clear();
+    for (const k of want) subOpen.add(k);
+    syncSubs();
+  };
+  window.clearTimeout(subTimer);
+  if ([...subOpen].every((k) => want.has(k))) apply();
+  else subTimer = window.setTimeout(apply, 220);
+});
 
 const hint = (text: string) => `<span class="muted">${esc(text)}</span>`;
 const disabledItem = (icon: string, text: string, why: string) =>
@@ -504,6 +570,7 @@ function showPop(): void {
   const x = pop.right ? pop.x - w : pop.x;
   el.style.left = `${Math.max(8, Math.min(x, innerWidth - w - 8))}px`;
   el.style.top = `${Math.max(8, Math.min(pop.y, innerHeight - h - 8))}px`;
+  syncSubs();
 }
 
 function openPop(kind: PopKind, x: number, y: number, arg = "", right = false): void {
@@ -905,10 +972,14 @@ onAction("bulk-promote", () => openPromotion(selectedNames()));
 onAction("show-deleted", () => deletedModal());
 onAction("bulk-reflect", () => reflectItems(selectedNames()));
 onAction("grid-sub", (el) => {
+  // Clic o teclado: abre ese submenú (y los que lo contienen) o lo cierra.
   const k = el.dataset.k!;
-  if (subOpen.has(k)) subOpen.delete(k);
-  else subOpen.add(k);
-  showPop();
+  const want = subsFor(el);
+  if (subOpen.has(k)) want.delete(k);
+  subOpen.clear();
+  for (const x of want) subOpen.add(x);
+  syncSubs();
+  if (subOpen.has(k)) el.parentElement?.querySelector<HTMLElement>(":scope > .menu-sub .menu-item:not(:disabled)")?.focus();
 });
 onAction("bulk-group", async () => {
   // Los de otro grupo también (se reagrupan, como la v1); los grupos no se anidan.

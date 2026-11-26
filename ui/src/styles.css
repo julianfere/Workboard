@@ -36,6 +36,13 @@ body { background: var(--bg); color: var(--fg); font: 14px/20px var(--font); -we
 button, select { font: inherit; color: inherit; }
 code { font-family: var(--mono); font-size: 12px; background: var(--surface-2); padding: 1px 4px; border-radius: var(--r-sm); }
 [hidden] { display: none !important; }
+/* Scroll propio (WebView2/WebKit): fino, redondeado y con los colores del tema; sin flechas. */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { background: transparent; }
+::-webkit-scrollbar-button { display: none; }
+::-webkit-scrollbar-thumb { background-color: color-mix(in srgb, var(--fg-2) 28%, transparent); background-clip: padding-box; border: 3px solid transparent; border-radius: 999px; min-height: 32px; }
+::-webkit-scrollbar-thumb:hover { background-color: color-mix(in srgb, var(--fg-2) 50%, transparent); border-width: 2px; }
+::-webkit-scrollbar-thumb:active { background-color: var(--blue); border-width: 2px; }
 svg.i { width: 16px; height: 16px; flex: none; }
 input, textarea { font: inherit; color: var(--fg); background: var(--surface); border: 1px solid var(--line-2); border-radius: var(--r-sm); padding: 6px 8px; }
 input:focus, textarea:focus, select:focus { outline: 2px solid var(--blue-soft); border-color: var(--blue); }
@@ -240,8 +247,9 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
 .menu-item:disabled:hover { background: none; }
 .menu-item .sub-chev { margin-left: auto; transition: transform .12s; }
 .menu-item.has-sub.open { background: var(--hover); }
-.menu-item.has-sub.open .sub-chev { transform: rotate(90deg); }
-.menu-sub { margin: 2px 0 4px 14px; padding-left: 6px; border-left: 1px solid var(--line); }
+/* Submenú flotante al costado de su entrada (lo ubica `syncSubs`). */
+.menu.menu-sub { display: none; z-index: 56; min-width: 220px; }
+.sub-wrap.open > .menu-sub { display: block; }
 .menu-check { display: flex; align-items: center; gap: 8px; padding: 4px 8px; border-radius: var(--r-sm); cursor: pointer; }
 .menu-check:hover { background: var(--hover); }
 .menu-check label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
@@ -691,7 +699,7 @@ body.resizing { cursor: col-resize; user-select: none; }
 .dp-head .detail-top .icon-btn { flex: none; }
 .d-main { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 340px; }
 .d-content { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
-.d-content > .tabs { flex: none; gap: 0; padding: 0 24px; margin-bottom: 0; overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; }
+.d-content > .tabs { flex: none; gap: 0; padding: 0 24px; margin-bottom: 0; overflow-x: auto; overflow-y: hidden; }
 .d-content > .tabs .tab { padding: 8px 10px; }
 .d-body { flex: 1; min-height: 0; overflow: auto; padding: 16px 24px 32px; }
 .d-side { min-height: 0; overflow: auto; padding: 16px; border-left: 1px solid var(--line); background: var(--surface-2); }
