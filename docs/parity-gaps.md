@@ -37,19 +37,19 @@ Referencias: `v1 app.js:N` = `_v1/ui/app.js`.
 
 ## US-02 Terminal y panel de sesiones (UI)
 
-- [ ] **(alta)** Ctrl+C con selección copia y Ctrl+V pega (v1 `attachCustomKeyEventHandler`, app.js:4491-4496).
-- [ ] Aviso de conflicto: dos sesiones editando el mismo repo (banner + ícono en la pestaña; v1 app.js:4547,
+- [x] **(alta)** Ctrl+C con selección copia y Ctrl+V pega (v1 `attachCustomKeyEventHandler`, app.js:4491-4496).
+- [x] Aviso de conflicto: dos sesiones editando el mismo repo (banner + ícono en la pestaña; v1 app.js:4547,
       4557-4559, 4759-4763). `Session.repos` ya existe.
-- [ ] Clic en una sesión pausada la reanuda y conecta (v1 app.js:4582-4593).
-- [ ] Pausar pide confirmación (v1 app.js:4611). Quitar un item de la sesión con Deshacer (v1 app.js:4437).
-- [ ] Ctrl+J sin pestañas: abre la última sesión o avisa «No hay sesiones abiertas» (v1 app.js:4595-4600).
-- [ ] Panel: maximizar/restaurar (v1 app.js:4555, 4603); pestaña con agente y estado (v1 app.js:4546); «Sumar item…» a
+- [x] Clic en una sesión pausada la reanuda y conecta (v1 app.js:4582-4593).
+- [x] Pausar pide confirmación (v1 app.js:4611). Quitar un item de la sesión con Deshacer (v1 app.js:4437).
+- [x] Ctrl+J sin pestañas: abre la última sesión o avisa «No hay sesiones abiertas» (v1 app.js:4595-4600).
+- [x] Panel: maximizar/restaurar (v1 app.js:4555, 4603); pestaña con agente y estado (v1 app.js:4546); «Sumar item…» a
       la sesión activa (v1 app.js:4551, 4716-4734).
-- [ ] Lista: tooltip con items, hace cuánto y repos editados; etiqueta Copilot/Propio; conteo de items; «Otros
+- [x] Lista: tooltip con items, hace cuánto y repos editados; etiqueta Copilot/Propio; conteo de items; «Otros
       proyectos» ordena primero «te necesita» y muestra el contador (v1 app.js:4376-4377, 4392-4395).
-- [ ] Nueva sesión: nombre por defecto «WI a + WI b», link «Configurar un comando propio…», opción «Agrupar estos N en
+- [x] Nueva sesión: nombre por defecto «WI a + WI b», link «Configurar un comando propio…», opción «Agrupar estos N en
       una carpeta grp-…» (v1 app.js:4632, 4643-4666).
-- [ ] Toast «Compactando…»; recordar entre reinicios el aviso de sesión larga ocultado (v1 app.js:4360, 4371).
+- [x] Toast «Compactando…»; recordar entre reinicios el aviso de sesión larga ocultado (v1 app.js:4360, 4371).
 
 ## US-03 Sesiones, MCP y métricas (backend)
 
