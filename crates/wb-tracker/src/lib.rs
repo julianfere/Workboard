@@ -5,6 +5,7 @@
 //! de error. El HTTP va por un [`Transport`] para poder probarlo sin red.
 
 pub mod azure;
+mod entities;
 pub mod html;
 pub mod http;
 
