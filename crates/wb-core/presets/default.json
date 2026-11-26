@@ -10,6 +10,7 @@
     { "id": "done", "category": "done", "labels": { "en": "Done", "es": "Hecho" } },
     { "id": "cancelled", "category": "cancelled", "labels": { "en": "Cancelled", "es": "Cancelado" } }
   ],
+  "mainPath": ["backlog", "planned", "in-progress", "review", "testing", "done"],
   "types": [
     { "id": "bug", "labels": { "en": "Bug", "es": "Bug" } },
     { "id": "feature", "labels": { "en": "Feature", "es": "Funcionalidad" }, "aliases": ["user story", "product backlog item", "epic"] },

@@ -37,13 +37,16 @@ export interface FieldKeys {
   period: string;
   hours: string;
   sessions: string;
-  extra: { key: string; noSpaces?: boolean }[];
+  /** Campos extra; `link` = "tracker" (id del tracker) o plantilla `https://…{value}`: el detalle los muestra como link. */
+  extra: { key: string; noSpaces?: boolean; labels?: Labels; link?: string; icon?: string }[];
 }
 
 export interface Workflow {
   id: string;
   name: Labels;
   states: StateDef[];
+  /** Camino principal (pasos del detalle); sin él, los estados que no son descartados ni desconocidos. */
+  mainPath?: string[];
   types: Choice[];
   environments: Choice[];
   period: { startDay: number };

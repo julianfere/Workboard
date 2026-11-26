@@ -12,6 +12,7 @@
     { "id": "descartado", "category": "cancelled", "labels": { "en": "Discarded", "es": "Descartado" } },
     { "id": "desconocido", "category": "unknown", "labels": { "en": "Unknown", "es": "Desconocido" } }
   ],
+  "mainPath": ["pendiente", "plan", "en-curso", "codeado", "qa", "prod"],
   "types": [
     { "id": "bug", "labels": { "en": "Bug", "es": "Bug" } },
     { "id": "us", "labels": { "en": "User story", "es": "User story" }, "aliases": ["product backlog item", "feature", "epic"] },
@@ -44,7 +45,7 @@
     "period": "periodo",
     "hours": "horas",
     "sessions": "sesiones",
-    "extra": [{ "key": "release_manual", "noSpaces": true }]
+    "extra": [{ "key": "release_manual", "noSpaces": true, "labels": { "en": "ReleaseManual", "es": "ReleaseManual" }, "link": "tracker", "icon": "package" }]
   },
   "tasks": { "heading": "Pendientes", "maxLen": 300 },
   "deployKeywords": ["deploy", "despleg", "promoci", "cómo correr", "como correr"],

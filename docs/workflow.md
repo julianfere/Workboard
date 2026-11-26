@@ -88,6 +88,17 @@ moving back.
 
 At least one state is required; ids must be unique.
 
+### `mainPath`
+
+*Optional.* The states of the normal path, in order: the item detail shows them as steps (an item in a state
+off the path, like a "diagnosis" side state, shows it as an extra step at the end) and its "Move to" button
+goes to the next one. Without it, every state that is not `cancelled` or `unknown` is on the path. Each entry
+must be a known state, without repeats.
+
+```json
+"mainPath": ["backlog", "planned", "in-progress", "review", "testing", "done"]
+```
+
 ### `types`
 
 Kinds of item (bug, feature…). `aliases` (*optional*) are other names that map to this type, compared
@@ -193,7 +204,7 @@ must be distinct.
 | `period` | `YYYY-MM`. If missing, derived from `due`. |
 | `hours` | Agreed hours (a number). Overrides the tracker's estimate. |
 | `sessions` | Agent sessions that worked on the item. Written by Workboard; not editable. |
-| `extra` | *Optional.* More single-line text fields: `[{ "key": "release_note", "noSpaces": false }]`. |
+| `extra` | *Optional.* More single-line text fields: `[{ "key": "release_note", "noSpaces": false }]`. Each may have `labels` (display name), `link` and `icon` (a name from the app's icon set): with `link: "tracker"` the value is a tracker work item id, and with an `https://…{value}` template it is the part that goes in the URL; the item detail shows it as a link in its header and side panel. |
 
 All of them except `sessions` are editable from the UI, validated the same way by the UI, the MCP and
 plugins, and an empty value deletes the key. The frontmatter is a subset of YAML: `key: value` and
