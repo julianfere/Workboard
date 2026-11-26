@@ -5933,6 +5933,7 @@ dependencies = [
  "tauri-plugin-dialog",
  "wb-api",
  "wb-platform",
+ "wb-plugins",
  "wb-sessions",
 ]
 

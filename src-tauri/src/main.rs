@@ -2,6 +2,8 @@
 //! `wb_api::Api` (lo mismo que sirve `wb-devserver` por HTTP en desarrollo). La salida de las terminales
 //! de las sesiones es un flujo: va por `session_attach`, con un canal de bytes crudos por pestaña.
 //! `workboard migrate-v1 …` no abre la ventana: importa la config de la v1 (`docs/migrate-v1.md`).
+//! `workboard plugin new|check …` tampoco: crea o prueba un plugin (`docs/plugins.md`, lógica en
+//! `wb_plugins::cli`).
 //! `workboard <carpeta>` abre la app con esa carpeta de trabajos (como `py app.py <carpeta>` en la v1).
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
@@ -46,6 +48,11 @@ fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
     if args.first().map(String::as_str) == Some("migrate-v1") {
         let code = wb_api::migrate::cli(&args[1..], &mut std::io::stdout().lock());
+        std::process::exit(code);
+    }
+    if args.first().map(String::as_str) == Some("plugin") {
+        let code =
+            wb_plugins::cli::cli(&args[1..], &wb_platform::config_dir(), &mut std::io::stdout().lock());
         std::process::exit(code);
     }
 
