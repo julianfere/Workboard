@@ -34,7 +34,10 @@ pub(crate) struct Snapshot {
     pub last_fetch: Option<f64>,
 }
 
-/// Remotes del repo leyendo `.git/config` (sin lanzar `git remote`). `None` = no se pudo leer (worktree).
+/// Remotes del repo leyendo `.git/config` (sin lanzar `git remote`). `None` = no se pudo leer (worktree) o no
+/// declara ningún `[remote]` (están en un `include` o en otra config): la v1 caía a `git remote`, que no es de
+/// la lista de solo lectura; con `None` valen los remotes que tengan ramas en `refs/remotes/`, que es lo mismo
+/// que listaría `git remote` para un repo con fetch.
 pub(crate) fn remotes(repo: &Path) -> Option<IndexMap<String, Option<String>>> {
     let cfg = std::fs::read(repo.join(".git").join("config")).ok()?;
     let cfg = String::from_utf8_lossy(&cfg);
@@ -63,7 +66,7 @@ pub(crate) fn remotes(repo: &Path) -> Option<IndexMap<String, Option<String>>> {
             out.insert(name.clone(), Some(v));
         }
     }
-    Some(out)
+    (!out.is_empty()).then_some(out)
 }
 
 pub(crate) fn snapshot(repo: &Path, rules: &Rules) -> Result<Snapshot, GitError> {
@@ -259,6 +262,21 @@ pub fn watch_signature(repos: &[RepoConfig]) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn remotes_fall_back_when_the_config_has_none() {
+        let dir = std::env::temp_dir().join(format!("wb-git-remotes-{}", std::process::id()));
+        std::fs::create_dir_all(dir.join(".git")).unwrap();
+        let cfg = dir.join(".git").join("config");
+        std::fs::write(&cfg, "[core]\n\tbare = false\n[include]\n\tpath = ../shared.cfg\n").unwrap();
+        assert_eq!(remotes(&dir), None);
+        let two = "[core]\n[remote \"origin\"]\n\turl = https://github.com/acme/app.git\n[remote \"up\"]\n";
+        std::fs::write(&cfg, two).unwrap();
+        let found = remotes(&dir).unwrap();
+        assert_eq!(found.get("origin"), Some(&Some("https://github.com/acme/app.git".to_string())));
+        assert_eq!(found.get("up"), Some(&None));
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
 
     #[test]
     fn web_urls() {

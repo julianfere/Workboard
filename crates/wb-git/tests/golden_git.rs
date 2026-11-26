@@ -282,6 +282,18 @@ fn overview_and_cache() {
     assert_json(&fx.v1(&warm), &g["overview"], "warm overview");
 }
 
+/// Sin `[remote]` en `.git/config` (la v1 caía a `git remote`): las ramas de `refs/remotes/` siguen contando.
+#[test]
+fn overview_without_remote_section() {
+    let g = golden();
+    let fx = Fixture::new("noremote");
+    setup_git(&fx.app, &["config", "--remove-section", "remote.origin"], None);
+    let cfg = std::fs::read_to_string(fx.app.join(".git").join("config")).unwrap();
+    assert!(!cfg.contains("[remote"), "{cfg}");
+    let ov = GitPanel::new(None).with_now(NOW).overview(&[fx.repo(&ENVS)], &wis(&WIS), &rules());
+    assert_json(&fx.v1(&ov), &g["overview"], "overview without [remote]");
+}
+
 #[test]
 fn promotion() {
     let g = golden();
