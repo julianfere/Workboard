@@ -1015,6 +1015,7 @@ impl SessionManager {
         let files =
             agents::LaunchFiles { context: &ctx, mcp_config: &mcp, claude_settings: settings.as_deref() };
         let prefix = env_info.agents.plan_prefix.get(&sess.agent).cloned().unwrap_or_default();
+        let prefix = agents::effective_plan_prefix(&sess.agent, &prefix, Path::new(&sess.cwd), &env);
         let (argv, extra) =
             agents::build_command(sess, &files, start, prompt, &prefix, &env_info.agents.custom, &env)?;
         env.extend(extra);

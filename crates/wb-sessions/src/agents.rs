@@ -267,6 +267,63 @@ pub enum Start<'a> {
     Fork(&'a str),
 }
 
+/// Prefijo de planificación que de verdad se usa. Si es un comando de Claude (`/go `) que no está instalado (skill o
+/// comando del usuario, del proyecto o de un plugin), Claude lo rechaza y la sesión no arranca: se manda el pedido
+/// solo, que ya dice qué hacer.
+pub fn effective_plan_prefix(
+    agent: &str,
+    prefix: &str,
+    cwd: &Path,
+    env: &BTreeMap<String, String>,
+) -> String {
+    let Some(name) = prefix.trim().strip_prefix('/').and_then(|r| r.split_whitespace().next()) else {
+        return prefix.to_string();
+    };
+    if agent != CLAUDE || claude_command_exists(name, cwd, env) {
+        return prefix.to_string();
+    }
+    String::new()
+}
+
+/// `~/.claude` (o `CLAUDE_CONFIG_DIR`).
+fn claude_home(env: &BTreeMap<String, String>) -> Option<PathBuf> {
+    let get = |k: &str| env.get(k).cloned().or_else(|| std::env::var(k).ok()).filter(|v| !v.is_empty());
+    get("CLAUDE_CONFIG_DIR")
+        .map(PathBuf::from)
+        .or_else(|| get("USERPROFILE").or_else(|| get("HOME")).map(|h| PathBuf::from(h).join(".claude")))
+}
+
+/// ¿Hay un skill o comando `name` en el usuario, en `cwd` o sus carpetas padre, o en un plugin instalado?
+pub fn claude_command_exists(name: &str, cwd: &Path, env: &BTreeMap<String, String>) -> bool {
+    let name = name.rsplit(':').next().unwrap_or(name);
+    let has = |dir: &Path| {
+        dir.join("skills").join(name).join("SKILL.md").is_file()
+            || dir.join("commands").join(format!("{name}.md")).is_file()
+    };
+    let home = claude_home(env);
+    if home.as_deref().is_some_and(has) || cwd.ancestors().any(|d| has(&d.join(".claude"))) {
+        return true;
+    }
+    // Plugins: `<home>/plugins/**/{skills/<name>/SKILL.md, commands/<name>.md}`, con profundidad acotada.
+    let Some(plugins) = home.map(|h| h.join("plugins")) else { return false };
+    let mut stack = vec![(plugins, 0u8)];
+    while let Some((dir, depth)) = stack.pop() {
+        if has(&dir) {
+            return true;
+        }
+        if depth >= 6 {
+            continue;
+        }
+        let Ok(rd) = std::fs::read_dir(&dir) else { continue };
+        for e in rd.flatten() {
+            if e.file_type().is_ok_and(|t| t.is_dir() && !t.is_symlink()) {
+                stack.push((e.path(), depth + 1));
+            }
+        }
+    }
+    false
+}
+
 /// `(argv, variables extra)` para lanzar la sesión con su agente.
 pub fn build_command(
     sess: &Session,
@@ -380,6 +437,29 @@ mod tests {
         [("session_id", "S".to_string()), ("mcp_config", "C:/m.json".into()), ("prompt", prompt.into())]
             .into_iter()
             .collect()
+    }
+
+    #[test]
+    fn plan_prefix_only_when_the_command_exists() {
+        let d = std::env::temp_dir().join(format!("wb-sess-prefix-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&d);
+        let home = d.join("claude");
+        let cwd = d.join("work/item");
+        std::fs::create_dir_all(&cwd).unwrap();
+        let env: BTreeMap<String, String> =
+            [("CLAUDE_CONFIG_DIR".to_string(), home.display().to_string())].into_iter().collect();
+        assert_eq!(effective_plan_prefix(CLAUDE, "/go ", &cwd, &env), "");
+        assert_eq!(effective_plan_prefix(CLAUDE, "Planeá: ", &cwd, &env), "Planeá: ");
+        assert_eq!(effective_plan_prefix(COPILOT, "/go ", &cwd, &env), "/go ");
+        let plugin = home.join("plugins/cache/mk/tools/1.0.0/skills/go");
+        std::fs::create_dir_all(&plugin).unwrap();
+        std::fs::write(plugin.join("SKILL.md"), "").unwrap();
+        assert_eq!(effective_plan_prefix(CLAUDE, "/go ", &cwd, &env), "/go ");
+        std::fs::remove_dir_all(home.join("plugins")).unwrap();
+        std::fs::create_dir_all(d.join("work/.claude/commands")).unwrap();
+        std::fs::write(d.join("work/.claude/commands/go.md"), "").unwrap();
+        assert_eq!(effective_plan_prefix(CLAUDE, "/go ", &cwd, &env), "/go ");
+        std::fs::remove_dir_all(&d).ok();
     }
 
     #[test]
