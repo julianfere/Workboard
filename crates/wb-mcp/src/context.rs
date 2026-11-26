@@ -8,20 +8,76 @@ use std::path::Path;
 use serde_json::Value as Json;
 use wb_core::Workflow;
 use wb_core::frontmatter::Value;
-use wb_core::workspace::{Item, ItemKind};
+use wb_core::workspace::{Item, ItemKind, README};
 
 use crate::{item_path, names};
 
 /// Guía de Workboard para un flujo e idioma (las `instructions` del MCP).
 pub fn guide_for(wf: &Workflow, lang: &str) -> String {
     let ids = |v: Vec<&str>| v.join(", ");
+    // Cada tipo con su nombre cuando no es el mismo id (`us = User story`), como la v1.
+    let types: Vec<String> = wf
+        .types
+        .iter()
+        .map(|c| {
+            let label = Workflow::label(&c.labels, lang, &c.id);
+            if label.eq_ignore_ascii_case(&c.id) { c.id.clone() } else { format!("{} = {label}", c.id) }
+        })
+        .collect();
+    let start = wf.period.start_day;
+    let period = if start <= 1 {
+        wb_i18n::t(lang, "mcp.guidePeriodMonth", &[])
+    } else {
+        let (s, e) = (start.to_string(), (start - 1).to_string());
+        wb_i18n::t(lang, "mcp.guidePeriodSpan", &[("start", &s), ("end", &e)])
+    };
+    // Prefijos por categoría de archivo (`MIGRATION_ / SEED_ (Migraciones)`) y, aparte, las que van por
+    // extensión (`.py, .ps1… (Scripts)`).
+    let by_kind: Vec<String> = wf
+        .files
+        .categories
+        .iter()
+        .filter(|c| !c.kinds.is_empty())
+        .map(|c| {
+            let kinds: Vec<String> = c.kinds.iter().map(|k| format!("{k}_")).collect();
+            format!("{} ({})", kinds.join(" / "), Workflow::label(&c.labels, lang, &c.id))
+        })
+        .collect();
+    let by_ext: Vec<String> = wf
+        .files
+        .categories
+        .iter()
+        .filter(|c| c.kinds.is_empty() && !c.extensions.is_empty())
+        .map(|c| {
+            let more = if c.extensions.len() > 2 { "…" } else { "" };
+            let exts = c.extensions.iter().take(2).cloned().collect::<Vec<_>>().join(", ");
+            format!("{exts}{more} ({})", Workflow::label(&c.labels, lang, &c.id))
+        })
+        .collect();
+    // Ejemplo de nombre: el tipo del preset y el prefijo de las carpetas de item (`wi{id}-…` → `WI`).
+    let tpl = &wf.folders.new_item_template;
+    let prefix = tpl.find("{id}").map_or("", |i| &tpl[..i]);
+    let prefix =
+        if prefix.chars().all(|c| c.is_ascii_alphanumeric()) { prefix.to_uppercase() } else { String::new() };
+    let example = wb_i18n::t(
+        lang,
+        "mcp.guideExample",
+        &[("kind", wf.example_kind().unwrap_or_default()), ("prefix", &prefix)],
+    );
+    let none = wb_i18n::t(lang, "mcp.none", &[]);
+    let or_none = |v: Vec<String>| if v.is_empty() { none.clone() } else { v.join(", ") };
     wb_i18n::t(
         lang,
         "mcp.guide",
         &[
             ("states", &ids(wf.state_ids().collect())),
-            ("types", &ids(wf.types.iter().map(|t| t.id.as_str()).collect())),
+            ("types", &types.join(", ")),
             ("environments", &ids(wf.environments.iter().map(|e| e.id.as_str()).collect())),
+            ("period", &period),
+            ("fileKinds", &or_none(by_kind)),
+            ("fileExtensions", &or_none(by_ext)),
+            ("example", &example),
+            ("groupPrefix", &wf.folders.group_prefix),
             ("tasks", &wf.tasks.heading),
             ("session", names::SESSION),
             ("get", names::GET_ITEM),
@@ -34,6 +90,11 @@ pub fn guide_for(wf: &Workflow, lang: &str) -> String {
             ("runTool", names::RUN_TOOL),
         ],
     )
+}
+
+/// Primer párrafo de las `instructions` del MCP (como la v1): qué hay en la carpeta de trabajos.
+pub fn intro_for(wf: &Workflow, lang: &str) -> String {
+    wb_i18n::t(lang, "mcp.intro", &[("groupPrefix", &wf.folders.group_prefix), ("tasks", &wf.tasks.heading)])
 }
 
 fn text<'a>(it: &'a Item, key: &str) -> &'a str {
@@ -66,6 +127,7 @@ pub fn item_lines(
                 t("ctx.group", &[("name", name), ("count", &it.members.len().to_string())])
             ),
             format!("- {}", t("ctx.groupFolder", &[("path", &folder.display().to_string())])),
+            format!("- {}", t("ctx.groupReadme", &[("path", &folder.join(README).display().to_string())])),
         ]
     } else {
         let ids = if it.ids.is_empty() { String::new() } else { format!(" (#{})", it.ids.join(", #")) };

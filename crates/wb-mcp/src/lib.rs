@@ -382,9 +382,14 @@ pub fn guide(ctx: &Ctx) -> String {
     context::guide_for(&ctx.workflow(), &ctx.lang())
 }
 
-/// `instructions` del MCP: dentro de una sesión, el mismo contexto que recibe el agente (sus items, la
-/// guía y las tools); fuera de una sesión, solo la guía.
+/// `instructions` del MCP: una intro de qué hay en la carpeta de trabajos (como la v1) y, dentro de una
+/// sesión, el mismo contexto que recibe el agente (sus items, la guía y las tools); fuera, la guía.
 pub fn instructions(ctx: &Ctx) -> String {
+    let intro = context::intro_for(&ctx.workflow(), &ctx.lang());
+    format!("{intro}\n\n{}", session_instructions(ctx))
+}
+
+fn session_instructions(ctx: &Ctx) -> String {
     let (Some(rec), Ok(ws)) = (ctx.session_record(), ctx.workspace()) else { return guide(ctx) };
     let Ok(all) = ws.list_items() else { return guide(ctx) };
     let items: Vec<String> = rec
@@ -617,16 +622,13 @@ pub fn add_note(ctx: &Ctx, item: &str, title: &str, text: &str) -> ToolResult {
     Ok(json!({"note": note.id, "folder": store.folder().display().to_string(), "ids": note.items}))
 }
 
-/// Tools promovidas por el usuario (`<config>/tools/<nombre>/tool.json`, formato de la v1).
+/// Tools promovidas por el usuario que se pueden correr (el script sigue igual que cuando se promovió),
+/// con las claves de `tool.json` (formato de la v1). Las que cambiaron no se ofrecen en el contexto.
 pub fn registered_tools(ctx: &Ctx) -> Vec<Json> {
-    let mut dirs: Vec<PathBuf> = std::fs::read_dir(ctx.config_dir.join("tools"))
-        .map(|rd| rd.flatten().map(|e| e.path()).filter(|p| p.join("tool.json").is_file()).collect())
-        .unwrap_or_default();
-    dirs.sort();
-    dirs.iter()
-        .filter_map(|d| {
-            serde_json::from_str::<Json>(&std::fs::read_to_string(d.join("tool.json")).ok()?).ok()
-        })
+    tools::list(&ctx.config_dir)
+        .into_iter()
+        .filter(|t| t.ok)
+        .filter_map(|t| serde_json::to_value(&t.meta).ok())
         .collect()
 }
 
