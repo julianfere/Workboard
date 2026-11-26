@@ -3,15 +3,16 @@
 // cercanas y las próximas tareas de lo que está en curso o pactado para el período.
 
 import { api } from "../api";
-import { onAction, onChange, refresh, registerView, render, setNavCounter } from "../app";
-import { daysUntil, esc, todayIso } from "../dom";
-import { lang, t } from "../i18n";
+import { onAction, onAfterRender, registerView, render, setNavCounter } from "../app";
+import { daysUntil, esc, toast, todayIso } from "../dom";
+import { hoursHidden } from "../discreet";
+import { errorText, lang, t } from "../i18n";
 import { ico } from "../icons";
 import { byUrgency, dueOf, fmtDay, hoursOf, isOverdue, lateTag, periodOf, priorityBadge, priorityOf } from "../planning";
-import { S, effectiveStatus, isClosed, itemByName, stateDef, titleOf, wf } from "../state";
+import { S, effectiveStatus, isClosed, itemByName, metaText, stateDef, stateLabel, titleOf, wf } from "../state";
 import { curPeriod, fmtH, periodRange, periodShift, periodStart, timeReady, workedIn, workedTotal } from "../stats";
 import type { Item } from "../types";
-import { activeAlerts, dismissAlert, isAlertDismissed, type AlertKind } from "./alerts";
+import { activeAlerts, alertItemCount, alertTitle, dismissAlert, isAlertDismissed, type AlertKind } from "./alerts";
 import { statusChip } from "./items";
 
 /** Período (`AAAA-MM`) en que cae una fecha, según el día de inicio del flujo. */
@@ -30,9 +31,11 @@ export function periodKey(iso: string): string {
 }
 
 const DAY_MS = 864e5;
-const units = () => S.items.filter((it) => it.kind === "item");
+/** Grupos y sueltos, sin los miembros de un grupo (v1 `!i.group`, app.js:2827). */
+const units = () => S.items.filter((it) => !it.group);
 const category = (it: Item) => stateDef(effectiveStatus(it))?.category;
 const idsOf = (it: Item) => it.ids.join(", ") || it.name.split("/").pop()!;
+const notesOf = (it: Item) => metaText(it, wf().fields.notes);
 
 /** Cuándo vence una fecha, relativo a hoy (`n` = días; negativo = vencida). */
 const when = (n: number) =>
@@ -41,10 +44,11 @@ const when = (n: number) =>
 // ---------- necesita tu atención ----------
 
 /** Alertas que piden acción ahora (las demás quedan en Alertas). Las vencidas van aparte. */
-const IMPORTANT: AlertKind[] = ["gitDesync", "gitDirty", "stale", "plan"];
+const IMPORTANT: AlertKind[] = ["finalEnv", "gitDesync", "gitDirty", "stale", "plan"];
 
 interface Attention {
   tone: "danger" | "warn";
+  icon: "alert" | "clock";
   title: string;
   sub: string;
   /** Atributos del botón de la acción. */
@@ -59,6 +63,7 @@ export function attentionList(): Attention[] {
   for (const s of [...S.sessions, ...S.otherSessions].filter((x) => x.status === "needsYou")) {
     out.push({
       tone: "danger",
+      icon: "alert",
       title: t("today.att.session", { name: s.name }),
       sub: s.statusDetail || (s.project ? t("today.att.project", { name: s.project }) : t("today.att.agent")),
       action: `data-action="sess-open" data-id="${esc(s.id)}"`,
@@ -72,8 +77,10 @@ export function attentionList(): Attention[] {
     const date = dueOf(it).date;
     out.push({
       tone: "warn",
+      icon: "clock",
       title: t("today.att.late", { item: `${idsOf(it)} ${titleOf(it)}`, date: fmtDay(date) }),
-      sub: when(daysUntil(date)),
+      // Como la v1 (app.js:2836): el estado y las notas.
+      sub: [effectiveStatus(it) ? stateLabel(effectiveStatus(it)) : when(daysUntil(date)), notesOf(it)].filter(Boolean).join(" · "),
       action: `data-action="open-item" data-name="${esc(it.name)}"`,
       label: t("today.att.view"),
       dismiss: { name: it.name, kind: "overdue" },
@@ -81,8 +88,9 @@ export function attentionList(): Attention[] {
   }
   for (const a of activeAlerts().filter((x) => IMPORTANT.includes(x.kind))) {
     out.push({
-      tone: a.kind === "gitDesync" ? "danger" : "warn",
-      title: t(`alerts.${a.kind}`),
+      tone: a.kind === "finalEnv" ? "danger" : "warn",
+      icon: "alert",
+      title: alertTitle(a.kind),
       sub: `${idsOf(a.item)} ${titleOf(a.item)}${a.detail ? ` · ${a.detail}` : ""}`,
       action: `data-action="open-item" data-name="${esc(a.item.name)}"`,
       label: t("today.att.view"),
@@ -147,11 +155,11 @@ function periodCard(): string {
 
 function attentionCard(): string {
   const att = attentionList();
-  const alerts = activeAlerts().length;
+  const alerts = alertItemCount();
   const rows = att
     .slice(0, 6)
     .map(
-      (a, n) => `<li><span class="att-ico ${a.tone}">${ico(a.tone === "danger" ? "alert" : "clock")}</span>
+      (a, n) => `<li><span class="att-ico ${a.tone}">${ico(a.icon)}</span>
         <span class="grow att-main"><span class="att-t">${esc(a.title)}</span><span class="muted sm">${esc(a.sub)}</span></span>
         <button class="btn" ${a.action}>${esc(a.label)}</button>
         ${a.dismiss ? `<button class="icon-btn" data-action="today-dismiss" data-n="${n}" title="${esc(t("alerts.dismissHint"))}" aria-label="${esc(t("alerts.dismiss"))}">${ico("x")}</button>` : ""}</li>`,
@@ -173,11 +181,18 @@ function wipCard(): string {
     .map((it) => {
       const plan = hoursOf(it).hours;
       const real = report ? workedTotal(it) : 0;
-      const hours = plan
-        ? `<span class="muted sm hrs">${bar((real / plan) * 100, real > plan ? "over" : "")} ${esc(t("today.hoursOf", { worked: fmtH(real), planned: fmtH(plan) }))}</span>`
-        : "";
-      return `<li class="link-row" data-action="open-item" data-name="${esc(it.name)}"><span class="grow att-main"><span class="att-t"><span class="muted">${esc(idsOf(it))}</span> ${esc(titleOf(it))}${lateTag(it)}</span>${hours}</span>
-        ${priorityBadge(priorityOf(it))}${statusChip(effectiveStatus(it))}</li>`;
+      // Como la v1 (app.js:2899): horas contra lo pactado o, sin horas (u ocultas), las notas.
+      const notes = notesOf(it);
+      const sub =
+        plan && !hoursHidden()
+          ? `<span class="muted sm hrs">${bar((real / plan) * 100, real > plan ? "over" : "")} ${esc(t("today.hoursOf", { worked: fmtH(real), planned: fmtH(plan) }))}</span>`
+          : notes
+            ? `<span class="muted sm">${esc(notes)}</span>`
+            : "";
+      const id = it.kind === "group" ? t("today.group") : it.ids.join(", ") || t("today.noId");
+      const due = dueOf(it).date;
+      return `<li class="link-row" data-action="open-item" data-name="${esc(it.name)}"><span class="grow att-main"><span class="att-t"><span class="muted">${esc(id)}</span> ${esc(titleOf(it))}${lateTag(it)}</span>${sub}</span>
+        ${priorityBadge(priorityOf(it))}<span class="wip-side">${statusChip(effectiveStatus(it))}${due ? `<span class="muted sm">${esc(t("today.dueOn", { date: fmtDay(due) }))}</span>` : ""}</span></li>`;
     })
     .join("");
   return `<section class="card"><h2><span class="grow">${esc(t("today.inProgress"))}</span><button class="link" data-action="nav" data-view="items">${esc(t("today.allItems"))}</button></h2>
@@ -205,20 +220,48 @@ function datesCard(): string {
     ${rows ? `<ul class="list">${rows}</ul>` : `<p class="empty">${esc(t("today.noDates"))}</p>`}</section>`;
 }
 
+// Lo escrito en el campo de la bandeja sobrevive al refresco de la vista (se rearma con cada cambio en disco).
+let inboxDraft = "";
+let inboxFocus: { start: number | null; end: number | null } | null = null;
+
+function captureInbox(): void {
+  const el = document.querySelector<HTMLInputElement>("#today-inbox");
+  inboxFocus = null;
+  if (!el) return;
+  inboxDraft = el.value;
+  if (document.activeElement === el) inboxFocus = { start: el.selectionStart, end: el.selectionEnd };
+}
+
+onAfterRender(() => {
+  const el = document.querySelector<HTMLInputElement>("#today-inbox");
+  if (!el || !inboxFocus) return;
+  el.focus();
+  el.setSelectionRange(inboxFocus.start, inboxFocus.end);
+});
+
+/** Fila de tarea completa, como la de Pendientes sin «Mover» (v1 app.js:2914): tildar, editar y borrar usan las
+ *  acciones de Pendientes. */
+function taskRow(it: Item, text: string, i: number): string {
+  const at = `data-name="${esc(it.name)}" data-index="${i}"`;
+  return `<li class="task"><input type="checkbox" data-change="tk-toggle" ${at} aria-label="${esc(text)}">
+    <span class="grow" data-action="tk-edit" ${at}>${esc(text)}</span>
+    <button class="icon-btn" data-action="tk-edit" ${at} title="${esc(t("common.edit"))}">${ico("edit")}</button>
+    <button class="icon-btn" data-action="tk-remove" ${at} title="${esc(t("common.delete"))}">${ico("trash")}</button>
+    <button class="link muted sm" data-action="open-item" data-name="${esc(it.name)}" title="${esc(titleOf(it))}">${esc(idsOf(it))}</button></li>`;
+}
+
 function tasksCard(): string {
   const rows = todayTasks()
     .slice(0, 7)
-    .map(
-      ({ it, text, i }) => `<li class="task"><input type="checkbox" data-change="today-task" data-name="${esc(it.name)}" data-index="${i}" aria-label="${esc(text)}"><span class="grow">${esc(text)}</span>
-        <button class="link muted sm" data-action="open-item" data-name="${esc(it.name)}" title="${esc(titleOf(it))}">${esc(idsOf(it))}</button></li>`,
-    )
+    .map(({ it, text, i }) => taskRow(it, text, i))
     .join("");
   return `<section class="card"><h2><span class="grow">${esc(t("today.nextTasks"))}</span><span class="muted sm">${esc(t("today.nextTasksSub"))}</span></h2>
     ${rows ? `<ul class="tasks">${rows}</ul>` : `<p class="empty">${esc(t("today.noTasks"))}</p>`}
-    <div class="add-row"><input id="today-inbox" placeholder="${esc(t("today.inboxAdd"))}" data-enter="today-inbox"><button class="btn" data-action="today-inbox">${ico("inbox")}${esc(t("tasks.inbox"))}</button></div></section>`;
+    <div class="add-row"><input id="today-inbox" placeholder="${esc(t("today.inboxAdd"))}" value="${esc(inboxDraft)}" data-enter="today-inbox"><button class="btn" data-action="today-inbox">${ico("inbox")}${esc(t("tasks.inbox"))}</button></div></section>`;
 }
 
 function renderToday(): string {
+  captureInbox();
   const now = new Date();
   const date = now.toLocaleDateString(lang(), { weekday: "long", day: "numeric", month: "long" });
   const h = now.getHours();
@@ -232,18 +275,17 @@ function renderToday(): string {
 registerView("today", renderToday);
 setNavCounter("today", () => attentionList().length);
 
-onChange("today-task", async (el) => {
-  const it = S.items.find((x) => x.name === el.dataset.name)!;
-  const i = Number(el.dataset.index);
-  await api.setTask(it.name, i, true, it.tasks[i].text);
-  await refresh();
-});
 onAction("today-inbox", async () => {
   const input = document.querySelector<HTMLInputElement>("#today-inbox")!;
   if (!input.value.trim()) return;
-  S.inbox = await api.inboxAdd(input.value);
+  try {
+    S.inbox = await api.inboxAdd(input.value);
+  } catch (err) {
+    toast(errorText(err), undefined, "error");
+    return;
+  }
+  input.value = "";
   render();
-  document.querySelector<HTMLInputElement>("#today-inbox")?.focus();
 });
 onAction("today-dismiss", async (el, ev) => {
   ev.stopPropagation();

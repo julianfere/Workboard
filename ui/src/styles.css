@@ -612,3 +612,15 @@ pre.tool-code { max-height: 40vh; }
 .tr-facts > span:not(:first-child)::before { content: " · "; }
 
 .card h2 .link { font-size: 13px; font-weight: 400; }
+
+/* Alertas: filas como la v1 (estado, tipo e id, título y carpeta, hace cuánto) y duplicados por conjunto. */
+.alert-ico { display: inline-flex; color: var(--fg-2); }
+.alert-ico.on { color: var(--warn); }
+.alert-row .ar-state { flex: none; width: 130px; overflow: hidden; }
+.alert-row .ar-id { flex: none; width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.alert-row .ar-name { display: flex; flex-direction: column; min-width: 0; }
+.alert-row .ar-name > * { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dup-cluster { border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; margin: 8px 0; }
+.dup-cluster .dc-head { display: flex; align-items: center; gap: 10px; padding: 4px 0; flex-wrap: wrap; }
+.wip-side { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex: none; }
+@media (max-width: 640px) { .alert-row .ar-state, .alert-row .ar-id { width: auto; } }

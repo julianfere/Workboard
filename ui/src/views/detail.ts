@@ -21,7 +21,7 @@ import { dueOf, fmtDay, hoursOf, lateTag, localTag, overridesTracker, periodOf, 
 import { curPeriod, fmtH, periodRange, periodShift, sessionsWithTime, timeReady, workedTotal } from "../stats";
 import { TR, trackerBadge, trackerCard, trackerConnected, trackerDue, trackerEstimate } from "./tracker";
 import { gitDesyncs, gitInfo, gitUncommitted, itemIds, openPromotion, renderGitTab } from "../git";
-import { activeAlerts } from "./alerts";
+import { activeAlerts, alertTitle } from "./alerts";
 import { allFiles, filesTab, newBadge, newCount, scriptsCard } from "./detail-files";
 import { ensureNotes, notesOf, notesTab } from "./detail-notes";
 
@@ -502,7 +502,7 @@ function head(it: Item): string {
         ${next ? `<button class="btn primary" data-action="set-status" data-status="${esc(next.id)}">${ico("chevronRight")}${esc(t("detail.moveTo", { status: label(next.labels, next.id) }))}</button>` : ""}
       </div></div>
     ${conflictBanner()}
-    ${alerts.length ? `<div class="d-warn" role="note">${ico("alert")}<span>${esc(alerts.map((k) => t(`alerts.${k}`)).join(" · "))}</span>${it.dupes?.length ? `<span class="muted">${esc(it.dupes.join(", "))}</span>` : ""}</div>` : ""}`;
+    ${alerts.length ? `<div class="d-warn" role="note">${ico("alert")}<span>${esc(alerts.map(alertTitle).join(" · "))}</span>${it.dupes?.length ? `<span class="muted">${esc(it.dupes.join(", "))}</span>` : ""}</div>` : ""}`;
 }
 
 function renderDetail(): string {

@@ -58,6 +58,8 @@ export interface Workflow {
   files: { kinds: string[]; categories: FileCategory[]; fallbackCategory: FileCategory };
   /** Palabras que identifican la sección «cómo deployar» del README. */
   deployKeywords?: string[];
+  /** Vista Alertas: tipos de archivo que tienen que correrse en el último ambiente y estados vigilados. */
+  alerts?: { finalEnvKinds?: string[]; staleStates?: string[] };
 }
 
 export type MetaValue = string | string[];

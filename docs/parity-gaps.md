@@ -72,21 +72,24 @@ Referencias: `v1 app.js:N` = `_v1/ui/app.js`.
 
 ## US-04 Alertas y Hoy
 
-- [ ] **(alta)** Alerta «MIGRATION / FIX sin correr en PROD» (v1 app.js:139, 153, 174) en Alertas y en «Necesita tu
+- [x] **(alta)** Alerta «MIGRATION / FIX sin correr en PROD» (v1 app.js:139, 153, 174) en Alertas y en «Necesita tu
       atención» de Hoy. Categorías de archivo y ambiente final desde el preset.
-- [ ] Desparejos de git: solo comparar repos que tienen QA… en términos de preset: los repos que tienen el ambiente
+- [x] Desparejos de git: solo comparar repos que tienen QA… en términos de preset: los repos que tienen el ambiente
       intermedio; un repo sin ese ambiente no genera alertas en PROD (v1 app.js:2421; v2 `git.ts:125`).
-- [ ] «Crear README» no pone estado ni abre el detalle (v1 app.js:1927).
-- [ ] Duplicados como cluster: cantidad de archivos por carpeta, «A _deleted» por carpeta con Deshacer, «Es
+- [x] «Crear README» no pone estado ni abre el detalle (v1 app.js:1927).
+- [x] Duplicados como cluster: cantidad de archivos por carpeta, «A _deleted» por carpeta con Deshacer, «Es
       intencional» (v1 app.js:816-827).
-- [ ] Contador del menú como la v1 (items únicos, solo tipos que cuentan; app.js:275). Filas con estado, tipo, #id,
+- [x] Contador del menú como la v1 (items únicos, solo tipos que cuentan; app.js:275). Filas con estado, tipo, #id,
       título, carpeta, hace cuánto (app.js:807).
-- [ ] Reglas: stale solo en estados activos de la v1 (sin diag; app.js:154); «sin estado» también sin README
+- [x] Reglas: stale solo en estados activos de la v1 (sin diag; app.js:154); «sin estado» también sin README
       (app.js:155); «sin prefijo» como la v1 (app.js:156). Alertas git por item, no por grupo (app.js:149). Huella de
       «sin commitear» con la lista de archivos (app.js:173).
-- [ ] Hoy cuenta grupos y sueltos sin sus miembros (v1 `!i.group`, app.js:2827).
-- [ ] Hoy «En curso»: «Pactada <fecha>» y notas sin horas; vencidas con estado + notas (app.js:2836, 2899).
+- [x] Hoy cuenta grupos y sueltos sin sus miembros (v1 `!i.group`, app.js:2827).
+- [x] Hoy «En curso»: «Pactada <fecha>» y notas sin horas; vencidas con estado + notas (app.js:2836, 2899).
       «Próximas tareas» con la fila de tarea completa (app.js:2914). El campo de la bandeja no se borra al refrescar.
+
+  Preset nuevo: `alerts.finalEnvKinds` y `alerts.staleStates` (opcionales; falta sumarlos a `classic-tx`). Prueba a
+  mano: `bash tests/manual/us04-alerts.sh <carpeta>`.
 
 ## US-05 Grilla de Trabajos y búsqueda
 

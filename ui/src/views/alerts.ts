@@ -1,27 +1,32 @@
-// Alertas: items sin README, número sin el prefijo de la plantilla, ids repetidos en varias carpetas, planes
-// incompletos, items activos sin movimiento o sin estado, fechas vencidas y avisos de git.
+// Alertas (como la v1): ids repetidos en varias carpetas, scripts que escriben sin correr en el último ambiente,
+// items activos sin movimiento o sin estado, número sin el formato de la plantilla, sin README, avisos de git,
+// planes incompletos y (de la v2) fechas vencidas. Son de cada item: un grupo no tiene alertas propias.
 // Desestimar: se guarda cada alerta (`<item>|<tipo>`) con una huella de lo que la disparó, por carpeta de
 // trabajos, en la config. Si la huella cambia (otra carpeta duplicada, más actividad…), la alerta vuelve.
 
 import { api } from "../api";
-import { onAction, onChange, openDetail, refresh, registerView, render, setAlertCounter } from "../app";
+import { onAction, onChange, refresh, registerView, render, setAlertCounter } from "../app";
 import { confirmDialog, daysUntil, esc, fmtAgo, promptDialog, toast } from "../dom";
 import { errorText, t } from "../i18n";
 import { ico } from "../icons";
-import { S, effectiveStatus, isClosed, metaText, stateDef, statusOf, titleOf, wf } from "../state";
+import { S, effectiveStatus, envLabel, isClosed, metaList, metaText, stateDef, statusOf, titleOf, typeLabel, wf } from "../state";
 import type { Item } from "../types";
 import { gitAlerts, gitDesyncs, gitUncommitted } from "../git";
 import { sessionsOf } from "../sessions";
+import { statusChip } from "./items";
 
-const KINDS = ["noReadme", "noPrefix", "dupes", "plan", "stale", "noStatus", "overdue", "gitDesync", "gitDirty"] as const;
+// En el orden de la v1 (app.js:137); `overdue` es de la v2.
+const KINDS = ["dupes", "finalEnv", "stale", "noStatus", "noPrefix", "noReadme", "gitDesync", "gitDirty", "plan", "overdue"] as const;
 type Kind = (typeof KINDS)[number];
 export type AlertKind = Kind;
+/** Tipos que no suman en el contador del menú (la v1 no cuenta «sin prefijo» ni «sin README»). */
+const NO_COUNT: readonly Kind[] = ["noPrefix", "noReadme", "overdue"];
 
 interface Alert {
   kind: Kind;
   item: Item;
   detail: string;
-  /** Carpetas del mismo id (solo `dupes`). */
+  /** Carpetas del mismo id, ordenadas, incluida la del item (solo `dupes`): el conjunto agrupa la vista. */
   names?: string[];
 }
 
@@ -55,13 +60,16 @@ function ensureDismissed(): void {
 }
 
 const keyOf = (a: Alert) => `${a.item.name}|${a.kind}`;
+const clusterKey = (a: Alert) => (a.names ?? []).join("|");
 
-/** Lo que disparó la alerta: si cambia, una alerta desestimada vuelve. */
+/** Lo que disparó la alerta: si cambia, una alerta desestimada vuelve (v1 app.js:171). */
 function fingerprint(a: Alert): string {
   const it = a.item;
   switch (a.kind) {
     case "dupes":
-      return (a.names ?? []).join(",");
+      return (a.names ?? []).filter((n) => n !== it.name).join(",");
+    case "finalEnv":
+      return finalEnvFiles(it).join(",");
     case "plan":
       return it.planGaps.join(",");
     case "stale":
@@ -71,7 +79,7 @@ function fingerprint(a: Alert): string {
     case "gitDesync":
       return JSON.stringify(gitDesyncs(it));
     case "gitDirty":
-      return JSON.stringify(gitUncommitted(it).map((d) => [d.repo, d.branch, d.count]));
+      return JSON.stringify(gitUncommitted(it));
     default:
       return "";
   }
@@ -79,7 +87,7 @@ function fingerprint(a: Alert): string {
 
 const isDismissed = (a: Alert) => dismissed[keyOf(a)] === fingerprint(a);
 
-// ---------- cálculo ----------
+// ---------- reglas del flujo ----------
 
 /** Prefijo fijo de la plantilla de carpeta antes del id (`wi` en `wi{id}-{slug}`); vacío si no tiene. */
 function idPrefix(): string {
@@ -88,39 +96,85 @@ function idPrefix(): string {
   return at > 0 ? tpl.slice(0, at) : "";
 }
 
+/** El grupo `id` de `folders.itemPattern` anclado al principio (`^\d{6}` en classic-es). La v1 avisa de una carpeta
+ *  sin id que empieza con un número así (`1234567-x`, `123456_x`): no tiene el formato de la plantilla. */
+let idStartCache: [string, RegExp | null] | null = null;
+export function idStart(pattern: string): RegExp | null {
+  if (idStartCache?.[0] === pattern) return idStartCache[1];
+  let re: RegExp | null = null;
+  const at = pattern.indexOf("(?P<id>");
+  let depth = 0;
+  for (let i = at; at >= 0 && i < pattern.length; i++) {
+    if (pattern[i] === "\\") i++;
+    else if (pattern[i] === "(") depth++;
+    else if (pattern[i] === ")" && --depth === 0) {
+      try {
+        re = new RegExp(`^(?:${pattern.slice(at + "(?P<id>".length, i)})`, pattern.startsWith("(?i)") ? "i" : "");
+      } catch {
+        re = null;
+      }
+      break;
+    }
+  }
+  idStartCache = [pattern, re];
+  return re;
+}
+
+/** Archivos del item de los tipos que tienen que correrse en el último ambiente (`alerts.finalEnvKinds`). */
+function finalEnvFiles(it: Item): string[] {
+  const kinds = wf().alerts?.finalEnvKinds ?? [];
+  return it.files
+    .filter((f) => f.kind && kinds.includes(f.kind))
+    .map((f) => f.name)
+    .sort();
+}
+
+/** Estados vigilados por «sin movimiento»: los del preset o, si no dice, los de categoría active/review. */
+function isStaleState(status: string): boolean {
+  const list = wf().alerts?.staleStates ?? [];
+  if (list.length) return list.includes(status);
+  const category = stateDef(status)?.category;
+  return category === "active" || category === "review";
+}
+
+/** Último ambiente del flujo (PROD en classic-es). */
+const finalEnv = () => wf().environments[wf().environments.length - 1]?.id ?? "";
+
+/** Título de un tipo de alerta. */
+export function alertTitle(kind: Kind): string {
+  if (kind === "finalEnv") return t("alerts.finalEnv", { kinds: (wf().alerts?.finalEnvKinds ?? []).join(" / "), env: envLabel(finalEnv()) });
+  return t(`alerts.${kind}`);
+}
+
+// ---------- cálculo ----------
+
 function allAlerts(): Alert[] {
   const out: Alert[] = [];
-  const seen = new Set<string>();
   const now = Date.now() / 1000;
-  const prefix = idPrefix().toLowerCase();
+  const startsLikeId = idStart(wf().folders.itemPattern);
+  const kinds = wf().alerts?.finalEnvKinds ?? [];
+  const final = finalEnv();
   for (const it of S.items) {
+    if (it.kind !== "item") continue; // las alertas son de cada item (v1 app.js:149)
     const status = effectiveStatus(it);
     const base = it.name.split("/").pop()!;
-    if (it.kind === "item" && !it.hasReadme) out.push({ kind: "noReadme", item: it, detail: "" });
-    // El id salió del nombre de la carpeta pero falta el prefijo de la plantilla (`123456-x` en vez de `wi123456-x`).
-    if (it.kind === "item" && prefix && it.ids.some((id) => base.startsWith(id)) && !base.toLowerCase().startsWith(prefix))
-      out.push({ kind: "noPrefix", item: it, detail: `${idPrefix()}${base}` });
-    // Un id repetido cuenta una vez; dentro de un mismo grupo no es duplicado.
-    const dupes = (it.dupes ?? []).filter((d) => d.split("/")[0] !== it.name.split("/")[0]);
-    if (dupes.length) {
-      const names = [it.name, ...dupes].sort();
-      const key = names.join("|");
-      if (!seen.has(key)) {
-        seen.add(key);
-        out.push({ kind: "dupes", item: it, detail: dupes.join(", "), names });
-      }
-    }
+    // Mismo id en varias carpetas; las del mismo grupo son partes de un trabajo, no un duplicado.
+    const dupes = it.dupes ?? [];
+    if (dupes.length && !(it.group && dupes.every((d) => d.startsWith(`${it.group}/`))))
+      out.push({ kind: "dupes", item: it, detail: dupes.join(", "), names: [it.name, ...dupes].sort() });
+    // Scripts que escriben datos y todavía no figuran en el último ambiente (v1: MIGRATION / FIX sin PROD).
+    if (status && !isClosed(status) && final && it.kinds.some((k) => kinds.includes(k)) && !metaList(it, wf().fields.environments).includes(final))
+      out.push({ kind: "finalEnv", item: it, detail: finalEnvFiles(it).join(", ") });
+    if (status && isStaleState(status) && now - it.last > STALE_DAYS * DAY) out.push({ kind: "stale", item: it, detail: "" });
+    if (!statusOf(it) && now - it.last < NO_STATUS_DAYS * DAY) out.push({ kind: "noStatus", item: it, detail: "" });
+    if (!it.ids.length && startsLikeId?.test(it.name)) out.push({ kind: "noPrefix", item: it, detail: `${idPrefix()}${base}` });
+    if (!it.hasReadme) out.push({ kind: "noReadme", item: it, detail: "" });
     // Plan a medias después de una sesión de planificación que ya no está trabajando.
     if (it.planGaps.length) {
       const plans = sessionsOf(it.name).filter((s) => s.plan);
       if (plans.length && !plans.some((s) => s.status === "starting" || s.status === "working"))
         out.push({ kind: "plan", item: it, detail: it.planGaps.map((g) => t(`detail.gap.${g}`)).join(" · ") });
     }
-    const category = stateDef(status)?.category;
-    if (it.kind === "item" && (category === "active" || category === "review") && now - it.last > STALE_DAYS * DAY)
-      out.push({ kind: "stale", item: it, detail: fmtAgo(it.last) });
-    if (it.kind === "item" && it.hasReadme && !statusOf(it) && now - it.last < NO_STATUS_DAYS * DAY)
-      out.push({ kind: "noStatus", item: it, detail: fmtAgo(it.last) });
     const due = metaText(it, wf().fields.due);
     if (due && daysUntil(due) < 0 && !isClosed(status)) out.push({ kind: "overdue", item: it, detail: due });
   }
@@ -135,10 +189,25 @@ function allAlerts(): Alert[] {
   return [...byKey.values()];
 }
 
-/** Alertas vigentes (sin las desestimadas): lo que cuenta el badge. */
+/** Alertas vigentes (sin las desestimadas). */
 export function activeAlerts(): Alert[] {
   ensureDismissed();
   return allAlerts().filter((a) => !isDismissed(a));
+}
+
+/** Contador del menú (v1 app.js:275): items con alguna alerta que cuenta, más cada conjunto de duplicados. */
+export function alertCount(): number {
+  const keys = new Set<string>();
+  for (const a of activeAlerts()) {
+    if (NO_COUNT.includes(a.kind)) continue;
+    keys.add(a.kind === "dupes" ? `dupes:${clusterKey(a)}` : a.item.name);
+  }
+  return keys.size;
+}
+
+/** «Todas las alertas (N)» de Hoy (v1 app.js:2860): items con alguna alerta que cuenta. */
+export function alertItemCount(): number {
+  return new Set(activeAlerts().filter((a) => !NO_COUNT.includes(a.kind)).map((a) => a.item.name)).size;
 }
 
 // ---------- vista ----------
@@ -149,30 +218,68 @@ function fixButton(a: Alert): string {
     return `<button class="btn" data-action="create-readme" data-name="${name}">${ico("filePlus")}${esc(t("alerts.createReadme"))}</button>`;
   if (a.kind === "noPrefix")
     return `<button class="btn" data-action="alert-rename" data-name="${name}" data-to="${esc(a.detail)}">${ico("edit")}${esc(t("alerts.rename"))}</button>`;
-  // Agrupar solo carpetas sueltas: dentro de un grupo no cuentan como duplicado.
-  if (a.kind === "dupes" && !a.names!.some((n) => n.includes("/")))
-    return `<button class="btn" data-action="alert-group" data-names="${esc(a.names!.join("|"))}" title="${esc(t("alerts.groupHint"))}">${ico("folderIn")}${esc(t("alerts.group"))}</button>`;
   return "";
 }
 
+/** Fila como la v1 (app.js:807): estado, tipo y #id, título y carpeta, hace cuánto (+ el detalle de la v2). */
 function row(a: Alert, off: boolean): string {
-  const name = esc(a.item.name);
+  const it = a.item;
+  const name = esc(it.name);
   const toggle = off
     ? `<button class="btn" data-action="alert-restore" data-key="${esc(keyOf(a))}">${ico("undo")}${esc(t("alerts.restore"))}</button>`
     : `<button class="icon-btn" data-action="alert-dismiss" data-key="${esc(keyOf(a))}" title="${esc(t("alerts.dismissHint"))}" aria-label="${esc(t("alerts.dismiss"))}">${ico("x")}</button>`;
   const detail = a.kind === "noPrefix" ? t("alerts.renameTo", { name: a.detail }) : a.detail;
-  return `<li class="link-row" data-action="open-item" data-name="${name}"><span class="grow"><b>${esc(titleOf(a.item))}</b> <span class="muted">${name}</span></span><span class="muted">${esc(detail)}</span>${off ? "" : fixButton(a)}${toggle}</li>`;
+  const ids = it.ids.map((id) => `#${id}`).join(" ");
+  return `<li class="link-row alert-row" data-action="open-item" data-name="${name}"><span class="ar-state">${statusChip(effectiveStatus(it))}</span>
+    <span class="ar-id muted sm">${esc(it.type ? typeLabel(it.type) : "")} ${esc(ids)}</span>
+    <span class="grow ar-name"><b>${esc(titleOf(it))}</b><span class="muted sm">${name}${detail ? ` · ${esc(detail)}` : ""}</span></span>
+    <span class="muted sm">${esc(fmtAgo(it.last))}</span>${off ? "" : fixButton(a)}${toggle}</li>`;
+}
+
+/** Duplicados como conjuntos (v1 app.js:816): ids en común, cada carpeta con sus archivos, y acciones. */
+function dupBlock(list: Alert[], off: boolean): string {
+  const clusters = new Map<string, Alert[]>();
+  for (const a of list) {
+    const k = clusterKey(a);
+    if (!clusters.has(k)) clusters.set(k, []);
+    clusters.get(k)!.push(a);
+  }
+  return [...clusters.values()]
+    .map((alerts) => {
+      const names = alerts[0].names!;
+      const items = names.map((n) => S.items.find((i) => i.name === n)).filter(Boolean) as Item[];
+      const common = [...new Set(items.flatMap((i) => i.ids))].filter((id) => items.every((i) => i.ids.includes(id)));
+      const keys = esc(alerts.map(keyOf).join("\n"));
+      const head = off
+        ? `<button class="btn" data-action="alert-restore-set" data-keys="${keys}">${ico("undo")}${esc(t("alerts.restore"))}</button>`
+        : `${names.some((n) => n.includes("/")) ? "" : `<button class="btn" data-action="alert-group" data-names="${esc(names.join("|"))}" title="${esc(t("alerts.groupHint"))}">${ico("folderIn")}${esc(t("alerts.group"))}</button>`}
+          <button class="btn" data-action="alert-dismiss-set" data-keys="${keys}" title="${esc(t("alerts.intentionalHint"))}">${esc(t("alerts.intentional"))}</button>`;
+      const rows = items
+        .map(
+          (it) => `<li class="link-row alert-row" data-action="open-item" data-name="${esc(it.name)}"><span class="ar-state">${statusChip(effectiveStatus(it))}</span>
+          <span class="grow ar-name"><span>${esc(it.name)}</span><span class="muted sm">${esc(it.title)}</span></span>
+          <span class="muted sm">${esc(t("alerts.filesN", { n: it.files.length }))}</span><span class="muted sm">${esc(fmtAgo(it.last))}</span>
+          ${off ? "" : `<button class="btn" data-action="alert-trash" data-name="${esc(it.name)}" title="${esc(t("alerts.trashHint"))}">${ico("trash")}${esc(t("alerts.trash"))}</button>`}</li>`,
+        )
+        .join("");
+      return `<div class="dup-cluster"><div class="dc-head"><b>${esc(common.length ? common.map((id) => `#${id}`).join(" ") : t("alerts.dupNoId"))}</b>
+        <span class="muted grow">${esc(t("alerts.foldersN", { n: items.length }))}</span>${head}</div><ul class="list">${rows}</ul></div>`;
+    })
+    .join("");
 }
 
 function blocks(list: Alert[], off: boolean): string {
   return KINDS.map((k) => {
-    const of = list.filter((a) => a.kind === k);
+    const of = list.filter((a) => a.kind === k).sort((x, y) => y.item.last - x.item.last);
     if (!of.length) return "";
+    const n = k === "dupes" ? new Set(of.map(clusterKey)).size : of.length;
+    const counts = !NO_COUNT.includes(k);
     const all = off
       ? `<button class="btn ghost" data-action="alert-restore-all" data-kind="${k}">${esc(t("alerts.restoreAll"))}</button>`
       : `<button class="btn ghost" data-action="alert-dismiss-all" data-kind="${k}">${esc(t("alerts.dismissAll"))}</button>`;
-    return `<section class="card"><h2>${ico(off ? "info" : "alert")}<span class="grow">${esc(t(`alerts.${k}`))} <span class="muted">${of.length}</span></span>${all}</h2>
-      ${off ? "" : `<p class="muted">${esc(t(`alerts.why.${k}`))}</p>`}<ul class="list">${of.map((a) => row(a, off)).join("")}</ul></section>`;
+    const body = k === "dupes" ? dupBlock(of, off) : `<ul class="list">${of.map((a) => row(a, off)).join("")}</ul>`;
+    return `<section class="card"><h2><span class="${counts && !off ? "alert-ico on" : "alert-ico"}">${ico(counts ? "alert" : "info")}</span><span class="grow">${esc(alertTitle(k))} <span class="muted">${n}</span></span>${all}</h2>
+      ${off ? "" : `<p class="muted">${esc(t(`alerts.why.${k}`, { env: envLabel(finalEnv()) }))}</p>`}${body}</section>`;
   }).join("");
 }
 
@@ -190,7 +297,7 @@ function renderAlerts(): string {
 }
 
 registerView("alerts", renderAlerts);
-setAlertCounter(() => activeAlerts().length);
+setAlertCounter(alertCount);
 
 async function setDismissed(alerts: Alert[], on: boolean): Promise<void> {
   if (!alerts.length) return;
@@ -216,6 +323,11 @@ export async function dismissAlert(item: Item, kind: Kind): Promise<void> {
   await setDismissed([findAlert(`${item.name}|${kind}`) ?? { kind, item, detail: "" }], true);
 }
 
+const alertsOfKeys = (el: HTMLElement) => {
+  const keys = el.dataset.keys!.split("\n");
+  return allAlerts().filter((a) => keys.includes(keyOf(a)));
+};
+
 onAction("alert-dismiss", async (el, ev) => {
   ev.stopPropagation();
   const a = findAlert(el.dataset.key!);
@@ -226,10 +338,19 @@ onAction("alert-restore", async (el, ev) => {
   const a = findAlert(el.dataset.key!);
   if (a) await setDismissed([a], false);
 });
+// Duplicados: «Es intencional» desestima el conjunto; vuelve si aparece otra carpeta con el mismo id.
+onAction("alert-dismiss-set", async (el, ev) => {
+  ev.stopPropagation();
+  await setDismissed(alertsOfKeys(el), true);
+});
+onAction("alert-restore-set", async (el, ev) => {
+  ev.stopPropagation();
+  await setDismissed(alertsOfKeys(el), false);
+});
 onAction("alert-dismiss-all", async (el) => {
-  const kind = el.dataset.kind!;
+  const kind = el.dataset.kind as Kind;
   const of = allAlerts().filter((a) => a.kind === kind && !isDismissed(a));
-  if (!(await confirmDialog(t("alerts.confirmDismissAll", { n: of.length, kind: t(`alerts.${kind}`) }), t("alerts.dismiss")))) return;
+  if (!(await confirmDialog(t("alerts.confirmDismissAll", { n: of.length, kind: alertTitle(kind) }), t("alerts.dismiss")))) return;
   await setDismissed(of, true);
 });
 onAction("alert-restore-all", async (el) => {
@@ -242,11 +363,35 @@ onChange("alerts-show-dismissed", (el) => {
 
 onAction("create-readme", async (el, ev) => {
   ev.stopPropagation();
-  // Escribir un campo crea el README (`# carpeta` + frontmatter) por la escritura única.
-  const first = wf().states.find((s) => s.category === "backlog") ?? wf().states[0];
-  await api.updateFields(el.dataset.name!, { [wf().fields.status]: first.id });
+  // Como la v1 (app.js:3373): la escritura única sin campos crea solo `# carpeta`, sin estado y sin abrir el detalle.
+  try {
+    await api.updateFields(el.dataset.name!, {});
+    toast(t("alerts.readmeCreated"));
+  } catch (err) {
+    toast(errorText(err), undefined, "error");
+  }
   await refresh();
-  await openDetail(el.dataset.name!);
+});
+// Duplicados: mover una carpeta a la de eliminados, con Deshacer (v1 app.js:825).
+onAction("alert-trash", async (el, ev) => {
+  ev.stopPropagation();
+  const name = el.dataset.name!;
+  if (!(await confirmDialog(t("items.confirmDelete", { n: 1 }), t("items.delete")))) return;
+  let deleted: string;
+  try {
+    deleted = await api.trash(name);
+  } catch (err) {
+    toast(errorText(err), undefined, "error");
+    return;
+  }
+  await refresh();
+  toast(t("items.deletedN", { n: 1 }), {
+    label: t("common.undo"),
+    run: async () => {
+      await api.untrash(deleted, name);
+      await refresh();
+    },
+  });
 });
 onAction("alert-rename", async (el, ev) => {
   ev.stopPropagation();

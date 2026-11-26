@@ -12,7 +12,7 @@ import { errorText, label, t } from "./i18n";
 import { ico } from "./icons";
 import { type Mode, type PromoOpts, type Shell, promoCommands as promoCommandsFor, promoSteps as promoStepsFor } from "./promo";
 import { S, envLabel, itemByName, titleOf, wf } from "./state";
-import type { GitBranch, GitConfig, GitMention, GitOverview, Item, Msg, PromoRepo, PromoRow, Promotion, RepoConfig } from "./types";
+import type { GitBranch, GitConfig, GitMention, GitOverview, GitRepoInfo, Item, Msg, PromoRepo, PromoRow, Promotion, RepoConfig } from "./types";
 
 export const G = {
   /** Carpeta de trabajos de la vista general cargada. */
@@ -118,12 +118,23 @@ export function gitInfo(it: Item): GitInfo | null {
   return { branches, mentions };
 }
 
+/** Repos que se comparan entre sí (v1 app.js:2421: los que tienen QA). En términos del flujo: los que tienen
+ *  configurado algún ambiente intermedio (ni el primero ni el último); un repo solo con el primero y el último
+ *  (una base de datos que va por scripts) no se compara. Sin ambientes intermedios en el flujo, todos. */
+function pairedRepos(repos: GitRepoInfo[]): GitRepoInfo[] {
+  const envs = wf().environments.map((e) => e.id);
+  const middle = envs.slice(1, -1);
+  return repos.filter(
+    (r) => !r.error && r.compare !== false && (!middle.length || middle.some((e) => r.envs?.[e] && !(r.missingEnvs ?? []).includes(e))),
+  );
+}
+
 /** En un entorno, un repo ya tiene el trabajo y otro no (se mergean juntos). El primer ambiente del flujo
  *  no cuenta: suele recibir los arreglos después, por backflow. */
 export function gitDesyncs(it: Item): { env: string; ok: string[]; missing: string[] }[] {
   const info = gitInfo(it);
   if (!info || !G.data) return [];
-  const repos = G.data.repos.filter((r) => !r.error && r.compare !== false);
+  const repos = pairedRepos(G.data.repos);
   const involved = repos.filter((r) => info.branches.some((b) => b.repo === r.name) || info.mentions[r.name]);
   if (involved.length < 2) return [];
   const out: { env: string; ok: string[]; missing: string[] }[] = [];
@@ -153,7 +164,7 @@ export function gitAlerts(): { kind: "gitDesync" | "gitDirty"; item: Item; detai
   if (!G.data) return [];
   const out: { kind: "gitDesync" | "gitDirty"; item: Item; detail: string }[] = [];
   for (const it of S.items) {
-    if (it.group && itemByName(it.group)) continue; // lo informa el grupo
+    if (it.kind !== "item") continue; // las alertas son de cada item, no del grupo (v1 app.js:149)
     for (const d of gitDesyncs(it)) out.push({ kind: "gitDesync", item: it, detail: t("git.desyncShort", { env: envLabel(d.env), missing: d.missing.join(", ") }) });
     for (const d of gitUncommitted(it)) out.push({ kind: "gitDirty", item: it, detail: t("git.dirtyShort", { repo: d.repo, n: d.count }) });
   }
