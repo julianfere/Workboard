@@ -229,13 +229,48 @@ export function renderGitTab(it: Item): string {
 }
 
 onAction("git-refresh", () => loadGit(true));
-onAction("git-settings", () => {
-  S.view = "settings";
-  S.detail = null;
-  S.detailData = null;
+// «Repos y entornos» desde la pestaña: la misma tarjeta de Ajustes en un modal encima del detalle (como la v1),
+// sin perder el item abierto. Guardar lo cierra y relee git.
+let cfgBack: HTMLElement | null = null;
+
+function renderCfgModal(): void {
+  if (!cfgBack) return;
+  cfgBack.innerHTML = `<div class="modal git-cfg-modal" role="dialog" aria-modal="true">
+    <div class="viewer-head"><h2>${esc(t("git.reposAndEnvs"))}</h2><button class="icon-btn" data-action="git-cfg-close" title="${esc(t("common.close"))}">${ico("x")}</button></div>
+    <div class="git-cfg-body">${gitSettingsCard()}</div></div>`;
+}
+
+function closeCfgModal(): void {
+  cfgBack?.remove();
+  cfgBack = null;
+}
+
+/** Vuelve a dibujar la tarjeta donde esté: Ajustes y el modal. */
+function refreshCfg(): void {
   render();
-  document.querySelector("#git-settings")?.scrollIntoView();
+  renderCfgModal();
+}
+
+onAction("git-settings", () => {
+  closeCfgModal();
+  const back = document.createElement("div");
+  back.className = "modal-back";
+  back.tabIndex = -1;
+  back.addEventListener("click", (e) => {
+    if (e.target === back) closeCfgModal();
+  });
+  back.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeCfgModal();
+  });
+  document.body.append(back);
+  cfgBack = back;
+  // Siempre fresca: puede haber cambiado desde Ajustes o desde otra carpeta.
+  cfg = null;
+  draft = null;
+  renderCfgModal();
+  back.focus();
 });
+onAction("git-cfg-close", () => closeCfgModal());
 
 // ---------- repos y entornos (Ajustes) ----------
 
@@ -252,7 +287,7 @@ async function loadConfig(): Promise<void> {
     toast(errorText(err), undefined, "error");
   }
   cfgLoading = false;
-  render();
+  refreshCfg();
 }
 
 export function gitSettingsCard(): string {
@@ -292,6 +327,7 @@ async function saveConfig(patch: Parameters<typeof gitApi.setConfig>[0]): Promis
   cfg = await gitApi.setConfig(patch);
   draft = cfg.repos.map((r) => ({ ...r, envs: { ...r.envs } }));
   toast(t("git.saved"));
+  closeCfgModal();
   render();
   G.data = null;
   void loadGit(true);
@@ -307,7 +343,7 @@ onChange("git-cfg", (el) => {
 });
 onAction("git-cfg-remove", (el) => {
   draft?.splice(Number(el.dataset.i), 1);
-  render();
+  refreshCfg();
 });
 onAction("git-cfg-add", () => {
   const input = document.querySelector<HTMLInputElement>("#git-add-path");
@@ -315,7 +351,7 @@ onAction("git-cfg-add", () => {
   if (!path || !draft) return;
   if (draft.some((r) => r.path.toLowerCase() === path.toLowerCase())) return toast(t("git.alreadyAdded"), undefined, "error");
   draft.push({ name: path.split(/[\\/]/).filter(Boolean).pop() ?? path, path, envs: {}, compare: true });
-  render();
+  refreshCfg();
 });
 onAction("git-cfg-save", () => saveConfig({ repos: draft }));
 onAction("git-cfg-detect", () => saveConfig({ repos: null }));
