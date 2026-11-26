@@ -8,11 +8,11 @@ agent sessions (Claude Code, GitHub Copilot CLI or any CLI that speaks MCP) in a
 agents read and update that same state through the `workboard` MCP server, so you, the agents and your
 editor all work on plain files.
 
-> **Status: 0.1.0, early.** Workboard is a Rust + Tauri rewrite of a Python app used daily. The core,
-> agent sessions, the Git panel, the Azure DevOps integration and plugins are done and tested against the
-> original's behavior; parts of the UI (keyboard shortcuts, a configurable grid, saved views, the
-> file viewer) are still being ported. See [`docs/parity-checklist.md`](docs/parity-checklist.md)
-> and the [changelog](CHANGELOG.md). Expect rough edges and format changes before 1.0.
+> **Status: 0.1.0, early.** Workboard is a Rust + Tauri rewrite of a Python app used daily. It covers
+> everything the original does (core, agent sessions, Git panel, Azure DevOps, grid, saved views, file
+> viewer, alerts, hours…), tested against the original's behavior, and adds plugins and tracker plugins.
+> See [`docs/parity-gaps.md`](docs/parity-gaps.md) and the [changelog](CHANGELOG.md). Expect rough edges
+> and format changes before 1.0.
 
 ## Screenshots
 
@@ -93,7 +93,9 @@ pull request URL; Workboard never runs them. Only read-only git subcommands are 
 Link a work folder to Azure DevOps with a read-only token: sync states with a preview (fills, types,
 advances, moves back, per git), see what is **Assigned this period**, create items from work items and,
 with a separate write token and only on request, **Change state in Azure DevOps**. Tokens stay in the
-system credential store. See [docs/trackers.md](docs/trackers.md).
+system credential store. Azure DevOps is built in; any other tracker (Jira, Trello, GitHub Issues…) can be
+added by a plugin and then works the same way (`examples/plugins/trello` is a reference one). See
+[docs/trackers.md](docs/trackers.md).
 
 ### Configurable workflow
 
@@ -102,7 +104,8 @@ preset; two are included and plugins can add more. See [docs/workflow.md](docs/w
 
 ### Plugins
 
-Separate executables, in any language, that add actions (forms, results, sessions) and workflow presets.
+Separate executables, in any language, that add actions (forms, results, sessions), workflow presets and
+trackers.
 They talk JSON-RPC over stdio, with permissions declared in a manifest. Single-file SDKs for Python and
 Node (`sdk/`) handle the protocol, and `workboard plugin new <id>` creates a ready-to-enable plugin. See
 [docs/plugins.md](docs/plugins.md).
@@ -203,7 +206,7 @@ crates/wb-api       the app API (used by the window and by the dev server)
 crates/wb-mcp       the `workboard` MCP server agents use
 crates/wb-sessions  agent sessions: terminals, hooks, hours, metrics, reflect
 crates/wb-git       the read-only Git panel and promotion data
-crates/wb-tracker   trackers (Azure DevOps)
+crates/wb-tracker   trackers (Azure DevOps built in; others come from plugins)
 crates/wb-plugins   plugin manifests, the JSON-RPC runner and `workboard plugin new|check`
 sdk/                plugin SDKs for Python and Node (single files, no dependencies)
 crates/wb-hook      the hook binary agent CLIs call
@@ -212,7 +215,7 @@ crates/wb-platform  config folder, credential store, opening files, process tree
 src-tauri/          the desktop app and its commands
 ui/                 the UI (TypeScript + Vite)
 locales/            UI and agent texts (en, es)
-examples/           a demo work folder and an example plugin
+examples/           a demo work folder and example plugins (hello, Trello tracker)
 tests/golden/       reference behavior captured from the v1
 docs/               documentation
 ```
@@ -226,7 +229,8 @@ docs/               documentation
 - [Plugins](docs/plugins.md): manifest, protocol, host methods, trackers, SDKs, `workboard plugin`.
 - [Architecture](docs/architecture.md): crates, data flow, config folder, dev server, tests, conventions.
 - [Migrating from the v1](docs/migrate-v1.md): `workboard migrate-v1`, what it imports and what not.
-- [Parity checklist](docs/parity-checklist.md) (Spanish): what is ported from the v1.
+- [Parity checklist](docs/parity-checklist.md) and [parity gaps](docs/parity-gaps.md) (Spanish): what is
+  ported from the v1.
 - [Changelog](CHANGELOG.md).
 
 ## License

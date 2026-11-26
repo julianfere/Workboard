@@ -40,7 +40,9 @@ golden files captured from the original.
 
 - Views: Today, Work, Tasks, Hours, Alerts, Notes, Metrics, Tools, Settings; item detail with Summary,
   README, Files, Versions and Git tabs and automatic saving of the edited fields.
-- Selection in the item list with a bulk bar (set status, group).
+- Item grid with configurable columns, filters, grouping and saved views, CSV export, a context menu with
+  hover submenus and bulk actions with undo; file viewer (SQL, Markdown, images, PDF, draw.io, Mermaid);
+  dismissable alerts; notes management; keyboard shortcuts.
 - Live refresh of the work folder and of the repos' `.git`; command palette (`Ctrl+K`); recent folders;
   light, dark and system themes; English and Spanish.
 
@@ -87,6 +89,10 @@ golden files captured from the original.
 - Sync with a preview (fills, type, advances, moves back, per git); applying writes only status and type.
 - Assigned this period, import, and New item filled from a work item.
 - Change state in Azure DevOps with a separate write token (only `System.State`).
+- Trackers from plugins: a plugin can add a tracker kind (Jira, Trello…) that works like the built-in one
+  (connect, states, mapping, sync, assigned, import, change state); per-kind connection form, ids filtered
+  by `idPattern`, credential scrubbed from errors and logs, configuration kept while the plugin is missing.
+  Reference plugin for Trello boards in `examples/plugins/trello`.
 
 #### Plugins
 
@@ -107,7 +113,6 @@ golden files captured from the original.
 
 ### Known gaps
 
-Still being ported from the original app: keyboard shortcuts beyond the palette, the bulk context menu and
-undo, a configurable grid with grouping and filters, saved views, CSV export of the item
-list, the file viewer (SQL, Markdown, images, PDF, draw.io, Mermaid), dismissable alerts, notes management
-(rename, delete, filters) and some planning displays. See `docs/parity-checklist.md`.
+- The Trello reference plugin is tested only against a fake API, not against Trello itself.
+- On Windows, the installed app is a windowed program: `workboard migrate-v1` and `workboard plugin`
+  print nothing in an interactive console unless the output is redirected (for example `| Out-Host`).

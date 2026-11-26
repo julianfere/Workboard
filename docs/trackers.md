@@ -1,8 +1,8 @@
 # Trackers
 
 Workboard can link a work folder to an external tracker to read the state, title, type, priority, agreed
-date and estimate of each item's work item. Azure DevOps is the only tracker today; the code is behind a
-trait so others can be added (see [Adding a tracker](#adding-a-tracker)).
+date and estimate of each item's work item. Azure DevOps is built in; other trackers come from plugins and
+work the same way (see [Adding a tracker](#adding-a-tracker)).
 
 The rules:
 
@@ -149,7 +149,13 @@ tracker when the README has none). The MCP server never talks to the tracker and
 
 ## Adding a tracker
 
-Trackers live in `crates/wb-tracker`. A new one needs:
+**As a plugin (recommended).** A plugin declares a `trackers` entry in its manifest and answers the
+`tracker/*` methods; mapping, preview, cache, credentials and the UI are shared with Azure DevOps. It can be
+written in any language; the Python and Node SDKs reduce it to one class with seven methods, and
+`workboard plugin new <id> --tracker` creates a working skeleton. See
+[docs/plugins.md](plugins.md#trackers) and `examples/plugins/trello`.
+
+**Built in.** Trackers that ship with the app live in `crates/wb-tracker`. A new one needs:
 
 1. **A client implementing `Tracker`** (`crates/wb-tracker/src/lib.rs`):
 
@@ -176,5 +182,5 @@ Trackers live in `crates/wb-tracker`. A new one needs:
 3. **Registration**: add its `KIND` to `KINDS` and a branch to `Connection::normalized`, `source`,
    `item_url` and `client`; add `tracker.kind.<kind>` to both locale files.
 
-The rest (mapping, preview, cache, credentials, UI) is shared. Note that importing and fetching a work item
-currently expect numeric ids, as Azure DevOps uses.
+The rest (mapping, preview, cache, credentials, UI) is shared. Which ids belong to a tracker is decided per
+kind: numeric for Azure DevOps, the manifest's `idPattern` for a plugin tracker.
