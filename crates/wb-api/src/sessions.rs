@@ -78,12 +78,6 @@ impl Api {
         }
     }
 
-    /// Nombre para mostrar de un proyecto (la carpeta que contiene a la de trabajos, o la propia).
-    fn project_name(root: &str) -> String {
-        let p = Path::new(root);
-        p.file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_else(|| root.to_string())
-    }
-
     pub(crate) fn session_command(&self, cmd: &str, a: &Args) -> Option<ApiResult<Json>> {
         let out = match cmd {
             "sessions_rev" => self.session_manager().map(|m| json!(m.rev())),
@@ -148,11 +142,13 @@ impl Api {
             }
             Err(_) => (vec![], vec![]),
         };
+        let settings = self.settings();
         let others: Vec<Json> = m
             .running_elsewhere(root.as_deref().map(Path::new))
             .into_iter()
             .map(|v| {
-                let project = Self::project_name(&v.session.root);
+                // Como en recientes: el alias o el nombre del proyecto (v1).
+                let project = settings.display_name(&v.session.root);
                 let mut j = json!(v);
                 j["project"] = json!(project);
                 j

@@ -90,5 +90,10 @@ export const titleOf = (it: Item) => it.title || it.name.split("/").pop()!;
 export function folderName(path: string): string {
   const low = path.toLowerCase();
   const alias = Object.entries(S.settings?.aliases ?? {}).find(([k]) => k.toLowerCase() === low)?.[1];
-  return alias || path.split(/[\\/]/).filter(Boolean).pop() || path;
+  if (alias) return alias;
+  // Una carpeta tipo `_work` toma el nombre del proyecto que la contiene (como `display_name` del backend).
+  const parts = path.split(/[\\/]/).filter(Boolean);
+  const name = parts.pop() || path;
+  const parent = parts.pop();
+  return /^[_.]/.test(name) && parent && !parent.endsWith(":") ? parent : name;
 }
