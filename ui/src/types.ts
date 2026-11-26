@@ -137,6 +137,8 @@ export interface Version {
 export interface DeletedEntry {
   path: string;
   base: string;
+  /** Nombre con el que se restaura (sin el sufijo de fecha). */
+  original: string;
   title: string;
   status: string;
   deleted: number;
@@ -745,3 +747,15 @@ export type PluginStep =
     }
   | { type: "session"; session: Session; message?: string }
   | { type: "close"; message?: string };
+
+/** Valores previos de las claves tocadas por un `bulk_update`. */
+export interface MetaBefore {
+  name: string;
+  fields: Record<string, MetaValue>;
+}
+
+/** Carpeta movida a eliminados: `to` es la ruta en eliminados y `name` el nombre al que vuelve. */
+export interface TrashedEntry {
+  name: string;
+  to: string;
+}

@@ -226,6 +226,12 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
 .menu-item:hover, .menu-item:focus-visible { background: var(--hover); }
 .menu-item span:first-of-type { flex: 1; }
 .menu-item svg.i { color: var(--fg-2); width: 15px; height: 15px; }
+.menu-item:disabled { cursor: default; opacity: .55; }
+.menu-item:disabled:hover { background: none; }
+.menu-item .sub-chev { margin-left: auto; transition: transform .12s; }
+.menu-item.has-sub.open { background: var(--hover); }
+.menu-item.has-sub.open .sub-chev { transform: rotate(90deg); }
+.menu-sub { margin: 2px 0 4px 14px; padding-left: 6px; border-left: 1px solid var(--line); }
 .menu-check { display: flex; align-items: center; gap: 8px; padding: 4px 8px; border-radius: var(--r-sm); cursor: pointer; }
 .menu-check:hover { background: var(--hover); }
 .menu-check label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
