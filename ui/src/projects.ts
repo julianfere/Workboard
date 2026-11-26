@@ -115,10 +115,19 @@ document.addEventListener(
 // ---------- acciones ----------
 
 /** Abrir otra carpeta: el diálogo del sistema en la app; en el navegador, el campo de ruta de Ajustes. */
+let picking = false;
+
 export async function pickProject(): Promise<void> {
   if (inTauri) {
-    const p = await pickFolder();
-    if (p) await openRoot(p);
+    // Un solo diálogo (y una sola apertura) a la vez: clics repetidos no abren otro.
+    if (picking) return;
+    picking = true;
+    try {
+      const p = await pickFolder();
+      if (p) await openRoot(p);
+    } finally {
+      picking = false;
+    }
     return;
   }
   S.view = "settings";

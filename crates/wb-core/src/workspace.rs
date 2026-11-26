@@ -17,6 +17,17 @@ use crate::{StateCategory, Workflow, py};
 pub const README: &str = "README.md";
 pub const MAX_TEXT_BYTES: u64 = 2_000_000;
 pub const MAX_MEDIA_BYTES: u64 = 30_000_000;
+/// Tope de archivos que se leen por item: una carpeta con un repo o `node_modules` adentro no traba la app.
+pub const MAX_ITEM_FILES: usize = 2_000;
+/// Tope de entradas que recorre `signature` (se llama cada 2 s).
+pub const MAX_SIGNATURE_ENTRIES: u64 = 50_000;
+
+/// Subcarpeta a recorrer: ni ocultas ni enlaces simbólicos o junctions (pueden apuntar a cualquier lado, incluso
+/// a un ancestro).
+fn descend(entry: &std::fs::DirEntry) -> bool {
+    entry.file_type().is_ok_and(|t| t.is_dir() && !t.is_symlink())
+        && !entry.file_name().to_string_lossy().starts_with('.')
+}
 
 const TEXT_EXT: &[&str] = &[
     ".md", ".sql", ".txt", ".ps1", ".py", ".json", ".csv", ".cs", ".ts", ".js", ".html", ".xml", ".yml",
@@ -237,10 +248,14 @@ impl Workspace {
             let Ok(entries) = std::fs::read_dir(&dir) else { continue };
             let top = dir == folder;
             for entry in entries.flatten() {
+                if files.len() >= MAX_ITEM_FILES {
+                    stack.clear();
+                    break;
+                }
                 let path = entry.path();
                 let name = entry.file_name().to_string_lossy().into_owned();
                 if path.is_dir() {
-                    if !name.starts_with('.') && !(top && skip.contains(&name)) {
+                    if descend(&entry) && !(top && skip.contains(&name)) {
                         stack.push(path);
                     }
                     continue;
@@ -400,14 +415,19 @@ impl Workspace {
     pub fn signature(&self) -> (u64, f64) {
         let (mut count, mut total) = (0u64, 0.0f64);
         let mut stack = vec![self.root.clone()];
+        let mut seen = 0u64;
         while let Some(dir) = stack.pop() {
             let Ok(meta) = std::fs::metadata(&dir) else { continue };
             total += mtime(&meta);
             let Ok(rd) = std::fs::read_dir(&dir) else { continue };
             for e in rd.flatten() {
+                seen += 1;
+                if seen > MAX_SIGNATURE_ENTRIES {
+                    return (count, (total * 1000.0).round() / 1000.0);
+                }
                 let p = e.path();
                 if p.is_dir() {
-                    if !e.file_name().to_string_lossy().starts_with('.') {
+                    if descend(&e) {
                         stack.push(p);
                     }
                 } else if let Ok(m) = std::fs::metadata(&p) {
@@ -522,7 +542,24 @@ pub fn original_name(base: &str) -> &str {
 
 #[cfg(test)]
 mod tests {
-    use super::original_name;
+    use super::*;
+
+    #[test]
+    fn a_huge_folder_is_capped() {
+        let d = std::env::temp_dir().join(format!("wb-core-cap-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&d);
+        let deep = d.join("wi1-big/node_modules/pkg");
+        std::fs::create_dir_all(&deep).unwrap();
+        for i in 0..MAX_ITEM_FILES + 50 {
+            std::fs::write(deep.join(format!("f{i}.js")), "").unwrap();
+        }
+        let ws = Workspace::open(&d, Workflow::preset("default").unwrap(), None).unwrap();
+        let items = ws.list_items().unwrap();
+        assert_eq!(items.len(), 1);
+        assert_eq!(items[0].files.len(), MAX_ITEM_FILES);
+        assert!(ws.signature().0 > 0);
+        std::fs::remove_dir_all(&d).ok();
+    }
 
     #[test]
     fn original_name_drops_the_trash_stamp() {

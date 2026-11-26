@@ -152,13 +152,18 @@ export async function reloadSettings(): Promise<void> {
 
 /** Refresco en vivo: cada 2 s compara la firma del árbol (lo mismo que el watcher de la v1). */
 export function startPolling(): void {
+  // Un chequeo por vez: si la carpeta es grande y tarda más de 2 s, no se apilan llamadas.
+  let busy = false;
   window.setInterval(async () => {
-    if (document.hidden || !S.settings?.root || document.querySelector(".modal-back")) return;
+    if (busy || document.hidden || !S.settings?.root || document.querySelector(".modal-back")) return;
+    busy = true;
     try {
       const sig = (await api.signature()).join(":");
       if (sig !== S.signature) await refreshAll();
     } catch {
       /* la carpeta pudo desaparecer: lo informa el próximo refresh */
+    } finally {
+      busy = false;
     }
   }, 2000);
 }
