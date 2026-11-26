@@ -138,14 +138,17 @@ fn python_sdk_through_the_runner() {
 }
 
 #[test]
-fn the_example_ships_the_current_sdk() {
+fn the_examples_ship_the_current_sdk() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
-    let copy = std::fs::read_to_string(root.join("examples/plugins/hello/workboard_plugin.py")).unwrap();
-    assert_eq!(
-        copy.replace("\r\n", "\n"),
-        cli::PYTHON_SDK.replace("\r\n", "\n"),
-        "copy sdk/python/workboard_plugin.py into examples/plugins/hello/"
-    );
+    for example in ["hello", "trello"] {
+        let path = root.join(format!("examples/plugins/{example}/workboard_plugin.py"));
+        let copy = std::fs::read_to_string(path).unwrap();
+        assert_eq!(
+            copy.replace("\r\n", "\n"),
+            cli::PYTHON_SDK.replace("\r\n", "\n"),
+            "copy sdk/python/workboard_plugin.py into examples/plugins/{example}/"
+        );
+    }
 }
 
 fn opts(parent: &Path, id: &str, lang: Lang, tracker: bool) -> NewOptions {
