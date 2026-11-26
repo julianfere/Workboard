@@ -1215,6 +1215,7 @@
   "agent.review.packetRepo": "- Repo: `{path}`",
   "agent.review.packetCommits": "- {n} commits propios, `{range}`",
   "agent.review.packetCut": " (diff recortado)",
+  "agent.review.diffCut": "… (diff recortado)",
   "agent.review.packetDiff": "- Diff completo: `{path}`",
   "agent.review.noteTitle": "Revisión · {id}",
   "agent.review.prompt": "Revisá lo hecho en el trabajo {id} como revisor independiente: no escribiste este código. Esta sesión es de solo lectura: no modifiques archivos. Empezá por {packet} (ramas, diffs y el README con los criterios). Leé los diffs y, cuando haga falta, el código alrededor en el repo. Buscá: criterios de aceptación no cumplidos, bugs, casos borde, regresiones, cambios fuera de alcance y tests faltantes. Cada hallazgo cita `ruta:línea` que hayas leído vos; no cites líneas que no abriste. Guardá el resultado con {addNote} en {item}, título «{title}», con este formato:\n\n## Veredicto\naprobar | cambios | bloqueado — una línea de por qué\n\n## Verificación\n- C1: cumple | no cumple | no verificable — `ruta:línea` que lo muestra (una línea por criterio)\n\n## Hallazgos\n- [bloqueante | menor] `ruta:línea` — qué pasa y por qué importa\n\nDespués cargá cada hallazgo bloqueante como pendiente con {addTask} (texto: «Revisión: …»).",
