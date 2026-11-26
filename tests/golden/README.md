@@ -5,7 +5,7 @@ reproduzca. Cada caso es entrada → salida esperada (o error esperado). Los tes
 comparan; no ejecutan Python.
 
 ```
-gen/              generadores (Python, importan la v1 desde WORKBOARD_V1 o _v1/)
+gen/              generadores (Python, importan la v1 desde WORKBOARD_V1 o ../workboard-v1)
 fixtures/work/    una carpeta _work ficticia (se versiona tal cual: CRLF, BOM y cp1252 a propósito)
 fixtures/repos/   app.fi: repo git sintético en formato `git fast-import` (SHAs deterministas)
 cases/*.json      los casos

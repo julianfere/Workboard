@@ -1,7 +1,7 @@
 """Helpers compartidos de los generadores de golden files.
 
 Los golden se generan con la v1 en Python (la referencia de comportamiento) y los consume el port en
-Rust. La v1 se importa desde `WORKBOARD_V1` (por defecto `_v1/` en la raíz del repo, que no se publica).
+Rust. La v1 se importa desde `WORKBOARD_V1` (por defecto `../workboard-v1`, al lado del repo; no se versiona).
 """
 
 import json
@@ -15,7 +15,7 @@ GOLDEN = Path(__file__).resolve().parent.parent
 REPO = GOLDEN.parent.parent
 FIXTURES = GOLDEN / "fixtures"
 CASES = GOLDEN / "cases"
-V1 = Path(os.environ.get("WORKBOARD_V1") or REPO / "_v1").resolve()
+V1 = Path(os.environ.get("WORKBOARD_V1") or REPO.parent / "workboard-v1").resolve()
 
 ROOT_TOKEN = "<ROOT>"
 CONFIG_TOKEN = "<CONFIG>"

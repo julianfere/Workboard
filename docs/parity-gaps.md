@@ -1,6 +1,6 @@
 # Brechas de paridad v1 → v2
 
-Relevamiento del 2026-11-25: la v1 (`_v1/`) contra la v2 (este repo + `../workboard-private`), leyendo el código de
+Relevamiento del 2026-11-25: la v1 (`../workboard-v1`) contra la v2 (este repo + `../workboard-private`), leyendo el código de
 los dos lados. El checklist de `docs/parity-checklist.md` tiene filas gruesas y las marca todas hechas; esto baja al
 detalle. Cada US es una rama `us/<id>`; al cerrarla se tilda acá.
 
@@ -8,7 +8,7 @@ Lo que **coincide** y no hay que tocar: frontmatter, tareas, `write_readme`, mov
 bandeja, `runs.json`, algoritmo de estado git y comandos de promoción, consultas y reglas del sync de Azure, pasos de
 ReleaseManual, horas, umbrales de peso de sesión.
 
-Referencias: `v1 app.js:N` = `_v1/ui/app.js`.
+Referencias: `v1 app.js:N` = `../workboard-v1/ui/app.js`.
 
 ## Decisiones tomadas
 

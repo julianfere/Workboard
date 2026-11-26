@@ -1,6 +1,6 @@
 """Regenera todos los golden files desde la v1:  py tests/golden/gen/gen_all.py
 
-Requiere la v1 en `WORKBOARD_V1` (o `_v1/`), Python 3.12 con `mcp` 2.x y git en el PATH.
+Requiere la v1 en `WORKBOARD_V1` (o `../workboard-v1`), Python 3.12 con `mcp` 2.x y git en el PATH.
 """
 
 import build_repo

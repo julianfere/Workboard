@@ -13,7 +13,7 @@ sección de checklist. La v1 sigue en uso y es la referencia de comportamiento.
 | Tests | `cargo test --workspace` |
 | Instaladores | `npm run tauri build` (en CI: tag `v*` → `.github/workflows/release.yml`, release en borrador) |
 | Lint (lo mismo que el CI) | `cargo fmt --all --check && cargo clippy --workspace --all-targets -- -D warnings` y `npm run build` |
-| Golden files | `py tests/golden/gen/gen_all.py` (necesita la v1 en `_v1/` o `WORKBOARD_V1`) |
+| Golden files | `py tests/golden/gen/gen_all.py` (necesita la v1 en `../workboard-v1` o `WORKBOARD_V1`) |
 | Migrar la config de la v1 | `workboard migrate-v1 [--from <v1>] [--to <config>] [--preset <id>] [--dry-run] [--force]` (lógica en `wb-api/src/migrate.rs`, DPAPI en `wb_platform::dpapi`; tabla en `docs/migrate-v1.md`). Al probar, siempre `--from` a un fixture y `WORKBOARD_CONFIG_DIR`/`WORKBOARD_SECRET_SERVICE` temporales |
 
 En Git Bash `cargo` está en `~/.cargo/bin` (agregarlo al PATH si no aparece).
@@ -114,7 +114,7 @@ config real.
   prefs chicas pasan por `prefs.ts`: `view`, `hours`, `metrics`) y `planning.ts`
   (prioridad, pactada, período, horas y la marca «local» cuando el README pisa al tracker).
 - `tests/golden/` — comportamiento de la v1 capturado como JSON (ver su README y `KNOWN_ISSUES.md`).
-- `_v1/` — copia de la v1 de referencia (versionada; se actualiza copiando la v1 en uso).
+- `../workboard-v1` — copia de la v1 de referencia, fuera del repo (se actualiza copiando la v1 en uso).
 
 ## Convenciones (no romper)
 

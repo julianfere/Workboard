@@ -25,3 +25,4 @@ Thumbs.db
 
 # Binarios auxiliares para el bundle (scripts/sidecars.mjs)
 src-tauri/binaries/
+/_v1/
