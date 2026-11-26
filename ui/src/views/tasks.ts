@@ -9,7 +9,8 @@ import { errorText, label, t } from "../i18n";
 import { ico } from "../icons";
 import { byUrgency, lateTag, passesDue, periodDiff, periodOf, periodRel, priorityBadge, priorityOf } from "../planning";
 import { sessionsOf } from "../sessions";
-import { S, effectiveStatus, isClosed, itemByName, metaList, titleOf, wf } from "../state";
+import { S, effectiveStatus, isClosed, itemByName, matchesSearch, metaList, titleOf, wf } from "../state";
+import { noSearchResults, searchBox } from "../search";
 import { periodRange } from "../stats";
 import type { Item, Task } from "../types";
 import { DUE_FILTERS, type DueFilter } from "./grid";
@@ -70,6 +71,7 @@ function visibleItems(): Item[] {
   return S.items
     .filter(
       (it) =>
+        matchesSearch(it) &&
         it.tasks.some((x) => F.showDone || !x.done) &&
         (!F.status || effectiveStatus(it) === F.status) &&
         (!F.session || (F.session === "none" ? !openSessions(it).length : openSessions(it).some((s) => s.id === F.session))) &&
@@ -89,6 +91,7 @@ function toolbar(): string {
   const envs = wf().environments.map((e) => opt(e.id, t("tasks.filter.ranIn", { env: label(e.labels, e.id) }), F.env)).join("");
   const dues = DUE_FILTERS.map((d) => opt(d, d ? t("tasks.filter.due", { what: t(`grid.due.${d}`) }) : t("grid.due.any"), F.due)).join("");
   return `<div class="toolbar"><h1>${esc(t("nav.tasks"))}</h1>
+    ${searchBox()}
     <select data-change="tasks-filter" data-key="status" aria-label="${esc(t("tasks.filter.status"))}">${opt("", t("tasks.filter.anyStatus"), F.status)}${states}</select>
     <select data-change="tasks-filter" data-key="session" aria-label="${esc(t("tasks.filter.session"))}">${opt("", t("tasks.filter.anySession"), F.session)}${opt("none", t("tasks.filter.noSession"), F.session)}${sessions}</select>
     <select data-change="tasks-filter" data-key="env" aria-label="${esc(t("tasks.filter.env"))}">${opt("", t("tasks.filter.anyEnv"), F.env)}${envs}</select>
@@ -153,7 +156,7 @@ function inboxCard(): string {
 function renderTasks(): string {
   loadFilters();
   const list = blocks(visibleItems());
-  return `<div class="page tasks-page">${toolbar()}<div class="tasks-wrap"><div>${list || `<p class="empty">${esc(t("tasks.none"))}</p>`}</div>${inboxCard()}</div></div>`;
+  return `<div class="page tasks-page">${toolbar()}<div class="tasks-wrap"><div>${list || `<p class="empty">${noSearchResults() || esc(t("tasks.none"))}</p>`}</div>${inboxCard()}</div></div>`;
 }
 
 registerView("tasks", renderTasks);
