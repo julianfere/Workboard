@@ -8,6 +8,7 @@ use std::io;
 /// Si este sistema tiene DPAPI (y por lo tanto puede haber una v1 que migrar).
 pub const SUPPORTED: bool = cfg!(windows);
 
+#[cfg(windows)]
 fn failed() -> io::Error {
     io::Error::other("DPAPI could not process the value")
 }
