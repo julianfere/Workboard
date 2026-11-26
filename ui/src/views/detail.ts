@@ -1,11 +1,13 @@
-// Detalle de un item: cabecera (migas, meta, alertas, acciones), estado por pasos, campos con guardado
+// Detalle de un item, en un panel lateral sobre la vista (como la v1: fondo, ancho que se arrastra y se
+// recuerda, maximizable; ver `app.ts`). Cabecera (migas, meta, alertas, acciones), estado por pasos, campos con guardado
 // automático de lo tocado (el refresco en vivo no pisa lo que estás escribiendo; si el README cambió en disco
 // mientras editabas, un aviso deja aplicar tu cambio sobre lo nuevo o descartarlo), tareas, archivos con visor,
-// cómo deployar, notas, README, Git y versiones anteriores.
+// cómo deployar, notas, README, Git y versiones anteriores. A la derecha, siempre a la vista, el panel de
+// planificación, detalles, tracker, resumen git e info.
 
-import { api } from "../api";
-import { closeDetail, onAction, onAfterRender, onChange, refresh, registerDetail, render } from "../app";
-import { confirmDialog, esc, fmtDateTimeFull, fmtSize, promptDialog, toast } from "../dom";
+import { api, pluginApi, trackerApi } from "../api";
+import { closeDetail, onAction, onAfterRender, onChange, refresh, registerDetail, render, requestCloseDetail } from "../app";
+import { confirmDialog, esc, fmtAgo, fmtDate, fmtDateTimeFull, fmtSize, promptDialog, selectDialog, toast } from "../dom";
 import { errorText, label, t } from "../i18n";
 import { ico } from "../icons";
 import { renderMarkdown } from "../markdown";
@@ -13,14 +15,14 @@ import { canReflect, reflectItems } from "../reflect";
 import { pluginItemCard } from "../plugins";
 import { canReview, openReview } from "../review";
 import { addToSessionModal, launched, loadSessions, newSessionModal, planItem, sessionById } from "../sessions";
-import { S, effectiveStatus, inSession, itemByName, metaList, metaText, stateDef, stateLabel, statusOf, titleOf, wf, type DetailTab } from "../state";
+import { S, effectiveStatus, envLabel, inSession, itemByName, metaList, metaText, stateDef, stateLabel, statusOf, titleOf, wf, type DetailTab } from "../state";
 import { termSize } from "../terminal";
-import type { ApiError, Item, StateDef } from "../types";
+import type { ApiError, Item, StateCategory, StateDef, Workflow } from "../types";
 import { statusChip } from "./items";
 import { dueOf, fmtDay, hoursOf, lateTag, localTag, overridesTracker, periodOf, periodRel, priorityBadge, priorityOf } from "../planning";
 import { curPeriod, fmtH, periodRange, periodShift, sessionsWithTime, timeReady, workedTotal } from "../stats";
 import { TR, trackerBadge, trackerCard, trackerConnected, trackerDue, trackerEstimate } from "./tracker";
-import { gitDesyncs, gitInfo, gitUncommitted, itemIds, openPromotion, renderGitTab } from "../git";
+import { G, OK_STATES, gitDesyncs, gitInfo, gitUncommitted, itemIds, openPromotion, renderGitTab } from "../git";
 import { activeAlerts } from "./alerts";
 import { allFiles, filesTab, newBadge, newCount, scriptsCard } from "./detail-files";
 import { ensureNotes, notesOf, notesTab } from "./detail-notes";
@@ -92,7 +94,7 @@ function conflictBanner(): string {
 function captureFocus(): void {
   const a = document.activeElement as HTMLInputElement | null;
   pendingFocus = null;
-  if (!a || !a.closest("#main .detail")) return;
+  if (!a || !a.closest("#dpanel .detail")) return;
   let sel = "";
   if (a.dataset.change && a.dataset.key) sel = `[data-change="${a.dataset.change}"][data-key="${CSS.escape(a.dataset.key)}"]`;
   else if (a.id) sel = `#${CSS.escape(a.id)}`;
@@ -112,7 +114,7 @@ onAfterRender(() => {
   const f = pendingFocus;
   pendingFocus = null;
   if (!f || !S.detail) return;
-  const el = document.querySelector<HTMLInputElement>(`#main .detail ${f.sel}`);
+  const el = document.querySelector<HTMLInputElement>(`#dpanel .detail ${f.sel}`);
   if (!el) return;
   el.focus();
   try {
@@ -125,7 +127,7 @@ onAfterRender(() => {
 // Mientras escribís: el valor queda como borrador (el refresco lo respeta) y se marca «sin guardar».
 document.addEventListener("input", (ev) => {
   const el = ev.target as HTMLInputElement;
-  if (!S.detail || !el.closest?.("#main .detail")) return;
+  if (!S.detail || !el.closest?.("#dpanel .detail")) return;
   if (el.id === "task-new") {
     taskDraft = el.value;
     return;
@@ -188,26 +190,39 @@ async function save(fields: Record<string, unknown>): Promise<boolean> {
 // ---------- estado por pasos ----------
 
 const isLinear = (s: StateDef) => s.category !== "cancelled" && s.category !== "unknown";
+/** Orden de las categorías del camino (descartado y desconocido quedan afuera). */
+const CAT_ORDER: StateCategory[] = ["backlog", "planned", "active", "review", "done"];
 
-/** Estado siguiente en el camino normal (sin descartado ni desconocido). */
-function nextState(current: string): StateDef | null {
-  const line = wf().states.filter(isLinear);
-  if (!current) return line[0] ?? null;
-  const i = line.findIndex((s) => s.id === current);
-  return i >= 0 ? (line[i + 1] ?? null) : null;
+/** Camino principal del flujo (`mainPath` del preset; sin él, los estados que no son descartados ni desconocidos). */
+function mainPath(): StateDef[] {
+  const ids = wf().mainPath?.length ? wf().mainPath! : wf().states.filter(isLinear).map((s) => s.id);
+  return ids.map(stateDef).filter((s): s is StateDef => !!s);
 }
 
+/** Estado siguiente: el que sigue en el camino principal; desde un estado fuera del camino (como «diagnóstico»),
+ *  el primero del camino de una categoría posterior (la v1: diag → codeado); sin estado, el primero. */
+function nextState(current: string): StateDef | null {
+  const line = mainPath();
+  if (!current) return line[0] ?? null;
+  const i = line.findIndex((s) => s.id === current);
+  if (i >= 0) return line[i + 1] ?? null;
+  const rank = CAT_ORDER.indexOf(stateDef(current)?.category ?? "unknown");
+  return rank < 0 ? null : (line.find((s) => CAT_ORDER.indexOf(s.category) > rank) ?? null);
+}
+
+/** Pasos: el camino principal y, al final, el estado actual si es otro (v1 app.js:1025). */
 function steps(it: Item): string {
   const current = statusOf(it);
-  const line = wf().states.filter(isLinear);
+  const line = mainPath();
   const cur = line.findIndex((s) => s.id === current);
-  return `<div class="steps" role="group" aria-label="${esc(t("detail.status"))}">${wf()
-    .states.map((s) => {
-      const on = s.id === current;
-      const done = cur >= 0 && isLinear(s) && line.indexOf(s) < cur;
-      const title = on ? t("detail.step.current") : t("detail.moveTo", { status: label(s.labels, s.id) });
-      return `<button class="step${on ? " current" : ""}${done ? " done" : ""}" data-action="set-status" data-status="${esc(s.id)}" aria-pressed="${on}" title="${esc(title)}">
-        ${done ? ico("check") : `<span class="dot ${s.category}"></span>`}${esc(label(s.labels, s.id))}</button>`;
+  const shown = cur >= 0 || !current ? line.map((s) => s.id) : [...line.map((s) => s.id), current];
+  return `<div class="steps" role="group" aria-label="${esc(t("detail.status"))}">${shown
+    .map((id, i) => {
+      const on = id === current;
+      const done = cur >= 0 && i < cur;
+      const title = on ? t("detail.step.current") : t("detail.moveTo", { status: stateLabel(id) });
+      return `<button class="step${on ? " current" : ""}${done ? " done" : ""}" data-action="set-status" data-status="${esc(id)}" aria-pressed="${on}" title="${esc(title)}">
+        ${done ? ico("check") : `<span class="dot ${stateDef(id)?.category ?? "unknown"}"></span>`}${esc(stateLabel(id))}</button>`;
     })
     .join("")}</div>`;
 }
@@ -285,7 +300,7 @@ function planningCard(it: Item): string {
   const nSess = time ? sessionsWithTime(it).length : 0;
   const worked = !time
     ? esc(t("detail.calculating"))
-    : `<b>${esc(fmtH(real))}</b>${hours.hours ? ` · ${esc(t("detail.worked.pct", { pct: Math.round(((real ?? 0) / hours.hours) * 100) }))}` : ""}${nSess ? ` · ${esc(t("detail.worked.sessions", { n: nSess }))}` : ""}`;
+    : `<b>${esc(fmtH(real))}</b>${hours.hours ? ` · ${esc(t("detail.worked.pct", { pct: Math.round(((real ?? 0) / hours.hours) * 100) }))}` : ""}${nSess ? ` · <button class="link" data-action="hours-item" data-name="${esc(it.name)}" title="${esc(t("detail.worked.hoursHint"))}">${esc(t("detail.worked.sessions", { n: nSess }))}</button>` : ""}`;
   return `<section class="card"><h2>${ico("calendar")}${esc(t("detail.planning"))}</h2>
     ${textField(f.due, t("detail.due"), "date", "", overridesTracker(it, "due") ? localTag() : "", `${esc(dueHint)}${clearLink(it, f.due)}`)}
     ${textField(f.hours, t("detail.hours"), "text", trHours !== null ? String(trHours) : "", overridesTracker(it, "hours") ? localTag() : "", `${esc(hoursHint)}${clearLink(it, f.hours)}`)}
@@ -305,11 +320,18 @@ function fieldsCard(it: Item): string {
       <label class="field">${esc(t("detail.status"))}<select data-change="field" data-key="${esc(f.status)}"><option value="">${esc(auto)}</option>${opts}</select>${fieldError(f.status)}</label>
       ${textField(f.title, t("items.title"), "text", it.title || it.name)}
       ${textField(f.branch, t("detail.branch"))}
-      ${f.extra.map((x) => textField(x.key, x.key)).join("")}
-      <div class="card-actions"><button class="btn danger" data-action="dissolve-group" title="${esc(t("detail.dissolveHint"))}">${ico("folderOut")}${esc(t("detail.dissolve"))}</button></div>
+      ${f.extra.map((x) => textField(x.key, extraName(x))).join("")}
     </section>`;
   }
+  // Estado: todos los del flujo, «Sin estado» y el que tenga el README si no es del flujo (v1 app.js:1134).
+  const own = statusOf(it);
+  const states = [...wf().states.map((x) => x.id), ...(own && !stateDef(own) ? [own] : [])]
+    .map((id) => `<option value="${esc(id)}"${own === id ? " selected" : ""}>${esc(stateLabel(id))}</option>`)
+    .join("");
   const types = wf().types.map((x) => `<option value="${esc(x.id)}"${metaText(it, f.type) === x.id ? " selected" : ""}>${esc(label(x.labels, x.id))}</option>`).join("");
+  // Sin tipo propio: el del tracker como pista (v1 app.js:1135).
+  const trType = metaText(it, f.type) ? "" : trackerType(it);
+  const noType = trType ? t("detail.noTypeTracker", { source: TR.cfg?.source ?? "", type: trType }) : t("detail.noType");
   const envs = metaList(it, f.environments);
   const envBoxes = wf()
     .environments.map(
@@ -317,13 +339,40 @@ function fieldsCard(it: Item): string {
     )
     .join("");
   return `<section class="card"><h2>${esc(t("detail.fields"))}</h2>
-    <label class="field">${esc(t("items.type"))}<select data-change="field" data-key="${esc(f.type)}"><option value=""></option>${types}</select>${fieldError(f.type)}</label>
+    <label class="field">${esc(t("detail.status"))}<select data-change="status-select"><option value="">${esc(t("detail.noStatus"))}</option>${states}</select>${fieldError(f.status)}</label>
+    <label class="field">${esc(t("items.type"))}<select data-change="field" data-key="${esc(f.type)}"><option value="">${esc(noType)}</option>${types}</select>${fieldError(f.type)}</label>
     <div class="field">${esc(t("detail.environments"))}<div class="checks">${envBoxes}</div>${fieldError(f.environments)}</div>
     ${textField(f.branch, t("detail.branch"))}
     ${textField(f.title, t("items.title"), "text", it.title)}
-    ${f.extra.map((x) => textField(x.key, x.key)).join("")}
+    ${f.extra.map((x) => textField(x.key, extraName(x))).join("")}
     ${textField(f.itemIds, t("detail.ids"), "text", it.ids.join(", "))}
   </section>`;
+}
+
+/** Tipo del tracker del item (el del flujo si está mapeado), para la pista de «Sin tipo». */
+function trackerType(it: Item): string {
+  const w = it.ids.map((id) => TR.cfg?.cache?.items[id]).find((x) => x?.type);
+  if (!w || !trackerConnected()) return "";
+  const local = TR.cfg?.localTypes[w.type];
+  const def = local ? wf().types.find((x) => x.id === local) : undefined;
+  return def ? label(def.labels, def.id) : w.type;
+}
+
+// ---------- campos extra con link (los declara el preset: `fields.extra[].link`) ----------
+
+type Extra = Workflow["fields"]["extra"][number];
+
+const extraName = (x: Extra) => (x.labels ? label(x.labels, x.key) : x.key);
+
+/** Links de los campos extra con valor (`link: "tracker"` → el work item; plantilla https → la página). */
+function extraLinks(it: Item): string[] {
+  return wf()
+    .fields.extra.filter((x) => x.link && metaText(it, x.key).trim())
+    .map((x) => {
+      const v = metaText(it, x.key).trim();
+      const text = x.link === "tracker" ? `${extraName(x)} #${v}` : `${extraName(x)} ${v}`;
+      return `<button class="link" data-action="extra-link" data-key="${esc(x.key)}" title="${esc(t("detail.extraOpen", { name: extraName(x) }))}">${ico(x.icon && ico(x.icon) ? x.icon : "external")}${esc(text)}</button>`;
+    });
 }
 
 /** «Qué falta» (el resumen de una línea), destacado arriba del Resumen. */
@@ -364,11 +413,13 @@ function membersCard(it: Item): string {
 const SESSIONS_SHOWN = 6;
 let allSessions = false;
 
-/** Se puede planear un item que todavía no arrancó (o que ya está en planificación). */
-function canPlan(it: Item): boolean {
-  if (it.kind !== "item") return false;
-  const cat = stateDef(effectiveStatus(it))?.category ?? "unknown";
-  return ["backlog", "planned", "unknown"].includes(cat);
+/** Planear es por item (no grupo), desde cualquier estado: si ya pasó la planificación, se confirma. */
+const canPlan = (it: Item) => it.kind === "item";
+
+/** El item ya pasó la planificación (o está cerrado): planear lo vuelve atrás (v1 app.js:4069). */
+function pastPlanning(it: Item): boolean {
+  const cat = stateDef(statusOf(it))?.category;
+  return cat === "active" || cat === "review" || cat === "done" || cat === "cancelled";
 }
 
 function sessionsCard(it: Item): string {
@@ -399,8 +450,65 @@ function sessionsCard(it: Item): string {
 // ---------- pestañas ----------
 
 function summaryTab(it: Item): string {
-  return `${whatsMissing()}<div class="detail-grid"><div>${tasksCard(it)}${scriptsCard(it)}${membersCard(it)}${sessionsCard(it)}</div>
-    <div>${pluginItemCard(it)}${trackerCard(it)}${planningCard(it)}${fieldsCard(it)}</div></div>`;
+  return `${whatsMissing()}${tasksCard(it)}${scriptsCard(it)}${membersCard(it)}${sessionsCard(it)}`;
+}
+
+// ---------- panel derecho (a la vista en todas las pestañas, como la v1) ----------
+
+type EnvSum = { state: "ok" | "partial" | "no"; ok: string[]; all: string[] };
+
+/** Por ambiente: ok si todos los repos del item ya tienen el trabajo, parcial si algunos, no si ninguno
+ *  (v1 `gitEnvSummary`). `null` = sin ramas ni commits del item. */
+function gitEnvSummary(it: Item): Record<string, EnvSum> | null {
+  const info = gitInfo(it);
+  if (!info || !G.data || (!info.branches.length && !Object.keys(info.mentions).length)) return null;
+  const repos = G.data.repos.filter((r) => !r.error && (info.branches.some((b) => b.repo === r.name) || info.mentions[r.name]));
+  const envs = wf().environments.map((e) => e.id).filter((env) => repos.some((r) => r.envs?.[env]));
+  const out: Record<string, EnvSum> = {};
+  for (const env of envs) {
+    const all = repos.filter((r) => r.envs?.[env]).map((r) => r.name);
+    const ok = all.filter((name) => info.branches.some((b) => b.repo === name && OK_STATES.has(b.envs[env]?.state ?? "")) || !!info.mentions[name]?.[env]);
+    out[env] = { state: ok.length === all.length ? "ok" : ok.length ? "partial" : "no", ok, all };
+  }
+  return out;
+}
+
+function gitCard(it: Item): string {
+  if (it.kind !== "item" || !it.ids.length) return "";
+  const title = `<h2>${ico("branch")}${esc(t("detail.tab.git"))}</h2>`;
+  if (!G.data) return `<section class="card side-git">${title}<p class="muted">${esc(t(G.loading ? "detail.git.loading" : "detail.git.noData"))}</p></section>`;
+  const sum = gitEnvSummary(it);
+  if (!sum) return `<section class="card side-git">${title}<p class="muted">${esc(t("detail.git.none"))}</p></section>`;
+  const icon = { ok: "check", partial: "clock", no: "minus" } as const;
+  const rows = Object.entries(sum)
+    .map(([env, x]) => {
+      const text = x.state === "ok" ? t("detail.git.allRepos") : x.state === "partial" ? t("detail.git.someRepos", { ok: x.ok.length, all: x.all.length }) : t("detail.git.pending");
+      return `<div class="kv"><span>${esc(envLabel(env))}</span><span class="genv ${x.state}" title="${esc(x.ok.join(", ") || t("detail.git.noRepos"))}">${ico(icon[x.state])}${esc(text)}</span></div>`;
+    })
+    .join("");
+  return `<section class="card side-git">${title}${rows}
+    <button class="link see-more" data-action="detail-tab" data-tab="git">${esc(t("detail.git.seeBranches"))}${ico("chevronRight")}</button></section>`;
+}
+
+function infoCard(it: Item): string {
+  const group = isGroup(it);
+  const files = group
+    ? t("detail.info.groupFiles", { n: allFiles(it).length, own: it.files.length })
+    : t("detail.info.files", { n: it.files.length, size: fmtSize(it.size) });
+  return `<section class="card side-info"><h2>${ico("info")}${esc(t("detail.info"))}</h2>
+    ${group ? "" : `<div class="kv"><span>${esc(t("detail.info.created"))}</span><span>${esc(it.created ? fmtDate(it.created) : "—")}</span></div>`}
+    <div class="kv"><span>${esc(t("detail.info.last"))}</span><span title="${esc(fmtDateTimeFull(it.last))}">${esc(fmtAgo(it.last))}</span></div>
+    <div class="kv"><span>${esc(t("detail.info.filesLabel"))}</span><span>${esc(files)}</span></div>
+    ${it.kinds.length ? `<div class="kinds">${it.kinds.map((k) => `<span class="chip kind">${esc(k)}</span>`).join("")}</div>` : ""}
+    <div class="side-links">${it.hasReadme ? `<button class="link" data-action="detail-tab" data-tab="versions">${esc(t("detail.info.versions"))}</button>` : ""}
+      <button class="link" data-action="rename">${esc(t("detail.info.rename"))}</button>
+      ${group ? `<button class="link" data-action="dissolve-group" title="${esc(t("detail.dissolveHint"))}">${esc(t("detail.dissolve"))}</button>` : ""}</div></section>`;
+}
+
+function sidePanel(it: Item): string {
+  const links = extraLinks(it);
+  const linkCard = links.length ? `<section class="card side-links-card"><div class="side-links">${links.join("")}</div></section>` : "";
+  return `${pluginItemCard(it)}${planningCard(it)}${fieldsCard(it)}${trackerCard(it)}${linkCard}${gitCard(it)}${infoCard(it)}`;
 }
 
 function readmeTab(): string {
@@ -472,9 +580,14 @@ function head(it: Item): string {
   const typeText = it.type ? label(wf().types.find((x) => x.id === it.type)?.labels ?? {}, it.type) : "";
   const meta = [
     isGroup(it) ? esc(t("detail.group.label", { n: it.members.length })) : typeText ? esc(typeText) : "",
-    it.ids.length ? esc(it.ids.map((x) => `#${x}`).join(" ")) : "",
+    it.ids.length
+      ? trackerConnected()
+        ? it.ids.map((x) => `<button class="link mono" data-action="trk-open" data-id="${esc(x)}" title="${esc(t("tracker.open", { source: TR.cfg?.source ?? "" }))}">#${esc(x)}</button>`).join(" ")
+        : esc(it.ids.map((x) => `#${x}`).join(" "))
+      : "",
     trackerBadge(it),
     priorityBadge(priorityOf(it)),
+    ...extraLinks(it),
     `<span class="mono">${esc(it.name)}</span>`,
     it.dupes?.length ? `<span class="warn-text">${esc(t("alerts.dupes"))}</span>` : "",
   ].filter(Boolean);
@@ -484,14 +597,19 @@ function head(it: Item): string {
     : it.kind === "item"
       ? `<button class="btn" data-action="to-group">${ico("folderIn")}${esc(t("detail.toGroup"))}</button>`
       : "";
-  return `<div class="detail-top"><button class="link" data-action="back" title="${esc(t("common.back"))}">${ico("chevronLeft")}${esc(t("common.back"))}</button>
+  const maxed = !!document.querySelector("#dpanel.max");
+  const maxText = t(maxed ? "detail.restoreWidth" : "detail.maximize");
+  return `<div class="detail-top"><button class="link" data-action="back" title="${esc(t("detail.backHint"))}">${ico("chevronLeft")}${esc(t(`nav.${S.view}`))}</button>
       ${parent ? `<span class="muted">/</span><button class="link" data-action="open-item" data-name="${esc(parent.name)}">${ico("folder")}${esc(titleOf(parent))}</button>` : ""}
-      <span class="spacer"></span>${saveStateHtml()}</div>
+      <span class="spacer"></span>${saveStateHtml()}
+      <button class="icon-btn" data-action="detail-max" title="${esc(maxText)}" aria-label="${esc(maxText)}">${ico(maxed ? "minimize" : "maximize")}</button>
+      <button class="icon-btn" data-action="back" title="${esc(t("detail.closeHint"))}" aria-label="${esc(t("common.close"))}">${ico("x")}</button></div>
     <div class="detail-head"><div class="grow"><div class="detail-meta muted">${meta.join(`<span class="sep">·</span>`)}</div>
       <h1>${esc(titleOf(it))}${lateTag(it)}</h1></div></div>
     <div class="detail-row">${isGroup(it) ? `<span class="muted">${esc(t("detail.status"))}: ${statusChip(effectiveStatus(it))}</span>` : steps(it)}
       <span class="spacer"></span>
       <div class="detail-acts">
+        ${!isGroup(it) && ["backlog", "planned"].includes(stateDef(status)?.category ?? "backlog") ? `<button class="btn" data-action="detail-plan" title="${esc(t("detail.planHint"))}">${ico("plan")}${esc(t("session.plan"))}</button>` : ""}
         <button class="btn" data-action="detail-new-session" title="${esc(t("detail.aiSessionHint"))}">${ico("play")}${esc(t("detail.aiSession"))}</button>
         <button class="icon-btn" data-action="open-folder" title="${esc(t("detail.openFolder"))}" aria-label="${esc(t("detail.openFolder"))}">${ico("folder")}</button>
         <button class="icon-btn" data-action="open-vscode" title="${esc(t("detail.vscode"))}" aria-label="${esc(t("detail.vscode"))}">${ico("code")}</button>
@@ -528,7 +646,10 @@ function renderDetail(): string {
     notes: notesTab,
     versions: versionsTab,
   }[S.detailTab](it);
-  return `<div class="page wide detail">${head(it)}<div class="tabs" role="tablist">${tabs}</div>${body}</div>`;
+  return `<div class="dp-resizer" title="${esc(t("detail.resizeHint"))}" aria-hidden="true"></div>
+    <div class="detail"><div class="dp-head">${head(it)}</div>
+      <div class="d-main"><div class="d-content"><div class="tabs" role="tablist">${tabs}</div><div class="d-body${S.detailTab === "files" ? " files-body" : ""}" data-keep-scroll="body">${body}</div></div>
+        <aside class="d-side" data-keep-scroll="side">${sidePanel(it)}</aside></div></div>`;
 }
 
 async function taskOp(fn: () => Promise<unknown>): Promise<void> {
@@ -556,8 +677,6 @@ function viewer(title: string, html: string): void {
   back.addEventListener("keydown", (e) => e.key === "Escape" && close());
 }
 
-registerDetail(renderDetail);
-
 /** Antes de salir del detalle con algo escrito sin guardar. */
 async function leaveOk(): Promise<boolean> {
   if (!dirty()) return true;
@@ -568,8 +687,16 @@ async function leaveOk(): Promise<boolean> {
   return true;
 }
 
-onAction("back", async () => {
-  if (await leaveOk()) closeDetail();
+registerDetail(renderDetail, leaveOk);
+
+onAction("back", () => requestCloseDetail());
+onChange("status-select", (el) => setStatus((el as HTMLSelectElement).value));
+onAction("extra-link", async (el) => {
+  const x = wf().fields.extra.find((f) => f.key === el.dataset.key);
+  const value = x ? metaText(item(), x.key).trim() : "";
+  if (!x || !value) return;
+  if (x.link === "tracker") await trackerApi.open(value);
+  else await pluginApi.openUrl(x.link!.replace("{value}", encodeURIComponent(value)));
 });
 onAction("promote-item", () => openPromotion([item().name]));
 onAction("detail-tab", (el) => {
@@ -631,8 +758,17 @@ onAction("task-edit", async (el) => {
 onAction("task-remove", async (el) => {
   const i = Number(el.dataset.index);
   const task = item().tasks[i];
-  await taskOp(() => api.removeTask(item().name, i, task.text));
-  toast(t("detail.taskRemoved"), { label: t("common.undo"), run: () => taskOp(() => api.addTask(item().name, task.text)) });
+  const name = item().name;
+  await taskOp(() => api.removeTask(name, i, task.text));
+  // Deshacer la vuelve a agregar (al final) con el mismo tildado.
+  toast(t("detail.taskRemoved"), {
+    label: t("common.undo"),
+    run: () =>
+      taskOp(async () => {
+        const after = await api.addTask(name, task.text);
+        if (task.done) await api.setTask(name, after.tasks.length - 1, true, task.text);
+      }),
+  });
 });
 onAction("reveal", async (el) => {
   await api.reveal(el.dataset.path!);
@@ -651,15 +787,35 @@ onAction("restore-version", async (el) => {
   await refresh();
   toast(t("detail.restored"));
 });
+/** Sigue al item abierto cuando su carpeta cambia de nombre o de lugar. */
+async function follow(from: string, to: string): Promise<void> {
+  if (S.detail === from) {
+    S.detail = to;
+    if (shownName === from) shownName = to;
+  }
+  await refresh();
+}
+
+const baseOf = (name: string) => name.split("/").pop()!;
+
 onAction("rename", async () => {
   const it = item();
-  const base = it.name.split("/").pop()!;
-  const next = await promptDialog(t("detail.renameTo"), base);
+  const base = baseOf(it.name);
+  const next = await promptDialog(t(isGroup(it) ? "detail.renameGroupTo" : "detail.renameTo"), base);
   if (!next || next === base) return;
   const name = await api.renameFolder(it.name, next);
-  S.detail = name;
-  shownName = name;
-  await refresh();
+  await follow(it.name, name);
+  toast(t("detail.renamed", { name: baseOf(name) }), {
+    label: t("common.undo"),
+    run: async () => {
+      try {
+        await follow(name, await api.renameFolder(name, base));
+        toast(t("detail.renameUndone"));
+      } catch (err) {
+        toast(errorText(err), undefined, "error");
+      }
+    },
+  });
 });
 onAction("trash-item", async () => {
   const it = item();
@@ -684,21 +840,36 @@ onAction("dissolve-group", async () => {
     },
   });
 });
-onAction("ungroup", async () => {
-  const name = await api.moveFolder(item().name, "");
-  S.detail = name;
-  shownName = name;
-  await refresh();
-});
+/** Mueve el item abierto a un grupo (o a la raíz con `""`), con aviso y Deshacer (v1 app.js:2088). */
+async function moveTo(dest: string): Promise<void> {
+  const it = item();
+  const from = it.group;
+  const name = await api.moveFolder(it.name, dest);
+  await follow(it.name, name);
+  const group = dest ? itemByName(dest) : null;
+  toast(dest ? t("detail.movedTo", { group: group ? titleOf(group) : baseOf(dest) }) : t("detail.ungrouped"), {
+    label: t("common.undo"),
+    run: async () => {
+      try {
+        await follow(name, await api.moveFolder(name, from));
+        toast(t("detail.moveUndone"));
+      } catch (err) {
+        toast(errorText(err), undefined, "error");
+      }
+    },
+  });
+}
+
+onAction("ungroup", () => moveTo(""));
 onAction("to-group", async () => {
-  const groups = S.items.filter((i) => i.kind === "group");
+  const groups = S.items.filter((i) => i.kind === "group" && i.name !== item().group);
   if (!groups.length) return toast(t("detail.noGroups"));
-  const choice = await promptDialog(t("detail.whichGroup", { groups: groups.map((g) => g.name).join(", ") }), groups[0].name);
-  if (!choice) return;
-  const name = await api.moveFolder(item().name, choice);
-  S.detail = name;
-  shownName = name;
-  await refresh();
+  const choice = await selectDialog(
+    t("detail.whichGroup", { title: titleOf(item()) }),
+    groups.map((g) => ({ value: g.name, label: g.title && g.title !== baseOf(g.name) ? `${titleOf(g)} · ${baseOf(g.name)}` : baseOf(g.name) })),
+    t("detail.toGroup"),
+  );
+  if (choice) await moveTo(choice);
 });
 
 // ---------- sesiones del item ----------
@@ -711,8 +882,16 @@ onAction("detail-new-session", () => newSessionModal([item().name]));
 onAction("detail-add-to-session", () => addToSessionModal([item().name]));
 onAction("detail-plan", async () => {
   const it = item();
-  if (!(await confirmDialog(t("session.planConfirm", { name: titleOf(it) }), t("session.plan")))) return;
+  if (dirty()) return toast(t("detail.saveFirst"), undefined, "error");
+  const planned = wf().states.find((x) => x.category === "planned");
+  if (pastPlanning(it)) {
+    const text = t("detail.replanConfirm", { name: titleOf(it), status: stateLabel(statusOf(it)), plan: planned ? label(planned.labels, planned.id) : "" });
+    if (!(await confirmDialog(text, t("detail.replan")))) return;
+  }
+  const open = S.sessions.filter((x) => x.state !== "closed" && inSession(x, it.name)).length;
+  if (open && !(await confirmDialog(t("detail.planOpenSessions", { name: titleOf(it), n: open }), t("detail.planAnother")))) return;
   await planItem(it.name);
+  toast(t("detail.planStarted", { name: titleOf(it), plan: planned ? label(planned.labels, planned.id) : "" }));
 });
 onAction("detail-reflect", () => reflectItems([item().name]));
 onAction("detail-review", () => openReview(item()));

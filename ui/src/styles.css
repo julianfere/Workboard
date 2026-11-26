@@ -64,6 +64,7 @@ svg.chev { width: 14px; height: 14px; color: var(--nav-fg-2); }
 
 /* ---------- página ---------- */
 #content { display: flex; flex-direction: column; min-width: 0; min-height: 0; height: 100vh; }
+#main-wrap { position: relative; display: flex; flex: 1; min-width: 0; min-height: 0; }
 #main { overflow: auto; min-width: 0; flex: 1; min-height: 0; }
 .page { max-width: 920px; padding: 24px 32px 48px; }
 .page.wide { max-width: none; }
@@ -589,3 +590,48 @@ pre.tool-code { max-height: 40vh; }
 .tr-facts > span:not(:first-child)::before { content: " · "; }
 
 .card h2 .link { font-size: 13px; font-weight: 400; }
+
+/* ---------- panel del detalle (sobre la vista, como la v1) ---------- */
+#dscrim { position: absolute; inset: 0; background: var(--backdrop); z-index: 20; }
+#dpanel { position: absolute; top: 0; right: 0; bottom: 0; width: 1100px; max-width: 100%; z-index: 21; display: flex; background: var(--bg); border-left: 1px solid var(--line); box-shadow: var(--shadow-64); transform: translateX(105%); visibility: hidden; transition: transform .18s ease-out, visibility .18s; }
+#dpanel.open { transform: none; visibility: visible; }
+#dpanel.max { left: 0; width: auto; }
+.dp-resizer { position: absolute; left: -4px; top: 0; bottom: 0; width: 8px; cursor: col-resize; z-index: 2; }
+.dp-resizer:hover, body.resizing .dp-resizer { background: var(--blue-soft); }
+body.resizing { cursor: col-resize; user-select: none; }
+#dpanel .detail { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+.dp-head { flex: none; padding: 12px 24px 0; }
+.dp-head .detail-top .icon-btn { flex: none; }
+.d-main { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 340px; }
+.d-content { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.d-content > .tabs { flex: none; padding: 0 24px; margin-bottom: 0; overflow-x: auto; }
+.d-body { flex: 1; min-height: 0; overflow: auto; padding: 16px 24px 32px; }
+.d-side { min-height: 0; overflow: auto; padding: 16px; border-left: 1px solid var(--line); background: var(--surface-2); }
+.d-side .card { padding: 12px 14px; margin-bottom: 12px; }
+.d-side .card h2 { font-size: 14px; margin-bottom: 8px; }
+#dpanel.narrow .d-main { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+#dpanel.narrow .d-side { order: -1; max-height: 40vh; border-left: 0; border-bottom: 1px solid var(--line); }
+.genv { display: inline-flex; align-items: center; gap: 4px; }
+.genv svg.i { width: 13px; height: 13px; }
+.genv.ok { color: var(--ok); }
+.genv.partial { color: var(--warn); }
+.genv.no { color: var(--fg-2); }
+.see-more { display: inline-flex; align-items: center; gap: 2px; margin-top: 6px; }
+.see-more svg.i { width: 14px; height: 14px; }
+.kinds { display: flex; flex-wrap: wrap; margin-top: 6px; }
+.side-links { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; margin-top: 8px; }
+.side-links .link, .detail-meta .link { display: inline-flex; align-items: center; gap: 4px; }
+.side-links-card .side-links { margin-top: 0; }
+.detail-meta .link svg.i { width: 13px; height: 13px; }
+/* Archivos: lista y visor lado a lado. */
+.d-body.files-body { display: flex; overflow: hidden; padding-bottom: 16px; }
+.files-split { flex: 1; min-width: 0; min-height: 0; display: grid; grid-template-columns: minmax(260px, 2fr) minmax(0, 3fr); gap: 12px; }
+.file-list { min-height: 0; overflow: auto; }
+.file-list .card { margin-bottom: 12px; }
+.file-list .file .size, .file-list .file .envs { display: none; }
+.files > li.file.sel { background: var(--selected); margin: 0 -8px; padding-left: 8px; padding-right: 8px; border-radius: var(--r-sm); }
+.viewer-slot { min-width: 0; min-height: 0; display: flex; }
+.viewer.inline { flex: 1; min-width: 0; display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px; }
+.viewer.inline .viewer-head { flex-wrap: wrap; }
+.viewer.inline .viewer-body { flex: 1; min-height: 0; }
+#dpanel.narrow .files-split { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 2fr) minmax(0, 3fr); }
