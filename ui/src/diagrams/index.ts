@@ -291,6 +291,7 @@ async function hydrate(): Promise<void> {
       if (!el.isConnected) continue;
       const box = document.createElement("div");
       box.className = "diagram";
+      box.title = t("viewer.zoomHint");
       mount(box, svg);
       el.replaceChildren(box);
     } catch (e) {
@@ -305,6 +306,13 @@ async function hydrate(): Promise<void> {
 export function watchMermaidBlocks(): void {
   if (observing) return;
   observing = true;
+  // Click en un diagrama del Markdown: tamaño real / ajustado al ancho (como las imágenes del visor).
+  document.addEventListener("click", (ev) => {
+    const box = (ev.target as HTMLElement).closest<HTMLElement>(".mmd-block .diagram");
+    if (!box) return;
+    box.classList.toggle("full");
+    box.title = t(box.classList.contains("full") ? "viewer.fitHint" : "viewer.zoomHint");
+  });
   const kick = () => {
     if (!queued && document.querySelector(".mmd-block:not([data-done])")) {
       queued = true;
