@@ -680,7 +680,7 @@ onAction("trk-push-go", async (el) => {
   const picked = pushPicked();
   const secret = $<HTMLInputElement>("#trk-write-secret")?.value.trim() ?? "";
   if (!TR.cfg!.hasWriteSecret && !secret) {
-    toast(t("tracker.noWriteSecret"), undefined, "error");
+    toast(t("tracker.noWriteSecret", { source: TR.cfg!.source }), undefined, "error");
     return;
   }
   const list = picked.map((r) => `#${r.id}: ${r.w?.state ?? "?"} → ${r.target}`).join(", ");

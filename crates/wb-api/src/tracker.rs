@@ -408,7 +408,7 @@ struct Ctx {
 
 impl Ctx {
     fn conn(&self) -> ApiResult<&Connection> {
-        self.conn.as_ref().ok_or_else(|| ApiError::new("tracker.notConnected", &[]))
+        self.conn.as_ref().ok_or_else(|| ApiError::new("tracker.notConnected", &[("source", azure::SOURCE)]))
     }
 
     fn project(&self) -> ProjectCfg {
@@ -498,7 +498,10 @@ impl Api {
     fn tracker_client(&self, ctx: &Ctx, write: bool) -> ApiResult<Box<dyn Tracker>> {
         let conn = ctx.conn()?;
         let secret = self.secrets().get(&secret_key(conn, write)).map_err(store_error)?.ok_or_else(|| {
-            ApiError::new(if write { "tracker.noWriteSecret" } else { "tracker.noSecret" }, &[])
+            ApiError::new(
+                if write { "tracker.noWriteSecret" } else { "tracker.noSecret" },
+                &[("source", conn.source())],
+            )
         })?;
         Ok(conn.client(&secret, self.http())?)
     }
@@ -601,7 +604,7 @@ impl Api {
             self.secrets().set(&secret_key(&conn, false), secret).map_err(store_error)?;
         }
         if !self.has_secret(&conn, false) {
-            return Err(ApiError::new("tracker.noSecret", &[]));
+            return Err(ApiError::new("tracker.noSecretFor", &[("org", &conn.org)]));
         }
         ctx.file.connections.insert(ctx.root_key.clone(), conn.clone());
         ctx.conn = Some(conn);
@@ -614,7 +617,7 @@ impl Api {
         let client = self.tracker_client(&ctx, false)?;
         let states = client.states()?;
         if states.is_empty() {
-            return Err(ApiError::new("tracker.noStates", &[]));
+            return Err(ApiError::new("tracker.noStates", &[("source", ctx.conn()?.source())]));
         }
         let fields = client.fields()?;
         let proc = ctx.project_mut()?;

@@ -219,7 +219,7 @@ impl AzureDevOps {
     pub fn new(org: &str, project: &str, pat: &str, http: Arc<dyn Transport>) -> Result<Self> {
         let pat = pat.trim();
         if pat.is_empty() {
-            return Err(TrackerError::new("tracker.noSecret", vec![]));
+            return Err(TrackerError::new("tracker.noSecret", vec![("source", SOURCE.to_string())]));
         }
         let token = base64::engine::general_purpose::STANDARD.encode(format!(":{pat}"));
         Ok(Self {
@@ -247,7 +247,10 @@ impl AzureDevOps {
     }
 
     fn project_not_found(&self) -> TrackerError {
-        TrackerError::new("tracker.projectNotFound", vec![("project", self.project.clone())])
+        TrackerError::new(
+            "tracker.projectNotFound",
+            vec![("project", self.project.clone()), ("org", self.org.clone())],
+        )
     }
 
     fn request(
@@ -282,7 +285,11 @@ impl AzureDevOps {
         match res.status {
             401 | 403 => Err(TrackerError::new(
                 "tracker.auth",
-                vec![("status", res.status.to_string()), ("detail", detail(200))],
+                vec![
+                    ("source", SOURCE.to_string()),
+                    ("status", res.status.to_string()),
+                    ("detail", detail(200)),
+                ],
             )),
             404 => {
                 let mut e = not_found;
@@ -291,11 +298,11 @@ impl AzureDevOps {
             }
             s if !(200..300).contains(&s) => Err(TrackerError::new(
                 "tracker.http",
-                vec![("status", s.to_string()), ("detail", detail(400))],
+                vec![("source", SOURCE.to_string()), ("status", s.to_string()), ("detail", detail(400))],
             )),
             // Con una credencial inválida Azure a veces responde 203 con la página de login en vez de 401.
             s if s == 203 || !res.content_type.starts_with("application/json") => {
-                Err(TrackerError::new("tracker.loginPage", vec![]))
+                Err(TrackerError::new("tracker.loginPage", vec![("source", SOURCE.to_string())]))
             }
             _ if res.body.is_empty() => Ok(json!({})),
             _ => serde_json::from_slice(&res.body)

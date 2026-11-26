@@ -164,7 +164,7 @@ fn connect_keeps_the_secret_out_of_files() {
         .api
         .dispatch("tracker_connect", &json!({"org": "miorg.visualstudio.com", "project": "P"}))
         .unwrap_err();
-    assert_eq!(err.code, "tracker.noSecret");
+    assert_eq!(err.code, "tracker.noSecretFor");
     let err = env
         .api
         .dispatch("tracker_connect", &json!({"org": "https://evil.com", "project": "P", "secret": "x"}))

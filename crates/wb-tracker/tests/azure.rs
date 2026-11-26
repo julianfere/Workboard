@@ -189,9 +189,13 @@ fn errors_never_carry_the_secret() {
     let e = c.fields().unwrap_err();
     assert_eq!(e.code, "tracker.projectNotFound");
     assert_eq!(e.params[0], ("project", "Mi Proyecto".to_string()));
+    assert_eq!(e.params[1], ("org", "https://miorg.visualstudio.com".to_string()));
 
     let (c, _) = client(Fake::default().on("GET", "/_apis/wit/fields", 500, json!({"message": "boom"})));
-    assert_eq!(c.fields().unwrap_err().params, vec![("status", "500".into()), ("detail", "boom".into())]);
+    assert_eq!(
+        c.fields().unwrap_err().params,
+        vec![("source", "Azure DevOps".into()), ("status", "500".into()), ("detail", "boom".into())]
+    );
 
     // Sin respuesta: error de red con la organización (nunca el header de autorización).
     let (c, _) = client(Fake::default());
