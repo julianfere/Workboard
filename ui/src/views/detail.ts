@@ -14,7 +14,7 @@ import { renderMarkdown } from "../markdown";
 import { canReflect, reflectItems } from "../reflect";
 import { pluginItemCard } from "../plugins";
 import { canReview, openReview } from "../review";
-import { addToSessionModal, launched, loadSessions, newSessionModal, planItem, sessionById } from "../sessions";
+import { addToSessionModal, busyGuard, launched, loadSessions, newSessionModal, planItem, sessionById } from "../sessions";
 import { S, effectiveStatus, envLabel, inSession, itemByName, metaList, metaText, stateDef, stateLabel, statusOf, titleOf, wf, type DetailTab } from "../state";
 import { termSize } from "../terminal";
 import type { ApiError, Item, StateCategory, StateDef, Workflow } from "../types";
@@ -800,6 +800,7 @@ const baseOf = (name: string) => name.split("/").pop()!;
 
 onAction("rename", async () => {
   const it = item();
+  if (await busyGuard([it.name])) return;
   const base = baseOf(it.name);
   const next = await promptDialog(t(isGroup(it) ? "detail.renameGroupTo" : "detail.renameTo"), base);
   if (!next || next === base) return;
@@ -819,17 +820,21 @@ onAction("rename", async () => {
 });
 onAction("trash-item", async () => {
   const it = item();
+  if (await busyGuard([it.name])) return;
   if (!(await confirmDialog(t("items.confirmDelete", { n: 1 }), t("items.delete")))) return;
   const deleted = await api.trash(it.name);
   closeDetail();
   await refresh();
   toast(t("items.deletedN", { n: 1 }), { label: t("common.undo"), run: async () => { await api.untrash(deleted, it.name); await refresh(); } });
 });
-onAction("dissolve-group", async () => {
-  const it = item();
+onAction("dissolve-group", () => dissolveGroup(item()));
+
+/** Disolver un grupo (detalle y menú de la grilla), con deshacer. */
+export async function dissolveGroup(it: Item): Promise<void> {
+  if (await busyGuard([it.name])) return;
   if (!(await confirmDialog(t("detail.dissolveConfirm", { n: it.members.length }), t("detail.dissolve")))) return;
   const out = await api.dissolveGroup(it.name);
-  closeDetail();
+  if (S.detail === it.name) closeDetail();
   await refresh();
   toast(t("detail.dissolved"), {
     label: t("common.undo"),
@@ -839,10 +844,11 @@ onAction("dissolve-group", async () => {
       await refresh();
     },
   });
-});
+}
 /** Mueve el item abierto a un grupo (o a la raíz con `""`), con aviso y Deshacer (v1 app.js:2088). */
 async function moveTo(dest: string): Promise<void> {
   const it = item();
+  if (await busyGuard([it.name])) return;
   const from = it.group;
   const name = await api.moveFolder(it.name, dest);
   await follow(it.name, name);
@@ -880,9 +886,12 @@ onAction("sess-show-all", () => {
 });
 onAction("detail-new-session", () => newSessionModal([item().name]));
 onAction("detail-add-to-session", () => addToSessionModal([item().name]));
-onAction("detail-plan", async () => {
-  const it = item();
-  if (dirty()) return toast(t("detail.saveFirst"), undefined, "error");
+onAction("detail-plan", () => planWithConfirm(item()));
+
+/** Planear un item (detalle y menú de la grilla): si ya pasó la planificación o tiene sesiones abiertas, se
+ *  confirma antes. */
+export async function planWithConfirm(it: Item): Promise<void> {
+  if (S.detail === it.name && dirty()) return toast(t("detail.saveFirst"), undefined, "error");
   const planned = wf().states.find((x) => x.category === "planned");
   if (pastPlanning(it)) {
     const text = t("detail.replanConfirm", { name: titleOf(it), status: stateLabel(statusOf(it)), plan: planned ? label(planned.labels, planned.id) : "" });
@@ -892,7 +901,7 @@ onAction("detail-plan", async () => {
   if (open && !(await confirmDialog(t("detail.planOpenSessions", { name: titleOf(it), n: open }), t("detail.planAnother")))) return;
   await planItem(it.name);
   toast(t("detail.planStarted", { name: titleOf(it), plan: planned ? label(planned.labels, planned.id) : "" }));
-});
+}
 onAction("detail-reflect", () => reflectItems([item().name]));
 onAction("detail-review", () => openReview(item()));
 onAction("sess-remove-item", async (el, ev) => {

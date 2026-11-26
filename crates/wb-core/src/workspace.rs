@@ -94,6 +94,8 @@ pub struct Item {
 pub struct DeletedEntry {
     pub path: String,
     pub base: String,
+    /// Nombre con el que se restaura: `base` sin el sufijo de fecha que agrega `trash` si ya había otra.
+    pub original: String,
     pub title: String,
     pub status: String,
     pub deleted: f64,
@@ -489,9 +491,11 @@ impl Workspace {
                     .map_or(heading, String::from);
                 meta = m;
             }
+            let base = e.file_name().to_string_lossy().into_owned();
             out.push(DeletedEntry {
                 path: self.rel(&c),
-                base: e.file_name().to_string_lossy().into_owned(),
+                original: original_name(&base).to_string(),
+                base,
                 title,
                 status: meta.get(&self.wf.fields.status).and_then(Value::as_text).unwrap_or("").to_string(),
                 deleted: std::fs::metadata(&c).map(|m| mtime(&m)).unwrap_or(0.0),
@@ -500,5 +504,32 @@ impl Workspace {
         }
         out.sort_by(|a, b| b.deleted.total_cmp(&a.deleted));
         Ok(out)
+    }
+}
+
+/// Nombre original de una carpeta eliminada: sin el sufijo `-AAAAMMDD-HHMMSS` que agrega `trash` cuando ya
+/// había otra con el mismo nombre en eliminados (v1: `base.replace(/-\d{8}-\d{6}$/, "")`).
+pub fn original_name(base: &str) -> &str {
+    let b = base.as_bytes();
+    let n = b.len();
+    let is_stamp = n > 16
+        && b[n - 16] == b'-'
+        && b[n - 7] == b'-'
+        && b[n - 15..n - 7].iter().all(u8::is_ascii_digit)
+        && b[n - 6..].iter().all(u8::is_ascii_digit);
+    if is_stamp { &base[..n - 16] } else { base }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::original_name;
+
+    #[test]
+    fn original_name_drops_the_trash_stamp() {
+        assert_eq!(original_name("wi1-x-20261126-101530"), "wi1-x");
+        assert_eq!(original_name("wi1-x"), "wi1-x");
+        assert_eq!(original_name("20261126-101530"), "20261126-101530");
+        assert_eq!(original_name("wi1-x-2026112-101530"), "wi1-x-2026112-101530");
+        assert_eq!(original_name("ñ-20261126-101530"), "ñ");
     }
 }

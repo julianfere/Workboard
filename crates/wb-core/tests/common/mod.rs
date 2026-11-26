@@ -122,7 +122,7 @@ pub fn to_v1(v: Value) -> Value {
             let mut out = serde_json::Map::new();
             let is_item = map.contains_key("hasReadme");
             for (k, v) in map {
-                if ["created", "last", "mtime", "deleted", "ts"].contains(&k.as_str()) {
+                if ["created", "last", "mtime", "deleted", "ts", "original"].contains(&k.as_str()) {
                     continue;
                 }
                 let (k, v) = match k.as_str() {

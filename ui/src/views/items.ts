@@ -2,22 +2,25 @@
 // hasta 3 niveles, columnas configurables (orden, ancho), densidad, exportar a CSV, selección múltiple con
 // barra y menú contextual en lote, y deshacer. El modelo (columnas, filtros, vistas) está en `grid.ts`.
 
-import { api } from "../api";
+import { api, trackerApi } from "../api";
 import { onAction, onAfterRender, onChange, openDetail, refresh, refreshAll, registerView, render } from "../app";
 import { noSearchResults, searchBox } from "../search";
 import { $, confirmDialog, daysUntil, esc, fmtAgo, promptDialog, toast } from "../dom";
 import { errorText, label, t } from "../i18n";
 import { ico } from "../icons";
 import { hasSessions, reflectItems } from "../reflect";
-import { addToSessionModal, launched, newSessionModal } from "../sessions";
+import { addToSessionModal, busyGuard, defaultAgentLabel, launched, newSessionModal } from "../sessions";
 import { termSize } from "../terminal";
-import { S, effectiveStatus, isClosed, itemByName, metaList, metaText, titleOf, wf } from "../state";
-import { exportCsv, toCsv } from "../stats";
-import { dueOf } from "../planning";
-import type { Item, MetaValue, TrackerItem } from "../types";
-import { createTrackedItem, fetchTrackerItem, openAssigned, trackerBulk, trackerConnected, trackerToolbar } from "./tracker";
+import { S, effectiveStatus, envLabel, isClosed, itemByName, metaList, metaText, stateDef, stateLabel, titleOf, wf } from "../state";
+import { curPeriod, exportCsv, periodRange, periodShift, toCsv } from "../stats";
+import { dueOf, periodRel } from "../planning";
+import { hoursHidden } from "../discreet";
+import { canReview, openReview } from "../review";
+import { dissolveGroup, planWithConfirm } from "./detail";
+import type { Item, MetaBefore, MetaValue, TrackerFailure, TrackerItem } from "../types";
+import { TR, createTrackedItem, fetchTrackerItem, openAssigned, syncSelection, trackerBulk, trackerConnected, trackerToolbar } from "./tracker";
 import { openPromotion } from "../git";
-import { pluginBulkButtons } from "../plugins";
+import { pluginBulkButtons, pluginMenuItems } from "../plugins";
 import {
   ACTIVITY_WEEKS,
   DUE_FILTERS,
@@ -65,6 +68,10 @@ import {
 } from "./grid";
 
 export { switchSavedView };
+
+/** Límites de la v1 para abrir varias cosas a la vez: carpetas en el explorador y work items en el tracker. */
+const EXPLORER_MAX = 5;
+const TRACKER_OPEN_MAX = 10;
 
 export const statusChip = statusChipHtml;
 
@@ -244,7 +251,7 @@ function table(): string {
 function bulkBar(): string {
   const names = selectedNames();
   if (!names.length) return "";
-  const states = wf().states.map((s) => `<option value="${esc(s.id)}">${esc(label(s.labels, s.id))}</option>`).join("");
+  const states = [`<option value="!">${esc(t("items.noStatus"))}</option>`, ...wf().states.map((s) => `<option value="=${esc(s.id)}">${esc(label(s.labels, s.id))}</option>`)].join("");
   return `<div class="bulk" role="toolbar" aria-label="${esc(t("items.selected", { n: names.length }))}"><b>${esc(t("items.selected", { n: names.length }))}</b>
     <select data-change="bulk-status" aria-label="${esc(t("items.setStatus"))}"><option value="">${esc(t("items.setStatus"))}</option>${states}</select>
     <button class="btn" data-action="grid-bulk-plan">${ico("calendar")}${esc(t("grid.bulk.planning"))}</button>
@@ -325,49 +332,139 @@ function viewMenu(id: string): string {
     ${sepHtml}${menuItem("grid-view-delete", "trash", t("grid.view.delete"), { id })}`;
 }
 
-/** Menú de la selección: lo que no aplica no aparece. */
-function ctxMenu(): string {
+/** Submenús abiertos del menú de la selección (se abren en el lugar, como acordeón). */
+const subOpen = new Set<string>();
+
+/** Entrada que abre o cierra un submenú; `body` son sus entradas (nada = no se muestra). */
+function subMenu(key: string, icon: string, text: string, body: string): string {
+  if (!body) return "";
+  const open = subOpen.has(key);
+  return `<button class="menu-item has-sub${open ? " open" : ""}" data-action="grid-sub" data-k="${esc(key)}" aria-expanded="${open}">${ico(icon)}<span>${esc(text)}</span>${ico("chevronRight", "sub-chev")}</button>${open ? `<div class="menu-sub">${body}</div>` : ""}`;
+}
+
+const hint = (text: string) => `<span class="muted">${esc(text)}</span>`;
+const disabledItem = (icon: string, text: string, why: string) =>
+  `<button class="menu-item" disabled title="${esc(why)}">${ico(icon)}<span>${esc(text)}</span>${hint(why)}</button>`;
+
+/** Items de la selección con los grupos abiertos en sus miembros (para lo que va por id del tracker). */
+function expandGroups(items: Item[]): Item[] {
+  const out = new Map<string, Item>();
+  for (const it of items) {
+    const list = it.kind === "group" ? (it.members.map(itemByName).filter(Boolean) as Item[]) : [it];
+    for (const m of list) out.set(m.name, m);
+  }
+  return [...out.values()];
+}
+
+/** Planificación de la selección: fecha pactada, período (atajos) y horas; vacío = quitar (v1 app.js:1930). */
+function planSection(items: Item[]): string {
+  const f = wf().fields;
+  const one = items.length === 1 ? items[0] : null;
+  const cur = curPeriod();
+  const periods = [-1, 0, 1, 2]
+    .map((d) => periodShift(cur, d))
+    .map((k) => menuItem("grid-bulk-set", "calendar", `${periodRange(k)} · ${periodRel(k)}`, { key: f.period, value: k, what: t("grid.bulk.setTo", { what: t("detail.period"), value: periodRange(k) }) }, one && metaText(one, f.period) === k ? ico("check") : ""))
+    .join("");
+  const byDate = items.some((it) => metaText(it, f.period)) ? sepHtml + menuItem("grid-bulk-set", "eraser", t("grid.bulk.periodByDate"), { key: f.period, value: "", what: t("detail.period") }) : "";
+  const out = [
+    menuItem("grid-bulk-text", "calendar", `${t("detail.due")}…`, { key: f.due }),
+    subMenu("period", "layers", t("detail.period"), periods + menuItem("grid-bulk-text", "edit", t("grid.bulk.periodOther"), { key: f.period }) + byDate),
+  ];
+  if (!hoursHidden()) out.push(menuItem("grid-bulk-text", "clock", `${t("detail.hours")}…`, { key: f.hours }));
+  if (items.some((it) => metaText(it, f.due) || metaText(it, f.period) || metaText(it, f.hours)))
+    out.push(menuItem("grid-bulk-revert", "undo", t(trackerConnected() ? "grid.bulk.revertTracker" : "grid.bulk.clearPlanning")));
+  return out.join("");
+}
+
+/** Menú de la selección (v1 `buildMenu`, app.js:1894): lo que no aplica no aparece; lo que tiene un límite
+ *  se deshabilita con el motivo. `only = "plan"` muestra solo la planificación (botón de la barra). */
+function ctxMenu(only = ""): string {
   const names = selectedNames();
   if (!names.length) return "";
   const items = names.map(itemByName).filter(Boolean) as Item[];
+  const n = items.length;
   const f = wf().fields;
-  const one = items.length === 1 ? items[0] : null;
-  const out: string[] = [head(one ? titleOf(one) : t("items.selected", { n: items.length }))];
-  out.push(menuItem("grid-bulk-session", "terminal", t("grid.bulk.newSession")), menuItem("grid-bulk-addsession", "plus", t("grid.bulk.addSession")));
+  const one = n === 1 ? items[0] : null;
+  if (only === "plan") return head(t("grid.bulk.planning")) + planSection(items);
+  const out: string[] = [head(one ? titleOf(one) : t("items.selected", { n }))];
+  if (one) out.push(menuItem("grid-bulk-open", "panel", t("grid.bulk.openDetail")));
+
+  // Sesión de IA (y las acciones de los plugins, como Implementar)
+  out.push(sepHtml, head(t("grid.bulk.ai")), menuItem("grid-bulk-session", "terminal", t("grid.bulk.newSession")));
+  if (S.sessions.some((s) => s.state !== "closed")) out.push(menuItem("grid-bulk-addsession", "plus", t("grid.bulk.addSession")));
+  const agent = defaultAgentLabel();
+  if (one?.kind === "item") out.push(menuItem("grid-bulk-planone", "plan", agent ? t("grid.bulk.planWith", { agent }) : `${t("session.plan")}…`));
+  if (one && canReview(one, effectiveStatus(one))) out.push(menuItem("grid-bulk-review", "check", t("grid.bulk.review")));
   if (hasSessions(names)) out.push(menuItem("bulk-reflect", "sparkle", t("reflect.action")));
-  out.push(sepHtml, head(t("items.status")));
-  for (const st of wf().states) out.push(menuItem("grid-bulk-field", "state", label(st.labels, st.id), { key: f.status, value: st.id }, `<span class="dot ${st.category}"></span>`));
-  out.push(sepHtml, head(t("items.type")));
-  for (const ty of wf().types) out.push(menuItem("grid-bulk-field", "tag", label(ty.labels, ty.id), { key: f.type, value: ty.id }));
-  out.push(menuItem("grid-bulk-field", "eraser", t("items.noType"), { key: f.type, value: "" }));
-  if (wf().environments.length) {
-    out.push(sepHtml, head(t("grid.col.envs")));
-    for (const e of wf().environments) {
-      const all = items.every((it) => metaList(it, f.environments).includes(e.id));
-      out.push(menuItem("grid-bulk-env", all ? "check" : "plus", label(e.labels, e.id), { env: e.id }, all ? `<span class="muted">${esc(t("grid.bulk.envRemove"))}</span>` : ""));
-    }
+  out.push(pluginMenuItems(names));
+
+  // Estado, tipo, ambientes
+  out.push(sepHtml);
+  const status = [{ id: "", text: t("items.noStatus"), cat: "unknown" }, ...wf().states.map((st) => ({ id: st.id, text: label(st.labels, st.id), cat: st.category as string }))]
+    .map((s) => menuItem("grid-bulk-set", "state", s.text, { key: f.status, value: s.id, what: t("grid.bulk.setTo", { what: t("items.status"), value: s.text }) }, `<span class="dot ${s.cat}"></span>`))
+    .join("");
+  out.push(subMenu("status", "state", t("items.status"), status));
+  const types = [...wf().types.map((ty) => ({ id: ty.id, text: label(ty.labels, ty.id) })), { id: "", text: t("items.noType") }]
+    .map((ty) => menuItem("grid-bulk-set", ty.id ? "tag" : "eraser", ty.text, { key: f.type, value: ty.id, what: t("grid.bulk.setTo", { what: t("items.type"), value: ty.text }) }))
+    .join("");
+  out.push(subMenu("type", "tag", t("items.type"), types));
+  const envs = wf().environments;
+  if (envs.length) {
+    const withEnv = (id: string) => items.some((it) => metaList(it, f.environments).includes(id));
+    const envItem = (mode: string) => (e: (typeof envs)[number]) => menuItem("grid-bulk-env", mode === "add" ? "plus" : "minus", label(e.labels, e.id), { env: e.id, mode });
+    const add = subMenu("envs-add", "plus", t("grid.bulk.envAdd"), envs.map(envItem("add")).join(""));
+    const remove = subMenu("envs-remove", "minus", t("grid.bulk.envRemove"), envs.filter((e) => withEnv(e.id)).map(envItem("remove")).join(""));
+    out.push(subMenu("envs", "layers", t("grid.col.envs"), add + remove));
   }
-  out.push(sepHtml, head(t("detail.planning")), menuItem("grid-bulk-plan", "calendar", t("grid.bulk.planningEdit")));
-  if (items.some((it) => metaText(it, f.due) || metaText(it, f.period) || metaText(it, f.hours)))
-    out.push(menuItem("grid-bulk-revert", "undo", t(trackerConnected() ? "grid.bulk.revertTracker" : "grid.bulk.clearPlanning")));
-  out.push(sepHtml, head(t("grid.bulk.edit")), menuItem("grid-bulk-text", "edit", t("items.notes"), { key: f.notes }), menuItem("grid-bulk-text", "branch", t("grid.col.branch"), { key: f.branch }));
-  if (one) out.push(menuItem("grid-bulk-rename", "edit", t("grid.bulk.rename")));
-  const loose = items.filter((it) => it.kind === "item" && !it.group);
-  const inGroup = items.filter((it) => it.group);
-  const groups = S.items.filter((it) => it.kind === "group");
-  out.push(sepHtml, head(t("items.group")));
-  if (loose.length) out.push(menuItem("bulk-group", "layers", t("grid.bulk.groupNew")));
-  if (groups.length && items.some((it) => it.kind === "item")) out.push(menuItem("grid-bulk-move", "folderIn", t("grid.bulk.moveTo")));
-  if (inGroup.length) out.push(menuItem("grid-bulk-ungroup", "folderOut", t("grid.bulk.ungroup")));
-  out.push(sepHtml, head(t("grid.bulk.git")), menuItem("bulk-promote", "promote", t("promo.button")));
-  const trk = trackerBulk(names);
-  const plugins = pluginBulkButtons(names);
-  if (trk || plugins) out.push(sepHtml, head(t("grid.bulk.integrations")), `<div class="menu-btns">${trk}${plugins}</div>`);
-  out.push(sepHtml, head(t("grid.bulk.openIn")));
-  if (one) out.push(menuItem("grid-bulk-reveal", "folder", t("grid.bulk.reveal")));
-  out.push(menuItem("grid-bulk-copy", "copy", t("grid.bulk.copyNames"), { what: "names" }));
-  if (items.some((it) => it.ids.length)) out.push(menuItem("grid-bulk-copy", "hash", t("grid.bulk.copyIds"), { what: "ids" }));
-  out.push(sepHtml, menuItem("bulk-trash", "trash", t("items.delete")));
+
+  // Planificación y edición
+  out.push(subMenu("plan", "calendar", t("grid.bulk.planning"), planSection(items)));
+  const noReadme = items.filter((it) => !it.hasReadme);
+  const edit = [
+    menuItem("grid-bulk-text", "branch", `${t("grid.bulk.setBranch")}…`, { key: f.branch }),
+    menuItem("grid-bulk-text", "edit", `${t("grid.bulk.setNotes")}…`, { key: f.notes }),
+    items.some((it) => metaText(it, f.notes)) ? menuItem("grid-bulk-set", "eraser", t("grid.bulk.clearNotes"), { key: f.notes, value: "", what: t("items.notes") }) : "",
+    one ? menuItem("grid-bulk-rename", "edit", `${t("grid.bulk.rename")}…`) : "",
+    noReadme.length ? menuItem("grid-bulk-readme", "filePlus", t("grid.bulk.createReadme", { n: noReadme.length })) : "",
+  ].join("");
+  out.push(subMenu("edit", "edit", t("grid.bulk.edit"), edit));
+
+  // Grupo
+  const loose = items.filter((it) => it.kind === "item");
+  const inGroup = loose.filter((it) => it.group);
+  const groups = S.items.filter((it) => it.kind === "group" && loose.some((i) => i.group !== it.name));
+  const grp = [
+    loose.length ? menuItem("bulk-group", "folder", loose.length > 1 ? t("grid.bulk.groupNewN", { n: loose.length }) : t("grid.bulk.groupNew")) : "",
+    loose.length && groups.length ? subMenu("move", "folderIn", t("grid.bulk.moveTo"), groups.map((g) => menuItem("grid-bulk-move", "folder", titleOf(g), { dest: g.name })).join("")) : "",
+    inGroup.length ? menuItem("grid-bulk-ungroup", "folderOut", inGroup.length > 1 ? t("grid.bulk.ungroupN", { n: inGroup.length }) : t("grid.bulk.ungroup")) : "",
+    one?.kind === "group" ? menuItem("grid-bulk-dissolve", "folderOut", t("detail.dissolve")) : "",
+  ].join("");
+  out.push(subMenu("group", "folder", t("items.group"), grp));
+
+  // Git y tracker
+  const withIds = expandGroups(items).filter((it) => it.ids.length);
+  const ids = [...new Set(withIds.flatMap((it) => it.ids))];
+  out.push(sepHtml, menuItem("bulk-promote", "promote", t("promo.button")));
+  if (withIds.length) {
+    const source = TR.cfg?.source ?? "";
+    const openMany = ids.length > 1 ? t("grid.bulk.openTrackerN", { source, n: ids.length }) : t("grid.bulk.openTracker", { source });
+    const trk = [
+      menuItem("grid-bulk-sync", "refresh", withIds.length > 1 ? t("grid.bulk.syncN", { n: withIds.length }) : t("grid.bulk.sync")),
+      trackerConnected() ? menuItem("trk-push", "cloud", `${t("tracker.push.button", { source })}…`, { names: JSON.stringify(names) }) : "",
+      !trackerConnected() ? "" : ids.length > TRACKER_OPEN_MAX ? disabledItem("external", openMany, t("grid.bulk.max", { n: TRACKER_OPEN_MAX })) : menuItem("grid-bulk-tracker-open", "external", openMany, { ids: JSON.stringify(ids) }),
+    ].join("");
+    out.push(subMenu("tracker", "cloud", source || t("grid.bulk.tracker"), trk));
+  }
+
+  // Abrir y copiar
+  const openIn = [
+    n > EXPLORER_MAX ? disabledItem("folder", t("grid.bulk.explorer"), t("grid.bulk.max", { n: EXPLORER_MAX })) : menuItem("grid-bulk-explorer", "folder", t("grid.bulk.explorer")),
+    one ? menuItem("grid-bulk-vscode", "code", t("detail.vscode")) : "",
+  ].join("");
+  const copy = menuItem("grid-bulk-copy", "copy", t("grid.bulk.copyNames"), { what: "names" }) + (ids.length ? menuItem("grid-bulk-copy", "hash", t("grid.bulk.copyIds"), { what: "ids" }) : "");
+  out.push(sepHtml, subMenu("open", "external", t("grid.bulk.openIn"), openIn), subMenu("copy", "copy", t("grid.bulk.copy"), copy));
+  out.push(sepHtml, menuItem("bulk-trash", "trash", n > 1 ? t("grid.bulk.deleteN", { n }) : `${t("items.delete")}…`, {}, hint(t("grid.bulk.keyDel"))));
+  out.push(menuItem("bulk-clear", "x", t("items.clearSelection"), {}, hint("Esc")));
   return out.join("");
 }
 
@@ -376,7 +473,7 @@ function popHtml(): string {
   if (pop.kind === "filters") return filtersMenu();
   if (pop.kind === "columns") return columnsMenu();
   if (pop.kind === "view") return viewMenu(pop.arg);
-  return ctxMenu();
+  return ctxMenu(pop.arg);
 }
 
 function showPop(): void {
@@ -411,6 +508,7 @@ function showPop(): void {
 
 function openPop(kind: PopKind, x: number, y: number, arg = "", right = false): void {
   pop = { kind, x, y, arg, right };
+  subOpen.clear();
   showPop();
 }
 
@@ -433,7 +531,8 @@ document.addEventListener("keydown", (ev) => {
 }, true);
 // Una acción del menú lo cierra (después de correr: el registro de acciones va antes).
 document.addEventListener("click", (ev) => {
-  if ((ev.target as HTMLElement).closest("#grid-pop .menu-item, #grid-pop .menu-btns .btn")) closePop();
+  const hit = (ev.target as HTMLElement).closest<HTMLElement>("#grid-pop .menu-item, #grid-pop .menu-btns .btn");
+  if (hit && !hit.classList.contains("has-sub")) closePop();
 });
 // Click derecho: en una fila, menú de la selección; en una pestaña, el de la vista.
 document.addEventListener("contextmenu", (ev) => {
@@ -617,186 +716,119 @@ function newItemModal(): void {
 
 // ---------- eliminados ----------
 
+/** Eliminados: restaurar vuelve la carpeta con su nombre original (sin el sufijo de fecha) y el modal queda
+ *  abierto con la lista al día (v1 app.js:2128-2149). */
 async function deletedModal(): Promise<void> {
-  const list = await api.listDeleted();
   const back = document.createElement("div");
   back.className = "modal-back";
-  back.innerHTML = `<div class="modal" role="dialog" aria-modal="true"><h2>${esc(t("items.deleted"))}</h2>
+  const close = () => back.remove();
+  const draw = async () => {
+    const list = await api.listDeleted();
+    back.innerHTML = `<div class="modal" role="dialog" aria-modal="true"><h2>${esc(t("items.deleted"))}</h2>
+    <p class="muted">${esc(t("items.deletedIntro", { dir: wf().folders.deletedDir }))}</p>
     <ul class="list">${list
-      .map((d) => `<li><span class="grow"><b>${esc(d.title || d.base)}</b> <span class="muted">${esc(d.base)} · ${esc(fmtAgo(d.deleted))}</span></span>
-        <button class="btn" data-restore="${esc(d.path)}" data-base="${esc(d.base)}">${esc(t("items.restore"))}</button></li>`)
+      .map((d) => `<li>${d.group ? ico("folder") : `<span class="dot ${stateDef(d.status)?.category ?? "unknown"}"></span>`}<span class="grow"><b>${esc(d.title || d.base)}</b> <span class="muted">${esc(d.base)} · ${esc(fmtAgo(d.deleted))}${d.status ? ` · ${esc(stateLabel(d.status))}` : ""}</span></span>
+        <button class="btn" data-restore="${esc(d.path)}" data-base="${esc(d.original)}">${ico("undo")}${esc(t("items.restore"))}</button></li>`)
       .join("") || `<li class="empty">${esc(t("items.noDeleted"))}</li>`}</ul>
     <div class="modal-actions"><button class="btn" data-close>${esc(t("common.close"))}</button></div></div>`;
-  document.body.append(back);
-  back.querySelector<HTMLElement>("[data-close]")!.onclick = () => back.remove();
-  back.querySelectorAll<HTMLElement>("[data-restore]").forEach((b) => {
-    b.onclick = async () => {
-      await api.untrash(b.dataset.restore!, b.dataset.base!);
-      back.remove();
-      await refresh();
-    };
+    back.querySelector<HTMLElement>("[data-close]")!.onclick = close;
+    back.querySelectorAll<HTMLElement>("[data-restore]").forEach((b) => {
+      b.onclick = async () => {
+        const res = await api.restoreDeleted([{ to: b.dataset.restore!, name: b.dataset.base! }]);
+        if (res.errors.length) return toast(failures(res.errors), undefined, "error");
+        await refresh();
+        toast(t("items.restored", { name: b.dataset.base! }));
+        await draw();
+      };
+    });
+  };
+  back.addEventListener("click", (e) => {
+    if (e.target === back) close();
   });
+  back.addEventListener("keydown", (e) => e.key === "Escape" && close());
+  await draw();
+  document.body.append(back);
 }
 
 // ---------- acciones en lote (con deshacer) ----------
 
-type Before = [string, Record<string, MetaValue>];
+const failures = (errs: TrackerFailure[]) => errs.map((e) => `${e.name ?? e.id}: ${errorText(e.error)}`).join(" · ");
 
-/** Escribe campos en varios items y ofrece deshacer (vuelve cada campo a lo que tenía). */
-async function applyFields(names: string[], fieldsFor: (it: Item) => Record<string, MetaValue> | null, what: string): Promise<void> {
-  const before: Before[] = [];
-  const errors: string[] = [];
-  for (const n of names) {
-    const it = itemByName(n);
-    const fields = it && fieldsFor(it);
-    if (!it || !fields) continue;
-    const prev = Object.fromEntries(Object.keys(fields).map((k) => [k, it.meta[k] ?? ""]));
-    try {
-      await api.updateFields(n, fields);
-      before.push([n, prev]);
-    } catch (err) {
-      errors.push(`${titleOf(it)}: ${errorText(err)}`);
-    }
-  }
-  await refresh();
-  if (errors.length) toast(t("grid.bulk.errors", { n: errors.length, list: errors.join(" · ") }), undefined, "error");
-  if (before.length) toast(t("grid.bulk.done", { what, n: before.length }), { label: t("common.undo"), run: () => void restoreFields(before) });
+/** Toast de una acción en lote: «qué · N carpetas», los errores por carpeta y Deshacer si se hizo algo. */
+function bulkToast(what: string, done: number, errors: TrackerFailure[], undo: (() => Promise<void>) | null): void {
+  const errs = errors.length ? ` · ${t("grid.bulk.errors", { n: errors.length, list: failures(errors) })}` : "";
+  toast(t("grid.bulk.done", { what, n: done }) + errs, done && undo ? { label: t("common.undo"), run: () => void undo().catch((err) => toast(errorText(err), undefined, "error")) } : undefined, errors.length ? "error" : "info");
 }
 
-async function restoreFields(before: Before[]): Promise<void> {
-  let n = 0;
-  for (const [name, fields] of before) {
-    const clean = Object.fromEntries(Object.entries(fields).map(([k, v]) => [k, Array.isArray(v) && !v.length ? "" : v]));
-    try {
-      await api.updateFields(name, clean);
-      n++;
-    } catch (err) {
-      toast(errorText(err), undefined, "error");
-    }
+/** Mismos campos (y ambientes a agregar o quitar) en varias carpetas, en el backend, con deshacer (v1
+ *  `bulkApply`). Un valor inválido no escribe nada; un error de una carpeta no corta el resto. */
+async function bulkApply(names: string[], fields: Record<string, MetaValue>, what: string, envs: { add?: string[]; remove?: string[] } = {}, undo = true): Promise<void> {
+  if (!names.length) return;
+  try {
+    const res = await api.bulkUpdate(names, fields, envs.add ?? [], envs.remove ?? []);
+    await refresh();
+    bulkToast(what, res.done.length, res.errors, undo && res.before.length ? () => undoBulk(res.before) : null);
+  } catch (err) {
+    toast(errorText(err), undefined, "error");
   }
-  await refresh();
-  toast(t("grid.undone", { n }));
 }
 
-/** Mueve carpetas (a un grupo o a la raíz) con deshacer. */
+/** Deshace un `bulkApply`: los valores previos se escriben tal cual (sin validar). */
+async function undoBulk(before: MetaBefore[]): Promise<void> {
+  const res = await api.restoreMeta(before);
+  await refresh();
+  toast(t("grid.undone", { n: res.done.length }) + (res.errors.length ? ` · ${failures(res.errors)}` : ""), undefined, res.errors.length ? "error" : "info");
+}
+
+/** Mueve carpetas a un grupo (o a la raíz con `""`) con deshacer: cada una vuelve a donde estaba. */
 async function moveItems(names: string[], dest: string, what: string): Promise<void> {
-  const moved: [string, string, string][] = [];
-  for (const n of names) {
-    const old = itemByName(n)?.group ?? "";
-    const now = await api.moveFolder(n, dest);
-    if (now !== n) moved.push([now, n, old]);
-  }
-  G.selected.clear();
-  await refresh();
-  toast(t("grid.bulk.done", { what, n: moved.length }), {
-    label: t("common.undo"),
-    run: async () => {
-      for (const [now, , old] of moved) await api.moveFolder(now, old);
-      await refresh();
-      toast(t("grid.undone", { n: moved.length }));
-    },
-  });
-}
-
-async function trashItems(names: string[]): Promise<void> {
-  if (!(await confirmDialog(t("items.confirmDelete", { n: names.length }), t("items.delete")))) return;
+  if (!names.length || (await busyGuard(names))) return;
   const moved: [string, string][] = [];
-  for (const n of names) moved.push([await api.trash(n), n]);
-  G.selected.clear();
-  await refresh();
-  toast(t("items.deletedN", { n: moved.length }), {
-    label: t("common.undo"),
-    run: async () => {
-      for (const [deleted, name] of moved) await api.untrash(deleted, name);
-      await refresh();
-    },
-  });
-}
-
-/** Planificación en lote: fecha pactada, período y horas; vacío = no tocar. */
-function planningModal(names: string[]): void {
-  const f = wf().fields;
-  const back = document.createElement("div");
-  back.className = "modal-back";
-  back.innerHTML = `<form class="modal small" role="dialog" aria-modal="true"><h2>${esc(t("grid.bulk.planning"))}</h2>
-    <p class="muted">${esc(t("grid.plan.intro", { n: names.length }))}</p>
-    <label>${esc(t("detail.due"))}<input name="due" type="date"></label>
-    <label>${esc(t("detail.period"))}<input name="period" placeholder="${esc(t("detail.periodHint"))}"></label>
-    <label class="hrs">${esc(t("detail.hours"))}<input name="hours" inputmode="decimal"></label>
-    <p class="error" data-error></p>
-    <div class="modal-actions"><button type="button" class="btn" data-cancel>${esc(t("common.cancel"))}</button><button class="btn primary">${esc(t("common.ok"))}</button></div></form>`;
-  document.body.append(back);
-  const form = back.querySelector("form")!;
-  const val = (n: string) => (form.elements.namedItem(n) as HTMLInputElement).value.trim();
-  const close = () => back.remove();
-  back.querySelector<HTMLElement>("[data-cancel]")!.onclick = close;
-  back.addEventListener("keydown", (e) => e.key === "Escape" && close());
-  back.addEventListener("click", (e) => {
-    if (e.target === back) close();
-  });
-  form.onsubmit = async (e) => {
-    e.preventDefault();
-    const fields: Record<string, string> = {};
-    if (val("due")) fields[f.due] = val("due");
-    if (val("period")) fields[f.period] = val("period");
-    if (val("hours")) fields[f.hours] = val("hours");
-    if (!Object.keys(fields).length) return close();
-    // Se valida con el primero: si un valor no sirve, no se escribe nada.
+  const errors: TrackerFailure[] = [];
+  for (const n of names) {
     try {
-      await api.updateFields(names[0], fields);
+      const now = await api.moveFolder(n, dest);
+      if (now !== n) moved.push([now, itemByName(n)?.group ?? ""]);
     } catch (err) {
-      back.querySelector("[data-error]")!.textContent = errorText(err);
-      return;
-    }
-    close();
-    const first = itemByName(names[0]);
-    // El primero ya quedó escrito: se reescribe con lo de antes en el deshacer, como los demás.
-    const prevFirst: Before | null = first ? [names[0], Object.fromEntries(Object.keys(fields).map((k) => [k, first.meta[k] ?? ""]))] : null;
-    await applyFieldsAfterFirst(names, fields, prevFirst);
-  };
-  (form.elements.namedItem("due") as HTMLInputElement).focus();
-}
-
-async function applyFieldsAfterFirst(names: string[], fields: Record<string, string>, prevFirst: Before | null): Promise<void> {
-  const before: Before[] = prevFirst ? [prevFirst] : [];
-  const errors: string[] = [];
-  for (const n of names.slice(1)) {
-    const it = itemByName(n);
-    if (!it) continue;
-    const prev = Object.fromEntries(Object.keys(fields).map((k) => [k, it.meta[k] ?? ""]));
-    try {
-      await api.updateFields(n, fields);
-      before.push([n, prev]);
-    } catch (err) {
-      errors.push(`${titleOf(it)}: ${errorText(err)}`);
+      errors.push({ name: n, error: err as TrackerFailure["error"] });
     }
   }
+  G.selected.clear();
   await refresh();
-  if (errors.length) toast(t("grid.bulk.errors", { n: errors.length, list: errors.join(" · ") }), undefined, "error");
-  if (before.length) toast(t("grid.bulk.done", { what: t("grid.bulk.planning"), n: before.length }), { label: t("common.undo"), run: () => void restoreFields(before) });
+  bulkToast(what, moved.length, errors, async () => {
+    for (const [now, old] of moved) await api.moveFolder(now, old);
+    await refresh();
+    toast(t("grid.undone", { n: moved.length }));
+  });
 }
 
-/** Elegir el grupo de destino. */
-function moveToGroupModal(names: string[]): void {
-  const groups = S.items.filter((it) => it.kind === "group");
-  const back = document.createElement("div");
-  back.className = "modal-back";
-  back.innerHTML = `<form class="modal small" role="dialog" aria-modal="true"><h2>${esc(t("grid.bulk.moveTo"))}</h2>
-    <label>${esc(t("items.group"))}<select name="dest">${groups.map((g) => `<option value="${esc(g.name)}">${esc(titleOf(g))}</option>`).join("")}</select></label>
-    <div class="modal-actions"><button type="button" class="btn" data-cancel>${esc(t("common.cancel"))}</button><button class="btn primary">${esc(t("common.ok"))}</button></div></form>`;
-  document.body.append(back);
-  const form = back.querySelector("form")!;
-  const close = () => back.remove();
-  back.querySelector<HTMLElement>("[data-cancel]")!.onclick = close;
-  back.addEventListener("keydown", (e) => e.key === "Escape" && close());
-  form.onsubmit = async (e) => {
-    e.preventDefault();
-    const dest = (form.elements.namedItem("dest") as HTMLSelectElement).value;
-    close();
-    const its = names.filter((n) => itemByName(n)?.kind === "item" && itemByName(n)?.group !== dest);
-    await moveItems(its, dest, t("grid.bulk.moveTo"));
-  };
-  (form.elements.namedItem("dest") as HTMLSelectElement).focus();
+/** Manda la selección a eliminados (los items de un grupo que también se elimina van con él), con deshacer. */
+async function trashItems(names: string[]): Promise<void> {
+  if (await busyGuard(names)) return;
+  const groups = names.filter((n) => itemByName(n)?.kind === "group").length;
+  const text = t("items.confirmDelete", { n: names.length }) + (groups ? `\n${t("items.confirmDeleteGroups")}` : "");
+  if (!(await confirmDialog(text, t("items.delete")))) return;
+  const res = await api.deleteItems(names);
+  G.selected.clear();
+  await refresh();
+  bulkToast(t("items.delete"), res.done.length, res.errors, async () => {
+    const back = await api.restoreDeleted(res.done);
+    await refresh();
+    toast(t("grid.undone", { n: back.done.length }) + (back.errors.length ? ` · ${failures(back.errors)}` : ""), undefined, back.errors.length ? "error" : "info");
+  });
+}
+
+/** Valor de un campo para la selección (vacío = quitar). Con una sola carpeta, se propone el que tiene. */
+async function askField(key: string, names: string[]): Promise<void> {
+  const f = wf().fields;
+  const shown: Record<string, string> = { [f.due]: t("detail.due"), [f.period]: t("detail.period"), [f.hours]: t("detail.hours"), [f.notes]: t("items.notes"), [f.branch]: t("grid.col.branch") };
+  const hints: Record<string, string> = { [f.due]: "grid.bulk.askDue", [f.period]: "grid.bulk.askPeriod", [f.hours]: "grid.bulk.askHours" };
+  const one = names.length === 1 ? itemByName(names[0]) : null;
+  const what = shown[key] ?? key;
+  const text = t(hints[key] ?? "grid.bulk.askText", { what, n: names.length, day: wf().period.startDay });
+  const value = await promptDialog(text, one ? metaText(one, key) : "", true);
+  if (value === null) return;
+  await bulkApply(names, { [key]: value.trim() }, what);
 }
 
 // ---------- acciones ----------
@@ -872,17 +904,27 @@ onAction("new-item", () => newItemModal());
 onAction("bulk-promote", () => openPromotion(selectedNames()));
 onAction("show-deleted", () => deletedModal());
 onAction("bulk-reflect", () => reflectItems(selectedNames()));
+onAction("grid-sub", (el) => {
+  const k = el.dataset.k!;
+  if (subOpen.has(k)) subOpen.delete(k);
+  else subOpen.add(k);
+  showPop();
+});
 onAction("bulk-group", async () => {
   // Los de otro grupo también (se reagrupan, como la v1); los grupos no se anidan.
-  const names = selectedNames().filter((n) => itemByName(n)?.kind === "item");
-  if (!names.length) return toast(t("group.pickItems"), undefined, "error");
-  const title = await promptDialog(t("items.groupTitle"));
+  const items = selectedNames().map(itemByName).filter((it): it is Item => it?.kind === "item");
+  if (!items.length) return toast(t("group.pickItems"), undefined, "error");
+  const names = items.map((it) => it.name);
+  if (await busyGuard(names)) return;
+  // Título propuesto como la v1: «WI a + WI b» (o el nombre de la carpeta si no tiene id).
+  const suggested = items.map((it) => (it.ids[0] ? t("session.itemLabel", { id: it.ids[0] }) : it.name.split("/").pop()!)).join(" + ").slice(0, 60);
+  const title = await promptDialog(t("items.groupTitle"), suggested);
   if (title === null) return;
   if (!title.trim()) return toast(t("group.titleRequired"), undefined, "error");
   const res = await api.createGroup(title, names);
   G.selected.clear();
   await refresh();
-  const errors = res.errors.length ? ` · ${t("grid.bulk.errors", { n: res.errors.length, list: res.errors.map((e) => `${e.name}: ${errorText(e.error)}`).join(", ") })}` : "";
+  const errors = res.errors.length ? ` · ${t("grid.bulk.errors", { n: res.errors.length, list: failures(res.errors) })}` : "";
   toast(t("items.grouped", { n: res.members.length }) + errors, {
     label: t("common.undo"),
     run: async () => {
@@ -894,49 +936,28 @@ onAction("bulk-group", async () => {
   });
 });
 onAction("bulk-trash", () => deleteSelection());
-onAction("grid-bulk-field", (el) => {
-  const key = el.dataset.key!;
-  const value = el.dataset.value ?? "";
-  const shown = key === wf().fields.status ? (value ? label(wf().states.find((s) => s.id === value)!.labels, value) : "") : t("items.type");
-  return applyFields(selectedNames(), (it) => (metaText(it, key) === value ? null : { [key]: value }), shown || t("items.type"));
-});
+onAction("grid-bulk-set", (el) => bulkApply(selectedNames(), { [el.dataset.key!]: el.dataset.value ?? "" }, el.dataset.what ?? ""));
 onAction("grid-bulk-env", (el) => {
   const env = el.dataset.env!;
-  const key = wf().fields.environments;
-  const items = selectedNames().map(itemByName).filter(Boolean) as Item[];
-  const remove = items.every((it) => metaList(it, key).includes(env));
-  return applyFields(
-    items.map((i) => i.name),
-    (it) => {
-      const list = metaList(it, key);
-      if (remove) return { [key]: list.filter((e) => e !== env) };
-      return list.includes(env) ? null : { [key]: [...list, env] };
-    },
-    t("grid.col.envs"),
-  );
+  const add = el.dataset.mode === "add";
+  return bulkApply(selectedNames(), {}, t(add ? "grid.bulk.envAdded" : "grid.bulk.envRemoved", { env: envLabel(env) }), add ? { add: [env] } : { remove: [env] });
 });
-onAction("grid-bulk-plan", () => planningModal(selectedNames()));
+onAction("grid-bulk-plan", (el) => {
+  const r = el.getBoundingClientRect();
+  openPop("ctx", r.left, r.top - 8 - Math.min(320, innerHeight / 2), "plan");
+});
 onAction("grid-bulk-revert", () => {
   const f = wf().fields;
-  const keys = [f.due, f.period, f.hours];
-  return applyFields(
-    selectedNames(),
-    (it) => (keys.some((k) => metaText(it, k)) ? Object.fromEntries(keys.map((k) => [k, ""])) : null),
-    t("detail.planning"),
-  );
+  return bulkApply(selectedNames(), { [f.due]: "", [f.period]: "", [f.hours]: "" }, t("detail.planning"));
 });
-onAction("grid-bulk-text", async (el) => {
-  const key = el.dataset.key!;
-  const names = selectedNames();
-  const first = itemByName(names[0]);
-  const shown = key === wf().fields.notes ? t("items.notes") : t("grid.col.branch");
-  const value = await promptDialog(shown, first ? metaText(first, key) : "", true);
-  if (value === null) return;
-  await applyFields(names, (it) => (metaText(it, key) === value ? null : { [key]: value }), shown);
+onAction("grid-bulk-text", (el) => askField(el.dataset.key!, selectedNames()));
+onAction("grid-bulk-readme", () => {
+  const names = selectedNames().filter((n) => itemByName(n)?.hasReadme === false);
+  return bulkApply(names, {}, t("grid.bulk.readmeCreated"), {}, false);
 });
 onAction("grid-bulk-rename", async () => {
   const name = selectedNames()[0];
-  if (!name) return;
+  if (!name || (await busyGuard([name]))) return;
   const base = name.split("/").pop()!;
   const next = await promptDialog(t("grid.bulk.rename"), base);
   if (!next || next === base) return;
@@ -951,25 +972,61 @@ onAction("grid-bulk-rename", async () => {
     },
   });
 });
-onAction("grid-bulk-move", () => moveToGroupModal(selectedNames()));
+onAction("grid-bulk-move", (el) => {
+  const dest = el.dataset.dest!;
+  const group = itemByName(dest);
+  const names = selectedNames().filter((n) => itemByName(n)?.kind === "item" && itemByName(n)?.group !== dest);
+  return moveItems(names, dest, t("grid.bulk.movedTo", { group: group ? titleOf(group) : dest }));
+});
 onAction("grid-bulk-ungroup", () => moveItems(selectedNames().filter((n) => itemByName(n)?.group), "", t("grid.bulk.ungroup")));
+onAction("grid-bulk-dissolve", async () => {
+  const it = itemByName(selectedNames()[0]);
+  if (it?.kind !== "group") return;
+  G.selected.clear();
+  await dissolveGroup(it);
+});
+onAction("grid-bulk-open", () => openDetail(selectedNames()[0]));
+onAction("grid-bulk-planone", () => {
+  const it = itemByName(selectedNames()[0]);
+  if (it) return planWithConfirm(it);
+});
+onAction("grid-bulk-review", () => {
+  const it = itemByName(selectedNames()[0]);
+  if (it) openReview(it);
+});
+onAction("grid-bulk-sync", () => {
+  const items = expandGroups(selectedNames().map(itemByName).filter(Boolean) as Item[]);
+  return syncSelection(items.filter((it) => it.ids.length).map((it) => it.name));
+});
+onAction("grid-bulk-tracker-open", async (el) => {
+  const ids = JSON.parse(el.dataset.ids || "[]") as string[];
+  for (const id of ids.slice(0, TRACKER_OPEN_MAX)) await trackerApi.open(id).catch((err) => toast(errorText(err), undefined, "error"));
+});
 onAction("grid-bulk-session", () => newSessionModal(selectedNames()));
 onAction("grid-bulk-addsession", () => addToSessionModal(selectedNames()));
-onAction("grid-bulk-reveal", async () => {
-  await api.reveal(selectedNames()[0]);
+onAction("grid-bulk-explorer", async () => {
+  for (const n of selectedNames().slice(0, EXPLORER_MAX)) await api.openPath(n).catch((err) => toast(errorText(err), undefined, "error"));
+});
+onAction("grid-bulk-vscode", async () => {
+  await api.openInVscode(selectedNames()[0]).catch((err) => toast(errorText(err), undefined, "error"));
 });
 onAction("grid-bulk-copy", async (el) => {
   const items = selectedNames().map(itemByName).filter(Boolean) as Item[];
-  const text = el.dataset.what === "ids" ? [...new Set(items.flatMap((i) => i.ids))].join("\n") : items.map((i) => i.name).join("\n");
-  await navigator.clipboard.writeText(text);
-  toast(t("grid.bulk.copied"));
+  const ids = el.dataset.what === "ids";
+  const list = ids ? [...new Set(expandGroups(items).flatMap((i) => i.ids))] : items.map((i) => i.name);
+  try {
+    await navigator.clipboard.writeText(list.join(ids ? ", " : "\n"));
+    toast(t(ids ? "grid.bulk.copiedIds" : "grid.bulk.copiedNames", { n: list.length }));
+  } catch {
+    toast(t("grid.bulk.copyFailed"), undefined, "error");
+  }
 });
 
 onChange("bulk-status", async (el) => {
-  const status = (el as HTMLSelectElement).value;
-  if (!status) return;
-  const key = wf().fields.status;
-  await applyFields(selectedNames(), (it) => (metaText(it, key) === status ? null : { [key]: status }), label(wf().states.find((s) => s.id === status)!.labels, status));
+  const v = (el as HTMLSelectElement).value;
+  if (!v) return;
+  // "=" + id cambia al estado; "!" es «Sin estado» (borra la clave).
+  await bulkApply(selectedNames(), { [wf().fields.status]: v === "!" ? "" : v.slice(1) }, t("items.status"));
 });
 onChange("grid-select-all", (el) => {
   if ((el as HTMLInputElement).checked) selectAllVisible();

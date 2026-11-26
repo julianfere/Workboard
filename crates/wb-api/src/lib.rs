@@ -3,6 +3,7 @@
 //! Todo se lee en cada llamada: la carpeta de trabajos puede cambiar por fuera (agentes, el usuario).
 
 mod alerts;
+mod bulk;
 mod detail;
 pub mod errlog;
 pub mod error;
@@ -358,6 +359,7 @@ impl Api {
                 .or_else(|| self.alerts_command(cmd, &a))
                 .or_else(|| self.notes_command(cmd, &a))
                 .or_else(|| self.detail_command(cmd, &a))
+                .or_else(|| self.bulk_command(cmd, &a))
                 .or_else(|| self.prefs_command(cmd, &a))
                 .unwrap_or_else(|| Err(ApiError::new("error.unknownCommand", &[("name", cmd)]))),
         }

@@ -27,6 +27,7 @@ import type {
 import type { AssignedList, NewItemResult, SyncPreview, TrackerConfig, TrackerFailure, TrackerItem } from "./types";
 import type { BranchDiff, GitConfig, GitOverview, Promotion, RepoConfig } from "./types";
 import type { PluginList, PluginStep } from "./types";
+import type { MetaBefore, MetaValue, TrashedEntry } from "./types";
 
 export const inTauri = "__TAURI_INTERNALS__" in window;
 
@@ -96,6 +97,14 @@ export const api = {
   trash: (name: string) => call<string>("trash", { name }),
   untrash: (deleted: string, name: string) => call<string>("untrash", { deleted, name }),
   listDeleted: () => call<DeletedEntry[]>("list_deleted"),
+  /** Mismos campos en varias carpetas (cada una aparte); `before` sirve para `restoreMeta`. */
+  bulkUpdate: (names: string[], fields: Record<string, MetaValue>, addEnvs: string[] = [], removeEnvs: string[] = []) =>
+    call<{ done: string[]; errors: TrackerFailure[]; before: MetaBefore[] }>("bulk_update", { names, fields, addEnvs, removeEnvs }),
+  /** Deshace `bulkUpdate`: escribe los valores previos sin validarlos. */
+  restoreMeta: (entries: MetaBefore[]) => call<{ done: string[]; errors: TrackerFailure[] }>("restore_meta", { entries }),
+  /** A eliminados; los items de un grupo que también se elimina van con él. `done` sirve para `restoreDeleted`. */
+  deleteItems: (names: string[]) => call<{ done: TrashedEntry[]; errors: TrackerFailure[] }>("delete_items", { names }),
+  restoreDeleted: (entries: TrashedEntry[]) => call<{ done: string[]; errors: TrackerFailure[] }>("restore_deleted", { entries }),
   markRan: (path: string, env: string, on: boolean) => call<Record<string, number>>("mark_ran", { path, env, on }),
   reveal: (path: string) => call<null>("reveal", { path }),
   openPath: (path: string) => call<null>("open_path", { path }),

@@ -110,21 +110,21 @@ Referencias: `v1 app.js:N` = `_v1/ui/app.js`.
 
 ## US-06 Menú contextual, lote y eliminados
 
-- [ ] Menú: Abrir detalle, Planear con…, Revisar con otro modelo…, acciones de plugins (Implementar), Disolver grupo,
+- [x] Menú: Abrir detalle, Planear con…, Revisar con otro modelo…, acciones de plugins (Implementar), Disolver grupo,
       VS Code, Crear README faltante (N), Borrar resumen (v1 `buildMenu`, app.js:1894-1987).
-- [ ] Estado «Sin estado» en el menú, la barra de lote y el detalle (app.js:1907, 1134).
-- [ ] Ambientes en lote con «Agregar» / «Quitar» (Quitar solo los que tiene alguno; app.js:1970).
-- [ ] Planificación en lote: atajos de período (anterior, actual, +1, +2, otro, según la fecha); vacío = quitar
+- [x] Estado «Sin estado» en el menú, la barra de lote y el detalle (app.js:1907, 1134).
+- [x] Ambientes en lote con «Agregar» / «Quitar» (Quitar solo los que tiene alguno; app.js:1970).
+- [x] Planificación en lote: atajos de período (anterior, actual, +1, +2, otro, según la fecha); vacío = quitar
       (app.js:1930-1942).
-- [ ] Agrupar propone el título «WI a + WI b»; «Mover a grupo» como submenú (app.js:2069).
-- [ ] Azure: «Sincronizar estados (N)» y «Abrir en Azure (N)» (máx. 10) de la selección (app.js:1947-1952).
-- [ ] Explorer: hasta 5 carpetas.
-- [ ] Aviso antes de eliminar/agrupar/mover/renombrar si una sesión trabaja en esas carpetas (`busyGuard`, app.js:2037).
-- [ ] Eliminar en lote: saltear miembros de un grupo que también se elimina, errores por carpeta, Deshacer de lo hecho
+- [x] Agrupar propone el título «WI a + WI b»; «Mover a grupo» como submenú (app.js:2069).
+- [x] Azure: «Sincronizar estados (N)» y «Abrir en Azure (N)» (máx. 10) de la selección (app.js:1947-1952).
+- [x] Explorer: hasta 5 carpetas.
+- [x] Aviso antes de eliminar/agrupar/mover/renombrar si una sesión trabaja en esas carpetas (`busyGuard`, app.js:2037).
+- [x] Eliminar en lote: saltear miembros de un grupo que también se elimina, errores por carpeta, Deshacer de lo hecho
       (v1 `app.py:818-832`).
-- [ ] Deshacer en lote restaura sin validar (v1 `restore_meta`, `app.py:1491`).
-- [ ] Ambientes en lote conserva los desconocidos (v1 `app.py:1476`).
-- [ ] Restaurar de eliminados con el nombre original (sin sufijo de fecha) y el modal queda abierto (app.js:2142).
+- [x] Deshacer en lote restaura sin validar (v1 `restore_meta`, `app.py:1491`).
+- [x] Ambientes en lote conserva los desconocidos (v1 `app.py:1476`).
+- [x] Restaurar de eliminados con el nombre original (sin sufijo de fecha) y el modal queda abierto (app.js:2142).
 
 ## US-07 Nuevo item y grupo
 

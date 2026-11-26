@@ -57,6 +57,21 @@ export function pluginBulkButtons(names: string[]): string {
   return pluginActions("items", items).map(({ plugin, action }) => button(plugin, action, names, "items")).join("");
 }
 
+/** Entradas del menú contextual de la grilla: con una sola fila, las acciones de `item` (las del detalle) y
+ *  las de `items`; con varias, solo las de `items`. */
+export function pluginMenuItems(names: string[]): string {
+  const items = names.map(itemByName).filter((x): x is Item => !!x);
+  const seen = new Set<string>();
+  const list = [...(items.length === 1 ? pluginActions("item", items).map((x) => ({ ...x, placement: "item" })) : []), ...pluginActions("items", items).map((x) => ({ ...x, placement: "items" }))];
+  return list
+    .filter(({ plugin, action }) => !seen.has(`${plugin.id}/${action.id}`) && !!seen.add(`${plugin.id}/${action.id}`))
+    .map(({ plugin, action, placement }) => {
+      const title = action.hint ? `${action.hint} · ${plugin.name}` : (plugin.name ?? "");
+      return `<button class="menu-item" data-action="plugin-run" data-plugin="${esc(plugin.id!)}" data-act="${esc(action.id)}" data-placement="${placement}" data-items="${esc(JSON.stringify(names))}" title="${esc(title)}">${ico(action.icon ?? "puzzle") || ico("puzzle")}<span>${esc(action.label)}</span></button>`;
+    })
+    .join("");
+}
+
 /** Tarjeta del detalle con las acciones de los plugins (nada si no hay). */
 export function pluginItemCard(it: Item): string {
   const list = pluginActions("item", [it]);
