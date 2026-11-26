@@ -1,14 +1,15 @@
 // Pestaña Notas del detalle: las notas vinculadas al item (por su id o su carpeta), crear una ya vinculada,
-// vincular una existente y desvincular. Abrir una nota lleva a la vista Notas.
+// vincular una existente y desvincular. Abrir una nota lleva a la vista Notas (si la abierta tiene cambios
+// sin guardar, pide confirmar).
 
 import { api } from "../api";
-import { goView, onAction, render } from "../app";
-import { esc, fmtAgo, promptDialog } from "../dom";
+import { onAction, render } from "../app";
+import { esc, fmtAgo } from "../dom";
 import { t } from "../i18n";
 import { ico } from "../icons";
 import { S, titleOf } from "../state";
 import type { Item, Note } from "../types";
-import { loadNotes } from "./notes";
+import { loadNotes, newNote, openNote } from "./notes";
 
 let loadedFor: string | null = null;
 
@@ -91,22 +92,11 @@ function pickNote(it: Item): Promise<string | null> {
   });
 }
 
-async function openNote(id: string): Promise<void> {
-  S.note = await api.noteRead(id);
-  goView("notes");
-}
-
 const current = () => S.detailData!.item;
 
 onAction("detail-note-open", (el) => openNote(el.dataset.id!));
-onAction("detail-note-new", async () => {
-  const it = current();
-  const title = await promptDialog(t("notes.title"));
-  if (!title) return;
-  const note = await api.noteCreate(title, [itemKey(it)]);
-  await loadNotes();
-  await openNote(note.id);
-});
+// Nota nueva: queda abierta en la vista Notas, en edición y con el cursor al final (como la v1).
+onAction("detail-note-new", () => newNote([itemKey(current())]));
 onAction("detail-note-link", async () => {
   const it = current();
   await loadNotes();

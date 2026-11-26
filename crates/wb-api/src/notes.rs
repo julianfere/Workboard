@@ -1,5 +1,6 @@
 //! Comandos de notas que van más allá de leer, crear y guardar: carpeta efectiva, cambiar el título,
-//! vincular items, mostrar en la carpeta y borrar a la papelera del sistema.
+//! vincular items, mostrar en la carpeta, abrir en Obsidian o con la app predeterminada y borrar a la
+//! papelera del sistema. También `open_url`: los links del Markdown (README y notas) se abren afuera.
 
 use std::path::{Path, PathBuf};
 
@@ -39,10 +40,39 @@ impl Api {
                 wb_platform::reveal_path(&self.notes()?.resolve(a.str("id")?)?)?;
                 Ok(Json::Null)
             })(),
+            "note_open" => self.note_open(a),
             "note_delete" => self.note_delete(a),
+            // Links del Markdown: solo `https://`, `http://` y `mailto:` (lo vuelve a chequear `open_url`).
+            "open_url" => a.str("url").and_then(|u| {
+                if !wb_platform::is_external_url(u) {
+                    return Err(crate::ApiError::new("error.badArgument", &[("name", "url")]));
+                }
+                wb_platform::open_url(u).map_err(wb_core::error::CoreError::from)?;
+                Ok(Json::Null)
+            }),
             _ => return None,
         };
         Some(out)
+    }
+
+    /// Abre la nota afuera: `mode` = `obsidian` (URI `obsidian://open`, como la v1) o `app` (la app
+    /// predeterminada para `.md`).
+    fn note_open(&self, a: &Args) -> ApiResult<Json> {
+        let id = a.str("id")?;
+        let mode = a.str("mode")?;
+        if !matches!(mode, "obsidian" | "app") {
+            return Err(crate::ApiError::new("error.badArgument", &[("name", "mode")]));
+        }
+        let p = self.notes()?.resolve(id)?;
+        if !p.is_file() {
+            return Err(crate::ApiError::new("core.note.missing", &[("id", id)]));
+        }
+        if mode == "obsidian" {
+            wb_platform::open_in_obsidian(&p).map_err(wb_core::error::CoreError::from)?;
+        } else {
+            wb_platform::open_path(&p).map_err(wb_core::error::CoreError::from)?;
+        }
+        Ok(Json::Null)
     }
 
     /// `{trash: true}` si fue a la papelera del sistema; si no, `{trash: false, movedTo}`.
@@ -115,6 +145,28 @@ mod tests {
         assert_eq!(err.code, "core.note.missing");
         let err = api.dispatch("note_link", &json!({"id": "../x.md", "key": "1", "add": true})).unwrap_err();
         assert_eq!(err.code, "core.note.outside");
+        std::fs::remove_dir_all(&d).unwrap();
+    }
+
+    #[test]
+    fn open_commands_validate_before_launching_anything() {
+        let d = temp("open");
+        let api = Api::new(d.join("cfg"));
+        let note = api.dispatch("note_create", &json!({"title": "Abrir", "items": []})).unwrap();
+        let id = note["id"].as_str().unwrap();
+        let err = api.dispatch("note_open", &json!({"id": id, "mode": "reveal"})).unwrap_err();
+        assert_eq!(
+            (err.code.as_str(), err.params.get("name").map(String::as_str)),
+            ("error.badArgument", Some("mode"))
+        );
+        let err = api.dispatch("note_open", &json!({"id": "nada.md", "mode": "obsidian"})).unwrap_err();
+        assert_eq!(err.code, "core.note.missing");
+        let err = api.dispatch("note_open", &json!({"id": "../x.md", "mode": "app"})).unwrap_err();
+        assert_eq!(err.code, "core.note.outside");
+        for bad in ["javascript:alert(1)", "file:///c:/x", "https://a b", ""] {
+            let err = api.dispatch("open_url", &json!({"url": bad})).unwrap_err();
+            assert_eq!(err.code, "error.badArgument", "{bad}");
+        }
         std::fs::remove_dir_all(&d).unwrap();
     }
 }

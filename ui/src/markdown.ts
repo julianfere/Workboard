@@ -1,11 +1,17 @@
 // Markdown mínimo para los README y las notas: títulos, párrafos, listas (con casillas), citas, código,
-// tablas simples, énfasis y links. Todo el texto se escapa: el HTML del archivo nunca se interpreta.
-// Bloques ```sql coloreados y ```mermaid dibujados a pedido (ver `diagrams`).
+// tablas simples, separadores, énfasis, links y `[[wikilinks]]`. Todo el texto se escapa: el HTML del archivo
+// nunca se interpreta. Bloques ```sql coloreados y ```mermaid dibujados a pedido (ver `diagrams`).
+// Los links `https:`, `http:` y `mailto:` se abren en el navegador del sistema (nunca en la ventana); los
+// demás quedan subrayados, con el destino en el tooltip (como la v1).
 
+import { api } from "./api";
 import { watchMermaidBlocks } from "./diagrams";
-import { esc } from "./dom";
+import { esc, toast } from "./dom";
 import { highlightSql } from "./highlight";
+import { errorText } from "./i18n";
 import { ico } from "./icons";
+
+const HR = /^\s*(-{3,}|\*{3,}|_{3,})\s*$/;
 
 /** Bloque de código: SQL coloreado; Mermaid queda como código hasta que `diagrams` lo dibuja. */
 function fencedBlock(lang: string, code: string): string {
@@ -22,7 +28,10 @@ function inline(s: string): string {
   out = out.replace(/`([^`]+)`/g, (_, c) => `<code>${c}</code>`);
   out = out.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
   out = out.replace(/(^|[^*])\*([^*\s][^*]*)\*/g, "$1<em>$2</em>");
-  out = out.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noreferrer">$1</a>');
+  out = out.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_, text: string, url: string) =>
+    /^(https?:\/\/|mailto:)/i.test(url) ? `<a class="md-link" href="#" data-href="${url}" title="${url}">${text}</a>` : `<u title="${url}">${text}</u>`,
+  );
+  out = out.replace(/\[\[([^\]]+)\]\]/g, "<u>$1</u>");
   return out;
 }
 
@@ -44,6 +53,11 @@ export function renderMarkdown(src: string): string {
     const h = line.match(/^(#{1,6})\s+(.*)/);
     if (h) {
       out.push(`<h${h[1].length}>${inline(h[2])}</h${h[1].length}>`);
+      i++;
+      continue;
+    }
+    if (HR.test(line)) {
+      out.push("<hr>");
       i++;
       continue;
     }
@@ -90,8 +104,16 @@ export function renderMarkdown(src: string): string {
       continue;
     }
     const para: string[] = [];
-    while (i < lines.length && lines[i].trim() && !/^(#{1,6}\s|```|>|\s*([-*+]|\d+[.)])\s)/.test(lines[i])) para.push(lines[i++]);
+    while (i < lines.length && lines[i].trim() && !HR.test(lines[i]) && !/^(#{1,6}\s|```|>|\s*([-*+]|\d+[.)])\s)/.test(lines[i])) para.push(lines[i++]);
     out.push(`<p>${inline(para.join(" "))}</p>`);
   }
   return out.join("\n");
 }
+
+// Un link del Markdown (en cualquier vista o en el visor) va al navegador del sistema.
+document.addEventListener("click", (ev) => {
+  const a = (ev.target as HTMLElement).closest<HTMLAnchorElement>("a.md-link[data-href]");
+  if (!a) return;
+  ev.preventDefault();
+  api.openUrl(a.dataset.href!).catch((err) => toast(errorText(err), undefined, "error"));
+});

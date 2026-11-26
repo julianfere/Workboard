@@ -75,7 +75,7 @@ config real.
   UI: `ui/src/plugins.ts` (botones por lugar, modal genérico, tarjeta de Ajustes). Ejemplo en `examples/plugins/hello/`.
 - `crates/wb-hook` — el hook del CLI (`wb-hook <Evento>`): postea a la app y reimprime la respuesta. Sin dependencias.
 - `crates/wb-i18n` — `t(lang, key, params)` sobre `locales/*.json` (los mismos archivos que usa la UI).
-- `crates/wb-platform` — todo lo que depende del SO (`config_dir`, `open_path`, `reveal_path`, `open_url` solo https,
+- `crates/wb-platform` — todo lo que depende del SO (`config_dir`, `open_path`, `reveal_path`, `open_url` solo https/http/mailto, `open_in_obsidian`,
   `kill_tree`, `which`, `script_command` + `run_captured` con timeout, `downloads_dir`, `hide_console`) y `secrets`
   (almacén de credenciales del sistema con `keyring`; `WORKBOARD_SECRET_SERVICE` cambia el servicio). Los tokens
   nunca van a archivos. Fuera de este crate no hay `cfg(windows)`.

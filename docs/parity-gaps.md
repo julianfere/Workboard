@@ -22,17 +22,17 @@ Referencias: `v1 app.js:N` = `_v1/ui/app.js`.
 
 ## US-01 Notas y Markdown
 
-- [ ] **(alta)** El editor de notas pierde lo escrito: `notes.ts:123` rearma el `<textarea>` desde `note.body` en cada
+- [x] **(alta)** El editor de notas pierde lo escrito: `notes.ts:123` rearma el `<textarea>` desde `note.body` en cada
       `render()` (las sesiones llaman a `render()` cada ≤15 s). Guardar el borrador en el estado, aviso «● cambios sin
       guardar» y confirmar al abrir otra nota / cambiar de vista / cerrar (v1 app.js:3655, 3727, 3782, 3789).
-- [ ] Editar directo con pestañas Editar / Vista previa (v1 app.js:3773-3776).
-- [ ] Abrir en Obsidian y abrir con la app predeterminada (v1 `open_note`, `app.py:404-414`, app.js:3778, 3847).
-- [ ] Menú contextual de la lista: Abrir, Cambiar título, Mostrar en carpeta, Borrar (v1 app.js:3713, 3850-3858).
-- [ ] Nota nueva desde el detalle se abre en edición con el cursor al final (v1 app.js:3808).
-- [ ] Carpeta de notas con selector de carpeta y «Usar la predeterminada» (v1 app.js:3742, 3841).
-- [ ] Links del Markdown abren en el navegador del sistema (`open_url`, solo https/http y `mailto:`), no en la ventana
+- [x] Editar directo con pestañas Editar / Vista previa (v1 app.js:3773-3776).
+- [x] Abrir en Obsidian y abrir con la app predeterminada (v1 `open_note`, `app.py:404-414`, app.js:3778, 3847).
+- [x] Menú contextual de la lista: Abrir, Cambiar título, Mostrar en carpeta, Borrar (v1 app.js:3713, 3850-3858).
+- [x] Nota nueva desde el detalle se abre en edición con el cursor al final (v1 app.js:3808).
+- [x] Carpeta de notas con selector de carpeta y «Usar la predeterminada» (v1 app.js:3742, 3841).
+- [x] Links del Markdown abren en el navegador del sistema (`open_url`, solo https/http y `mailto:`), no en la ventana
       (v1 app.js:3257, 3378; v2 `markdown.ts:25` sin manejador).
-- [ ] Markdown: `---` → `<hr>` y `[[wikilink]]` (v1 app.js:3258, 3273). Mermaid dentro de Markdown con zoom al clic
+- [x] Markdown: `---` → `<hr>` y `[[wikilink]]` (v1 app.js:3258, 3273). Mermaid dentro de Markdown con zoom al clic
       (v1 diagrams.js:541).
 
 ## US-02 Terminal y panel de sesiones (UI)

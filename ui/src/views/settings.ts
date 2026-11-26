@@ -11,7 +11,7 @@ import { agentLabel, agentsInfo, loadSessions } from "../sessions";
 import type { AgentsInfo } from "../types";
 import { loadInbox } from "./tasks";
 import { hoursHidden } from "../discreet";
-import { loadNotes } from "./notes";
+import { loadNotes, setNotesFolder } from "./notes";
 import { trackerSettingsCard } from "./tracker";
 import { gitSettingsCard } from "../git";
 import { pluginsSettingsCard } from "../plugins";
@@ -108,7 +108,9 @@ function renderSettings(): string {
       <div class="muted">${esc(t("workflow.environments"))}</div>${chips(w.environments)}
       <p class="muted">${esc(t("workflow.period", { day: w.period.startDay }))}</p></section>
     <section class="card"><h2>${esc(t("nav.notes"))}</h2>
-      <div class="set-row"><label for="set-notes">${esc(t("settings.notesFolder"))}</label><input id="set-notes" data-change="set-notes" value="${esc(s.notesFolder ?? "")}" placeholder="${esc(t("settings.notesDefault"))}"></div></section>
+      <div class="set-row"><label for="set-notes">${esc(t("settings.notesFolder"))}</label><div class="set-inline"><input id="set-notes" data-change="set-notes" value="${esc(s.notesFolder ?? "")}" placeholder="${esc(t("settings.notesDefault"))}">
+        ${inTauri ? `<button class="btn" data-action="notes-folder" title="${esc(t("notes.changeFolderHint"))}">${ico("folder")}${esc(t("project.browse"))}</button>` : ""}
+        ${s.notesFolder ? `<button class="btn ghost" data-action="notes-folder-reset">${esc(t("notes.useDefault"))}</button>` : ""}</div></div></section>
     ${trackerSettingsCard()}
     ${agentsCard()}
     ${gitSettingsCard()}
@@ -153,7 +155,8 @@ registerProject(renderProject);
 onChange("set-lang", (el) => update({ lang: (el as HTMLSelectElement).value || null }));
 onChange("set-theme", (el) => update({ theme: (el as HTMLSelectElement).value as Theme }));
 onChange("set-workflow", (el) => update({ workflow: (el as HTMLSelectElement).value }));
-onChange("set-notes", (el) => update({ notesFolder: (el as HTMLInputElement).value.trim() || null }));
+// La carpeta de notas pasa por `setNotesFolder`: confirma si la nota abierta tiene cambios sin guardar.
+onChange("set-notes", (el) => setNotesFolder((el as HTMLInputElement).value.trim() || null));
 onAction("open-path", () => {
   const v = document.querySelector<HTMLInputElement>("#root-path")!.value.trim();
   if (v) return openRoot(v);
