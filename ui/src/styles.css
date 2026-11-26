@@ -395,6 +395,9 @@ iframe.pdf { width: 100%; height: 75vh; border: 0; }
 .sess-more svg.i { width: 13px; height: 13px; }
 .sess-group { padding: 8px 20px 2px; font-size: 11px; color: var(--nav-fg-2); }
 .sess-empty { margin: 4px 20px; font-size: 12px; color: var(--nav-fg-2); }
+.sess-agent { flex: none; font-size: 10px; font-weight: 600; padding: 0 5px; border-radius: 8px; line-height: 15px; border: 1px solid var(--line); color: var(--nav-fg-2); }
+.sess-row .sess-sub { flex: none; }
+.sess-count { display: inline-block; min-width: 16px; padding: 0 5px; margin-left: 4px; border-radius: 8px; background: var(--warn); color: var(--on-accent); font-size: 10px; font-weight: 600; line-height: 15px; text-align: center; }
 
 /* estado en vivo */
 .sdot { width: 8px; height: 8px; border-radius: 50%; flex: none; background: var(--c-cancelled); }
@@ -419,15 +422,23 @@ iframe.pdf { width: 100%; height: 75vh; border: 0; }
 .term-tab-x { border: 0; background: none; padding: 2px; border-radius: var(--r-sm); color: var(--fg-2); cursor: pointer; display: grid; place-items: center; }
 .term-tab-x:hover { background: var(--hover); color: var(--fg); }
 .term-tab-x svg.i { width: 12px; height: 12px; }
+.term-tab-st { color: var(--fg-2); font-weight: 400; font-size: 11px; white-space: nowrap; }
+.term-tab-warn { display: grid; place-items: center; color: var(--warn); }
+.term-tab-warn svg.i { width: 13px; height: 13px; }
 .term-info { font-size: 12px; color: var(--fg-2); margin-right: 6px; max-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 #term-banner:empty { display: none; }
 .term-note { display: flex; align-items: center; gap: 8px; padding: 6px 12px; background: var(--surface-2); border-bottom: 1px solid var(--line); font-size: 13px; }
 .term-note.long { background: var(--surface-2); }
 .term-note.heavy { border-left: 3px solid var(--warn); }
+.term-note.conflict { border-left: 3px solid var(--warn); }
+.term-note.conflict svg.i { color: var(--warn); }
 .term-note svg.i { color: var(--fg-2); }
 .term-note .btn { height: 26px; padding: 0 10px; font-size: 12px; }
 .term-body { flex: 1; min-height: 0; position: relative; }
 .term-view { position: absolute; inset: 4px 0 0 8px; }
+#content.term-max > #main { display: none; }
+#content.term-max > #term { flex: 1; height: auto !important; }
+#content.term-max .term-drag { display: none; }
 
 /* ---------- formularios de sesión ---------- */
 .field-label { color: var(--fg-2); font-size: 12px; }

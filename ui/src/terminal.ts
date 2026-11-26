@@ -259,6 +259,8 @@ export function syncPanel(): void {
   const panel = $("#term");
   if (!panel) return;
   panel.hidden = !S.term.open;
+  // Maximizado solo mientras el panel se ve.
+  if (!S.term.open) $("#content")?.classList.remove("term-max");
   for (const [id, tab] of tabs) {
     tab.el.hidden = id !== S.term.active;
     const s = S.sessions.find((x) => x.id === id) ?? S.otherSessions.find((x) => x.id === id);
