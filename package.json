@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit",
-    "test": "node --test \"ui/tests/*.test.ts\"",
+    "test": "node --test \"ui/tests/*.test.ts\" \"sdk/node/tests/*.test.mjs\"",
     "bins": "node scripts/sidecars.mjs",
     "bins:release": "node scripts/sidecars.mjs --release",
     "tauri": "tauri"

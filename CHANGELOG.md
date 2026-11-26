@@ -94,6 +94,9 @@ golden files captured from the original.
   item detail, bulk bar, palette and Settings, generic forms and results, sessions, contributed presets,
   host methods for items, files, secrets, data and the tracker connection. Example plugin in
   `examples/plugins/hello`.
+- Plugin SDKs for Python and Node (`sdk/`, single files without dependencies): actions, trackers, step
+  builders, host requests and errors. `workboard plugin new <id>` creates a ready-to-enable plugin and
+  `workboard plugin check <folder>` validates it and runs `initialize`.
 
 #### Platform and release
 

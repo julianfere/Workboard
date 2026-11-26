@@ -15,6 +15,7 @@ wb-platform.workspace = true
 tauri-plugin-dialog = "2"
 wb-api = { version = "0.1.0", path = "../crates/wb-api" }
 wb-sessions.workspace = true
+wb-plugins.workspace = true
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }

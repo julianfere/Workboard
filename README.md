@@ -103,7 +103,8 @@ preset; two are included and plugins can add more. See [docs/workflow.md](docs/w
 ### Plugins
 
 Separate executables, in any language, that add actions (forms, results, sessions) and workflow presets.
-They talk JSON-RPC over stdio, with permissions declared in a manifest. See
+They talk JSON-RPC over stdio, with permissions declared in a manifest. Single-file SDKs for Python and
+Node (`sdk/`) handle the protocol, and `workboard plugin new <id>` creates a ready-to-enable plugin. See
 [docs/plugins.md](docs/plugins.md).
 
 ## Principles
@@ -185,7 +186,7 @@ Requirements: Rust (stable), Node 22, and on Linux the WebKitGTK dev packages.
 |---|---|
 | Run the app | `npm install` then `npm run tauri dev` |
 | UI in a browser against the real backend | `cargo run -p wb-api --bin wb-devserver -- <folder>` and `npm run dev` → <http://localhost:1420> |
-| Tests | `cargo test --workspace` |
+| Tests | `cargo test --workspace`, `npm test` (UI and Node SDK) and `python -m unittest discover -s sdk/python/tests` |
 | Lint | `npm run bins` once (the app crate needs `wb-mcp` and `wb-hook` built), then `cargo fmt --all --check && cargo clippy --workspace --all-targets -- -D warnings` |
 | Installers | `npm run tauri build` (CI builds them for the three systems on a `v*` tag) |
 | Regenerate golden files (needs the v1) | `py tests/golden/gen/gen_all.py` |
@@ -203,7 +204,8 @@ crates/wb-mcp       the `workboard` MCP server agents use
 crates/wb-sessions  agent sessions: terminals, hooks, hours, metrics, reflect
 crates/wb-git       the read-only Git panel and promotion data
 crates/wb-tracker   trackers (Azure DevOps)
-crates/wb-plugins   plugin manifests and the JSON-RPC runner
+crates/wb-plugins   plugin manifests, the JSON-RPC runner and `workboard plugin new|check`
+sdk/                plugin SDKs for Python and Node (single files, no dependencies)
 crates/wb-hook      the hook binary agent CLIs call
 crates/wb-i18n      translations, shared with the UI (locales/*.json)
 crates/wb-platform  config folder, credential store, opening files, process trees
@@ -221,7 +223,7 @@ docs/               documentation
 - [Agent sessions and the MCP server](docs/agents.md): agents, what each session gets, MCP tools, hooks,
   Plan / Reflect / Review, tools.
 - [Trackers](docs/trackers.md): Azure DevOps setup, state mapping, sync, writing states, adding a tracker.
-- [Plugins](docs/plugins.md): manifest, protocol, host methods.
+- [Plugins](docs/plugins.md): manifest, protocol, host methods, trackers, SDKs, `workboard plugin`.
 - [Architecture](docs/architecture.md): crates, data flow, config folder, dev server, tests, conventions.
 - [Migrating from the v1](docs/migrate-v1.md): `workboard migrate-v1`, what it imports and what not.
 - [Parity checklist](docs/parity-checklist.md) (Spanish): what is ported from the v1.
