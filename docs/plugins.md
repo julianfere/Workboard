@@ -290,6 +290,7 @@ plugin.run()
 ## Example
 
 `examples/plugins/hello/` is a minimal plugin in Python (copy the folder into `<config>/plugins/`; on
-Windows, if `python` is not on the `PATH`, change `command` to `py`). Plugins written in Rust can use
+Windows, if `python` is not on the `PATH`, change `command` to `py`). `examples/plugins/trello/` is a tracker plugin
+(Trello boards) built on the Python SDK. Plugins written in Rust can use
 `wb_plugins::sdk::serve`, which handles the framing and `initialize`; the tests in
 `crates/wb-plugins/tests/rpc.rs` and `crates/wb-api/tests/plugins.rs` use it.
