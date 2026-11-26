@@ -42,7 +42,8 @@ English, then the id.
   "plan": { … },
   "sections": { … },
   "files": { … },
-  "git": { … }
+  "git": { … },
+  "alerts": { … }
 }
 ```
 
@@ -310,6 +311,22 @@ Agents are told about these prefixes in their guide, so the files they create la
 | `envStates` | The state an item should be in once its work is in an environment in **all** its repos. The tracker sync proposes it as an unchecked "per git" row. An environment without an entry proposes nothing. Keys must be environments, values states. |
 
 How the Git panel uses these rules is described in the [README](../README.md#git-panel-read-only).
+
+### `alerts`
+
+*Optional* (and so is each key). Workflow-specific rules of the **Alerts** view.
+
+```json
+"alerts": {
+  "finalEnvKinds": ["MIGRATION", "FIX"],
+  "staleStates": ["in-progress", "review", "testing"]
+}
+```
+
+| Key | Meaning |
+|---|---|
+| `finalEnvKinds` | File kinds (from `files.kinds`) that write data and must be run in the **last** environment. An item that has one of these files, has a state, is not closed and does not list the last environment in its environments field raises the "not run in the final environment" alert. Empty: no such alert. |
+| `staleStates` | States in which an item without changes for 14 days raises the "no movement" alert. Empty: every state of category `active` or `review`. |
 
 ## Folder conventions in short
 

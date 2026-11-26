@@ -228,6 +228,19 @@ impl Default for GitRules {
     }
 }
 
+/// Reglas de la vista Alertas que dependen del flujo.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct AlertRules {
+    /// Tipos de archivo que escriben datos y tienen que correrse en el último ambiente: un item abierto
+    /// con alguno de estos archivos que todavía no figura en ese ambiente da la alerta.
+    #[serde(default)]
+    pub final_env_kinds: Vec<String>,
+    /// Estados en los que un item sin movimiento da la alerta. Vacío = los de categoría `active` y `review`.
+    #[serde(default)]
+    pub stale_states: Vec<String>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Workflow {
@@ -252,6 +265,9 @@ pub struct Workflow {
     /// Panel Git: cómo se reconocen los items en ramas y commits, y las ramas de cada ambiente.
     #[serde(default)]
     pub git: GitRules,
+    /// Vista Alertas: qué archivos tienen que llegar al último ambiente y qué estados se vigilan.
+    #[serde(default)]
+    pub alerts: AlertRules,
     #[serde(skip)]
     compiled: OnceLock<Compiled>,
 }
@@ -315,6 +331,12 @@ impl Workflow {
             if let Some(k) = c.kinds.iter().find(|k| !self.files.kinds.contains(k)) {
                 return bad(format!("category {} uses unknown kind {k}", c.id));
             }
+        }
+        if let Some(k) = self.alerts.final_env_kinds.iter().find(|k| !self.files.kinds.contains(k)) {
+            return bad(format!("alerts.finalEnvKinds uses unknown kind {k}"));
+        }
+        if let Some(s) = self.alerts.stale_states.iter().find(|s| !self.states.iter().any(|d| &d.id == *s)) {
+            return bad(format!("alerts.staleStates uses unknown state {s}"));
         }
         let git_id = Regex::new(&self.git.id_pattern)
             .map_err(|e| WorkflowError::Invalid(format!("{}: git.idPattern: {e}", self.id)))?;
@@ -493,6 +515,27 @@ mod tests {
         assert!(broken(&|v| v["fields"]["notes"] = v["fields"]["status"].clone()).is_err());
         assert!(broken(&|v| v["files"]["categories"][1]["kinds"] = serde_json::json!(["NOPE"])).is_err());
         assert!(broken(&|v| v["extra"] = 1.into()).is_err(), "unknown fields are rejected");
+        assert!(broken(&|v| v["alerts"]["finalEnvKinds"] = serde_json::json!(["NOPE"])).is_err());
+        assert!(broken(&|v| v["alerts"]["staleStates"] = serde_json::json!(["nope"])).is_err());
+        assert!(broken(&|v| v["alerts"]["nope"] = 1.into()).is_err());
+        let old = broken(&|v| {
+            v.as_object_mut().unwrap().remove("alerts");
+        })
+        .unwrap();
+        assert!(
+            old.alerts.final_env_kinds.is_empty() && old.alerts.stale_states.is_empty(),
+            "alerts is optional"
+        );
+    }
+
+    #[test]
+    fn alert_rules_of_the_bundled_presets() {
+        let classic = Workflow::preset("classic-es").unwrap();
+        assert_eq!(classic.alerts.final_env_kinds, ["MIGRATION", "FIX"]);
+        // La v1 no avisa de un diagnóstico quieto (app.js:154).
+        assert_eq!(classic.alerts.stale_states, ["en-curso", "codeado", "qa"]);
+        let default = Workflow::preset("default").unwrap();
+        assert_eq!(default.alerts.final_env_kinds, ["MIGRATION", "FIX"]);
     }
 
     #[test]

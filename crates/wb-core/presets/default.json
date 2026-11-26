@@ -72,5 +72,9 @@
       "prod": ["origin/main", "origin/master"]
     },
     "envStates": { "staging": "testing", "prod": "done" }
+  },
+  "alerts": {
+    "finalEnvKinds": ["MIGRATION", "FIX"],
+    "staleStates": ["in-progress", "review", "testing"]
   }
 }
