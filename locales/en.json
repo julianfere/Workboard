@@ -1242,6 +1242,7 @@
   "plugin.perm.filesRead": "read files of the items",
   "plugin.perm.secrets": "keep secrets in the system credential store",
   "plugin.perm.tracker": "see the tracker connection (no tokens)",
+  "plugin.perm.trackerWrite": "use the tracker write PAT (the one of «Change state»)",
   "plugin.presets": "{n} workflow presets",
   "plugin.presetFrom": "{name} (plugin {plugin})",
   "plugin.invalid": "Not loaded: {error}",

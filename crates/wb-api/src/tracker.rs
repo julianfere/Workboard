@@ -556,6 +556,32 @@ impl Api {
         ))
     }
 
+    /// El token de escritura de la organización de la carpeta abierta, el mismo que usa «Cambiar estado en
+    /// el tracker» (para los plugins con el permiso `tracker.write`). `op`: `get` → `{value}` (o `null`),
+    /// `set` (`value` no vacío) o `delete`.
+    pub(crate) fn tracker_write_token(&self, op: &str, value: Option<&str>) -> ApiResult<Json> {
+        let _guard = self.tracker_lock();
+        let ctx = self.tracker_ctx()?;
+        let key = secret_key(ctx.conn()?, true);
+        let secrets = self.secrets();
+        match op {
+            "get" => Ok(json!({"value": secrets.get(&key).map_err(store_error)?})),
+            "set" => {
+                let value = value
+                    .map(str::trim)
+                    .filter(|v| !v.is_empty())
+                    .ok_or_else(|| ApiError::new("error.badArgument", &[("name", "value")]))?;
+                secrets.set(&key, value).map_err(store_error)?;
+                Ok(json!({}))
+            }
+            "delete" => {
+                secrets.delete(&key).map_err(store_error)?;
+                Ok(json!({}))
+            }
+            _ => Err(ApiError::new("error.badArgument", &[("name", "op")])),
+        }
+    }
+
     pub(crate) fn tracker_command(&self, cmd: &str, a: &Args) -> Option<ApiResult<Json>> {
         if !cmd.starts_with("tracker_") {
             return None;

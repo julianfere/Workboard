@@ -11,6 +11,7 @@ use wb_core::frontmatter::Value;
 use wb_core::workspace::{Item, ItemKind};
 use wb_core::{Workflow, Workspace};
 use wb_plugins::{Manifest, Plugins};
+use wb_sessions::registry::{Registry, Session, State as SessionState};
 
 use crate::{Api, ApiError, ApiResult, Args};
 
@@ -24,9 +25,19 @@ fn str_list(v: &Json) -> Vec<String> {
     v.as_array().map_or(vec![], |l| l.iter().filter_map(|x| x.as_str().map(String::from)).collect())
 }
 
-/// Un item como lo ve un plugin.
-fn item_ref(wf: &Workflow, root: &Path, it: &Item) -> Json {
+/// Sesiones no cerradas de la carpeta de trabajos (para `sessions` de cada item).
+fn open_sessions(config_dir: &Path, root: &Path) -> Vec<Session> {
+    Registry::of_root(config_dir, root)
+        .load()
+        .into_iter()
+        .filter(|s| s.state != SessionState::Closed)
+        .collect()
+}
+
+/// Un item como lo ve un plugin. `sessions`: cuántas sesiones abiertas (no cerradas) lo incluyen.
+fn item_ref(wf: &Workflow, root: &Path, it: &Item, open: &[Session]) -> Json {
     json!({
+        "sessions": open.iter().filter(|s| s.items.contains(&it.name)).count(),
         "name": it.name,
         "title": it.title,
         "ids": it.ids,
@@ -59,6 +70,10 @@ impl ApiHost<'_> {
         Ok(format!("plugin:{}:{key}", self.manifest.id))
     }
 
+    fn open_sessions(&self, ws: &Workspace) -> Vec<Session> {
+        open_sessions(&self.api.config_dir, ws.root())
+    }
+
     fn data_path(&self) -> std::path::PathBuf {
         self.api.config_dir.join("plugin-data").join(format!("{}.json", self.manifest.id))
     }
@@ -66,7 +81,7 @@ impl ApiHost<'_> {
     fn item(&self, name: &str) -> Result<Json, String> {
         let ws = self.ws()?;
         let it = ws.folder_of(name).and_then(|f| ws.build_item(&f)).map_err(|e| e.code.to_string())?;
-        let mut out = item_ref(ws.workflow(), ws.root(), &it);
+        let mut out = item_ref(ws.workflow(), ws.root(), &it, &self.open_sessions(ws));
         out["meta"] = serde_json::to_value(&it.meta).unwrap_or(Json::Null);
         out["files"] = Json::Array(
             it.files
@@ -104,7 +119,7 @@ impl ApiHost<'_> {
         all.extend(extra);
         ws.folder_of(name).map_err(|e| e.code.to_string())?;
         let it = ws.update_meta(name, &all).map_err(|e| e.code.to_string())?;
-        Ok(item_ref(wf, ws.root(), &it))
+        Ok(item_ref(wf, ws.root(), &it, &self.open_sessions(ws)))
     }
 
     /// Un archivo dentro de la carpeta de algún item (no el README de otra cosa ni nada fuera).
@@ -139,7 +154,10 @@ impl wb_plugins::Host for ApiHost<'_> {
             "host/items" => {
                 let ws = self.ws()?;
                 let items = ws.list_items().map_err(|e| e.code.to_string())?;
-                Ok(Json::Array(items.iter().map(|it| item_ref(ws.workflow(), ws.root(), it)).collect()))
+                let open = self.open_sessions(ws);
+                Ok(Json::Array(
+                    items.iter().map(|it| item_ref(ws.workflow(), ws.root(), it, &open)).collect(),
+                ))
             }
             "host/item" => self.item(params["name"].as_str().ok_or("plugin.badArgument")?),
             "host/updateItem" => self.update_item(params),
@@ -183,6 +201,17 @@ impl wb_plugins::Host for ApiHost<'_> {
             "host/tracker" => {
                 self.need("tracker")?;
                 self.api.tracker_info().map_err(|e| e.code)
+            }
+            // El token de escritura del tracker, compartido con «Cambiar estado en el tracker».
+            "host/tracker/writeToken/get"
+            | "host/tracker/writeToken/set"
+            | "host/tracker/writeToken/delete" => {
+                self.need("tracker.write")?;
+                let op = method.rsplit('/').next().unwrap_or_default();
+                if op == "set" && !params["value"].as_str().is_some_and(|v| !v.trim().is_empty()) {
+                    return Err("plugin.badArgument".into());
+                }
+                self.api.tracker_write_token(op, params["value"].as_str()).map_err(|e| e.code)
             }
             _ => Err("plugin.unknownMethod".into()),
         }
@@ -292,9 +321,10 @@ impl Api {
         if !names.is_empty() {
             let ws = ws.as_ref().ok_or_else(|| ApiError::new("error.noRoot", &[]))?;
             let wf = ws.workflow();
+            let open = open_sessions(&self.config_dir, ws.root());
             for n in &names {
                 let it = ws.build_item(&ws.folder_of(n)?)?;
-                let r = item_ref(wf, ws.root(), &it);
+                let r = item_ref(wf, ws.root(), &it, &open);
                 if !wb_plugins::matches(action.when.as_ref(), wf, &r) {
                     return Err(ApiError::new("plugin.notForItem", &[("item", n)]));
                 }

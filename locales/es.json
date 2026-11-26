@@ -1242,6 +1242,7 @@
   "plugin.perm.filesRead": "leer archivos de los trabajos",
   "plugin.perm.secrets": "guardar secretos en el almacén de credenciales",
   "plugin.perm.tracker": "ver la conexión con el tracker (sin tokens)",
+  "plugin.perm.trackerWrite": "usar el PAT de escritura del tracker (el mismo de «Cambiar estado»)",
   "plugin.presets": "{n} presets de flujo",
   "plugin.presetFrom": "{name} (plugin {plugin})",
   "plugin.invalid": "No se cargó: {error}",
