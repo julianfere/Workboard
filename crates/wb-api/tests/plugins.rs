@@ -47,6 +47,7 @@ fn plugin_main() {
                     "state": {
                         "status": item["status"], "fileStart": file["text"].as_str().map(|t| t.chars().take(20).collect::<String>()),
                         "outside": outside, "secret": secret, "data": data, "tracker": tracker, "wf": wf["id"],
+                        "sessions": params["context"]["items"][0]["sessions"], "itemSessions": item["sessions"],
                     },
                 }))
             }
@@ -58,6 +59,18 @@ fn plugin_main() {
                 Ok(json!({"type": "result", "title": "t", "ok": true, "steps": [],
                     "links": [{"label": "ok", "url": "https://x.test/1"}, {"label": "bad", "url": "http://x.test"}, {"label": "js", "url": "javascript:alert(1)"}],
                     "state": {"ok": ok["status"], "badState": bad_state, "notDeclared": not_declared, "multiline": multiline}}))
+            }
+            ("action/submit", Some("token")) => {
+                let before = r(c, "host/tracker/writeToken/get", json!({}));
+                let empty = r(c, "host/tracker/writeToken/set", json!({"value": "  "}));
+                let set = r(c, "host/tracker/writeToken/set", json!({"value": "w-pat-1234"}));
+                let after = r(c, "host/tracker/writeToken/get", json!({}));
+                Ok(json!({"type": "close", "state": {"before": before, "empty": empty, "set": set, "after": after}}))
+            }
+            ("action/submit", Some("untoken")) => {
+                let del = r(c, "host/tracker/writeToken/delete", json!({}));
+                let after = r(c, "host/tracker/writeToken/get", json!({}));
+                Ok(json!({"type": "close", "state": {"del": del, "after": after}}))
             }
             ("action/submit", Some("session")) => Ok(json!({"type": "session", "items": [name], "name": "From plugin", "mode": "acceptEdits", "prompt": "hola"})),
             ("action/submit", Some("bad")) => Ok(json!({"type": "form", "fields": [{"id": "a", "type": "script"}]})),
@@ -119,11 +132,12 @@ fn main() {
     copy_dir(&PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../tests/golden/fixtures/work"), &root);
     std::fs::write(base.join("proyecto/secret.txt"), "no").unwrap();
     let cfg = base.join("cfg");
-    install(&cfg, "full", json!(["items.write", "files.read", "secrets", "tracker"]));
+    install(&cfg, "full", json!(["items.write", "files.read", "secrets", "tracker", "tracker.write"]));
     install(&cfg, "bare", json!([]));
 
     let api = Api::new(cfg.clone());
-    api.set_tracker_backend(Arc::new(MemorySecrets::default()), Arc::new(NoNet));
+    let secrets = Arc::new(MemorySecrets::default());
+    api.set_tracker_backend(secrets.clone(), Arc::new(NoNet));
     let exe = std::env::current_exe().unwrap();
     api.set_session_bins(exe.clone(), exe);
     api.dispatch("set_settings", &json!({"settings": {"workflow": "classic-es", "lang": "es"}})).unwrap();
@@ -176,6 +190,7 @@ fn main() {
     check("plugin data round-trips", st["data"] == json!({"n": 1}), st);
     check("tracker info is null without a connection", st["tracker"].is_null(), st);
     check("host/workflow gives the active preset", st["wf"] == "classic-es", st);
+    check("item refs count open sessions", st["sessions"] == 0 && st["itemSessions"] == 0, st);
 
     let bare = run("bare", "touch", item.clone(), None).unwrap();
     let st = &bare["state"];
@@ -216,6 +231,40 @@ fn main() {
             && sess["session"]["mode"] == "acceptEdits",
         &sess,
     );
+    let st = run("full", "touch", item.clone(), None).unwrap()["state"].clone();
+    check("item refs count the new session", st["sessions"] == 1 && st["itemSessions"] == 1, &st);
+
+    // El token de escritura del tracker, compartido con «Cambiar estado».
+    let tok = run("full", "touch", item.clone(), Some("token")).unwrap();
+    check("write token needs a connection", tok["state"]["before"]["error"] == "tracker.notConnected", &tok);
+    let tok = run("bare", "touch", item.clone(), Some("token")).unwrap();
+    check("tracker.write is enforced", tok["state"]["before"]["error"] == "plugin.denied", &tok);
+    api.dispatch(
+        "tracker_connect",
+        &json!({"org": "miorg.visualstudio.com", "project": "P", "secret": "read-1234"}),
+    )
+    .unwrap();
+    let tok = run("full", "touch", item.clone(), Some("token")).unwrap();
+    let st = &tok["state"];
+    check(
+        "write token round-trips",
+        st["before"]["value"].is_null()
+            && st["empty"]["error"] == "plugin.badArgument"
+            && st["after"]["value"] == "w-pat-1234",
+        st,
+    );
+    use wb_platform::secrets::SecretStore;
+    check(
+        "the plugin writes the tracker's own write token",
+        secrets.get("azure-devops:write:https://miorg.visualstudio.com").unwrap().as_deref()
+            == Some("w-pat-1234"),
+        (),
+    );
+    let cfg_now = api.dispatch("tracker_config", &json!({})).unwrap();
+    check("the app sees the shared write token", cfg_now["hasWriteSecret"] == true, &cfg_now);
+    let tok = run("full", "touch", item.clone(), Some("untoken")).unwrap();
+    check("write token can be removed", tok["state"]["after"]["value"].is_null(), &tok);
+
     let bad = run("full", "touch", item.clone(), Some("bad")).unwrap_err();
     check("invalid steps are rejected", bad.code == "plugin.error.badStep", &bad);
     let wrong = run("full", "touch", json!(["grp-checkout"]), None).unwrap_err();

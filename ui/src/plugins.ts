@@ -82,6 +82,7 @@ const PERMISSION_KEYS: Record<string, string> = {
   "files.read": "plugin.perm.filesRead",
   secrets: "plugin.perm.secrets",
   tracker: "plugin.perm.tracker",
+  "tracker.write": "plugin.perm.trackerWrite",
 };
 
 export function pluginsSettingsCard(): string {

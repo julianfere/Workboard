@@ -164,7 +164,7 @@ fn connect_keeps_the_secret_out_of_files() {
         .api
         .dispatch("tracker_connect", &json!({"org": "miorg.visualstudio.com", "project": "P"}))
         .unwrap_err();
-    assert_eq!(err.code, "tracker.noSecret");
+    assert_eq!(err.code, "tracker.noSecretFor");
     let err = env
         .api
         .dispatch("tracker_connect", &json!({"org": "https://evil.com", "project": "P", "secret": "x"}))
@@ -393,4 +393,33 @@ fn push_states_writes_only_with_the_write_secret() {
         assert!(!file_text(&env.base.join("cfg").join(f)).contains(WRITE_PAT), "{f}");
     }
     assert_eq!(env.api.dispatch("tracker_open", &json!({"id": "x"})).unwrap_err().code, "tracker.badId");
+}
+
+#[test]
+fn due_field_guess_is_retried_on_every_sync_like_v1() {
+    let (root, base) = fixture("dueguess");
+    let api = Api::new(base.join("cfg"));
+    let mut fake = azure();
+    // Sin un campo «pactad…»: «Due Date» no se adivina (la v1 no lo hacía).
+    fake.routes[1].2 = json!({"value": [
+        {"referenceName": "Microsoft.VSTS.Scheduling.DueDate", "name": "Due Date", "type": "dateTime"},
+        {"referenceName": "Custom.Horas", "name": "Horas pactadas", "type": "double"},
+    ]});
+    let http = Arc::new(fake);
+    api.set_tracker_backend(Arc::new(MemorySecrets::default()), http.clone());
+    api.dispatch("set_settings", &json!({"settings": {"workflow": "classic-es", "lang": "es"}})).unwrap();
+    api.dispatch("open_root", &json!({"path": root})).unwrap();
+    let env = Env { api, http, secrets: Arc::new(MemorySecrets::default()), root, base };
+    let cfg = env.connect();
+    assert_eq!(cfg["dueField"], "");
+    let field_reads =
+        || env.http.log.lock().unwrap().iter().filter(|r| r.url.contains("/_apis/wit/fields")).count();
+    assert_eq!(field_reads(), 1);
+    env.call("tracker_sync", json!({}));
+    env.call("tracker_sync", json!({}));
+    assert_eq!(field_reads(), 3, "sin fecha adivinada, cada sync vuelve a intentar");
+    // Elegir «ninguna» corta el reintento.
+    env.call("tracker_set_field", json!({"which": "due", "ref": ""}));
+    env.call("tracker_sync", json!({}));
+    assert_eq!(field_reads(), 3);
 }

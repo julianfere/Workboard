@@ -25,7 +25,7 @@ Which plugins are enabled is stored in `<config>/plugins.json`.
   "command": "bin/example",
   "args": [],
   "timeoutSeconds": 120,
-  "permissions": ["items.write", "files.read", "secrets", "tracker"],
+  "permissions": ["items.write", "files.read", "secrets", "tracker", "tracker.write"],
   "fields": ["release_manual"],
   "presets": ["presets/my-flow.json"],
   "actions": [
@@ -46,7 +46,10 @@ Which plugins are enabled is stored in `<config>/plugins.json`.
 - `command`: path relative to the plugin folder (on Windows `.exe` is added when missing), or a program on
   the `PATH` (`python`, `node`…) followed by `args`. It runs with the plugin folder as working directory. Workboard sets `WORKBOARD_PLUGIN_PROTOCOL` (the protocol version) in its environment.
 - `timeoutSeconds`: per call, 5 to 600 (default 120). Past it the process tree is killed.
-- `permissions`: what the plugin may ask Workboard (see *Host methods*). Anything else is refused.
+- `permissions`: what the plugin may ask Workboard (see *Host methods*): `items.write`, `files.read`,
+  `secrets`, `tracker` (the connection, never a token) and `tracker.write` (the tracker's write token).
+  Anything else is refused; an unknown permission makes the manifest invalid, so a plugin that asks for
+  `tracker.write` needs a Workboard that knows it.
 - `fields`: extra frontmatter keys the plugin may write with `host/updateItem` (single-line text). The
   workflow's own editable fields are always allowed with `items.write`.
 - `presets`: workflow presets (same format as `crates/wb-core/presets/*.json`). They appear in
@@ -54,7 +57,9 @@ Which plugins are enabled is stored in `<config>/plugins.json`.
 - `actions[].placements`: `item` (detail of one item), `items` (bulk bar, one or more selected items),
   `palette` (command palette, no items) and `settings` (a button in the plugin's row in Settings).
 - `actions[].when` (optional, only for `item`/`items`): `kind` (`item` or `group`), `hasIds` (boolean),
-  `categories` (state categories, e.g. `["active", "review"]`). Every selected item must match.
+  `categories` (state categories, e.g. `["active", "review"]`). Every selected item must match. State
+  conditions go through categories so they follow the active preset: `["planned"]` is the plan state in
+  both built-in presets.
 
 ## Protocol
 
@@ -89,8 +94,10 @@ Answer with any object (`{}`). If `protocol` is newer than the plugin understand
 
 `context` is `{ "lang", "root", "placement", "items": [ItemRef…] }`: where the action was started from
 (`item`, `items`, `palette` or `settings`) and the items it was started on (none from the palette or
-Settings). An `ItemRef` is `{ "name", "title", "ids", "kind", "type", "status", "folder" }`;
-`folder` is the absolute path, `name` the path relative to the root (`grp-x/wi1-foo`).
+Settings). An `ItemRef` is `{ "name", "title", "ids", "kind", "type", "status", "folder", "sessions" }`;
+`folder` is the absolute path, `name` the path relative to the root (`grp-x/wi1-foo`) and `sessions` how
+many agent sessions that are not closed include the item (for example, to ask before opening another one
+with a button's `confirm`). Older hosts don't send `sessions`: treat a missing value as 0.
 
 `action/submit` is sent when the user presses one of the form's buttons, or changes a field marked
 `refresh` (then `button` is `"$refresh"`). `values` has every field of the form (`password` fields only when
@@ -172,6 +179,9 @@ Requests the plugin sends to Workboard while handling a call. Errors come back a
 | `host/data/get` | — | `{}` → the plugin's JSON data (`{}` if none) |
 | `host/data/set` | — | `{data}` → `{}`; at most 1 MB, in `<config>/plugin-data/<id>.json` |
 | `host/tracker` | `tracker` | `{}` → `{kind, source, org, project}` of the open folder's tracker connection, or `null`. Never a token. |
+| `host/tracker/writeToken/get` | `tracker.write` | `{}` → `{value}` or `{value: null}`: the write token of the open folder's tracker organization, the same one **Change state in the tracker** uses (one per organization, shared by the app and every plugin). Error `tracker.notConnected` without a connection. |
+| `host/tracker/writeToken/set` | `tracker.write` | `{value}` (not empty) → `{}`; replaces that shared token. |
+| `host/tracker/writeToken/delete` | `tracker.write` | `{}` → `{}`; removes it (the app then asks for it again). |
 
 ## Example
 

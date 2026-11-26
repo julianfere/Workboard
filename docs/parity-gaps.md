@@ -168,19 +168,19 @@ Referencias: `v1 app.js:N` = `_v1/ui/app.js`.
 
 ## US-10 Azure DevOps
 
-- [ ] Un solo PAT de escritura por organización para la app y ReleaseManual (v1 `ado.wpats[org]`). El plugin lo pide al
+- [x] Un solo PAT de escritura por organización para la app y ReleaseManual (v1 `ado.wpats[org]`). El plugin lo pide al
       host en vez de guardar el suyo.
-- [ ] Fecha pactada: adivinar con la lista de la v1 (sin «target date»/«due date»; `app.py:52`) y volver a intentar en
+- [x] Fecha pactada: adivinar con la lista de la v1 (sin «target date»/«due date»; `app.py:52`) y volver a intentar en
       cada sync si no adivinó (`app.py:1349`); horas sin «hours».
-- [ ] Cambiar el campo de fecha en Ajustes no resincroniza (solo desde el modal de sync).
-- [ ] Sync sin configurar abre el asistente y sincroniza al guardar; errores de PAT/org/proyecto reabren el asistente;
+- [x] Cambiar el campo de fecha en Ajustes no resincroniza (solo desde el modal de sync).
+- [x] Sync sin configurar abre el asistente y sincroniza al guardar; errores de PAT/org/proyecto reabren el asistente;
       botón «Sincronizar Azure» siempre visible (app.js:1545-1560, index.html:42).
-- [ ] Botón «Conexión y mapeo» en el pie del modal de sync y del de cambiar estado (app.js:4268).
-- [ ] Tarjeta Azure del detalle: «Mapea a: <estado>» (app.js:1149).
-- [ ] Organización: aceptar lo que aceptaba la v1 (`ado.py:64-74`).
-- [ ] Entidades HTML completas en descripciones (v1 `html.unescape`).
-- [ ] Mensajes de error con los textos de la v1 (`ado.py:113-127`, `app.py:1337`).
-- [ ] ReleaseManual: orden de scripts como la v1; desde un grupo usa el grupo (privado `release.rs:388`, `lib.rs:47`).
+- [x] Botón «Conexión y mapeo» en el pie del modal de sync y del de cambiar estado (app.js:4268).
+- [x] Tarjeta Azure del detalle: «Mapea a: <estado>» (app.js:1149).
+- [x] Organización: aceptar lo que aceptaba la v1 (`ado.py:64-74`).
+- [x] Entidades HTML completas en descripciones (v1 `html.unescape`).
+- [x] Mensajes de error con los textos de la v1 (`ado.py:113-127`, `app.py:1337`).
+- [x] ReleaseManual: orden de scripts como la v1; desde un grupo usa el grupo (privado `release.rs:388`, `lib.rs:47`).
 
 ## US-11 Migración desde la v1
 

@@ -14,7 +14,7 @@ use wb_core::Workflow;
 /// Versión del protocolo que habla esta app.
 pub const PROTOCOL: u32 = 1;
 /// Lo que un plugin puede pedirle a la app (ver `docs/plugins.md`).
-pub const PERMISSIONS: [&str; 4] = ["items.write", "files.read", "secrets", "tracker"];
+pub const PERMISSIONS: [&str; 5] = ["items.write", "files.read", "secrets", "tracker", "tracker.write"];
 /// Dónde aparece una acción.
 pub const PLACEMENTS: [&str; 4] = ["item", "items", "palette", "settings"];
 

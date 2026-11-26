@@ -411,7 +411,7 @@ struct Ctx {
 
 impl Ctx {
     fn conn(&self) -> ApiResult<&Connection> {
-        self.conn.as_ref().ok_or_else(|| ApiError::new("tracker.notConnected", &[]))
+        self.conn.as_ref().ok_or_else(|| ApiError::new("tracker.notConnected", &[("source", azure::SOURCE)]))
     }
 
     fn project(&self) -> ProjectCfg {
@@ -501,7 +501,10 @@ impl Api {
     fn tracker_client(&self, ctx: &Ctx, write: bool) -> ApiResult<Box<dyn Tracker>> {
         let conn = ctx.conn()?;
         let secret = self.secrets().get(&secret_key(conn, write)).map_err(store_error)?.ok_or_else(|| {
-            ApiError::new(if write { "tracker.noWriteSecret" } else { "tracker.noSecret" }, &[])
+            ApiError::new(
+                if write { "tracker.noWriteSecret" } else { "tracker.noSecret" },
+                &[("source", conn.source())],
+            )
         })?;
         Ok(conn.client(&secret, self.http())?)
     }
@@ -556,6 +559,32 @@ impl Api {
         ))
     }
 
+    /// El token de escritura de la organización de la carpeta abierta, el mismo que usa «Cambiar estado en
+    /// el tracker» (para los plugins con el permiso `tracker.write`). `op`: `get` → `{value}` (o `null`),
+    /// `set` (`value` no vacío) o `delete`.
+    pub(crate) fn tracker_write_token(&self, op: &str, value: Option<&str>) -> ApiResult<Json> {
+        let _guard = self.tracker_lock();
+        let ctx = self.tracker_ctx()?;
+        let key = secret_key(ctx.conn()?, true);
+        let secrets = self.secrets();
+        match op {
+            "get" => Ok(json!({"value": secrets.get(&key).map_err(store_error)?})),
+            "set" => {
+                let value = value
+                    .map(str::trim)
+                    .filter(|v| !v.is_empty())
+                    .ok_or_else(|| ApiError::new("error.badArgument", &[("name", "value")]))?;
+                secrets.set(&key, value).map_err(store_error)?;
+                Ok(json!({}))
+            }
+            "delete" => {
+                secrets.delete(&key).map_err(store_error)?;
+                Ok(json!({}))
+            }
+            _ => Err(ApiError::new("error.badArgument", &[("name", "op")])),
+        }
+    }
+
     pub(crate) fn tracker_command(&self, cmd: &str, a: &Args) -> Option<ApiResult<Json>> {
         if !cmd.starts_with("tracker_") {
             return None;
@@ -604,7 +633,7 @@ impl Api {
             self.secrets().set(&secret_key(&conn, false), secret).map_err(store_error)?;
         }
         if !self.has_secret(&conn, false) {
-            return Err(ApiError::new("tracker.noSecret", &[]));
+            return Err(ApiError::new("tracker.noSecretFor", &[("org", &conn.org)]));
         }
         ctx.file.connections.insert(ctx.root_key.clone(), conn.clone());
         ctx.conn = Some(conn);
@@ -617,7 +646,7 @@ impl Api {
         let client = self.tracker_client(&ctx, false)?;
         let states = client.states()?;
         if states.is_empty() {
-            return Err(ApiError::new("tracker.noStates", &[]));
+            return Err(ApiError::new("tracker.noStates", &[("source", ctx.conn()?.source())]));
         }
         let fields = client.fields()?;
         let proc = ctx.project_mut()?;
@@ -688,7 +717,9 @@ impl Api {
         let client = self.tracker_client(&ctx, false)?;
         let mut proc = ctx.project();
         let mut changed = false;
-        if proc.date_fields.is_none() || proc.num_fields.is_none() {
+        // Campos sin leer, o una fecha pactada que no se pudo adivinar (como la v1, se reintenta en cada
+        // sync hasta adivinarla o hasta que el usuario elija una, aunque sea «ninguna»).
+        if proc.date_fields.is_none() || proc.num_fields.is_none() || proc.due_field.is_none() {
             proc.set_fields(&client.fields()?);
             changed = true;
         }
