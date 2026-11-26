@@ -1,4 +1,4 @@
-//! Comandos de trackers (Azure DevOps): conexión por carpeta raíz, mapeo de estados, campos de fecha
+//! Comandos de trackers (Azure DevOps o el de un plugin, ver `tracker_plugin.rs`): conexión por carpeta raíz, mapeo de estados, campos de fecha
 //! pactada y horas, sincronización con previsualización, asignados del período, items nuevos con los
 //! datos del tracker y el cambio de estado en el tracker.
 //!
@@ -30,6 +30,7 @@ use wb_tracker::{
     WorkItem, azure,
 };
 
+use crate::tracker_plugin::{Kind, PluginClient, plugin_missing};
 use crate::{Api, ApiError, ApiResult, Args, NewItem, squash, to_json};
 
 pub const TRACKERS_FILE: &str = "trackers.json";
@@ -111,8 +112,7 @@ impl ProjectCfg {
 
     /// Campos de fecha y numéricos, prioridad y trabajo completado. Si no hay fecha pactada elegida, se
     /// autoelige; una elegida que ya no existe se olvida.
-    fn set_fields(&mut self, fields: &[FieldInfo]) {
-        let c = azure::catalog(fields);
+    fn set_fields(&mut self, c: azure::Catalog) {
         self.has_priority = c.has_priority;
         self.has_effort = c.has_effort;
         let dates: Vec<FieldRef> = c.date_fields.iter().map(FieldRef::from).collect();
@@ -126,6 +126,9 @@ impl ProjectCfg {
         }
         if self.due_field.is_none() {
             self.due_field = c.due_guess;
+        }
+        if self.hours_field.is_none() && c.hours_guess.is_some() {
+            self.hours_field = c.hours_guess;
         }
         self.date_fields = Some(dates);
         self.num_fields = Some(nums);
@@ -189,10 +192,6 @@ fn str_list(v: &Json) -> Vec<String> {
 /// Id de work item como lo escribe el usuario (`#123` → `123`).
 fn clean_id(id: &str) -> String {
     id.trim().trim_start_matches('#').trim().to_string()
-}
-
-fn is_numeric_id(id: &str) -> bool {
-    !id.is_empty() && id.len() <= 10 && id.bytes().all(|b| b.is_ascii_digit())
 }
 
 /// Tipo del flujo para un tipo del tracker: por id, nombre o alias (sin mayúsculas), o "".
@@ -407,6 +406,8 @@ struct Ctx {
     root_key: String,
     file: TrackerFile,
     conn: Option<Connection>,
+    /// De qué es la conexión (sin conexión, Azure).
+    kind: Kind,
 }
 
 impl Ctx {
@@ -466,7 +467,8 @@ impl Api {
         let root_key = RunLog::root_key(ws.root());
         let file: TrackerFile = read_json(&self.trackers_path());
         let conn = file.connections.get(&root_key).cloned();
-        Ok(Ctx { ws, root_key, file, conn })
+        let kind = conn.as_ref().map_or(Kind::Azure, |c| self.tracker_kind(&c.kind));
+        Ok(Ctx { ws, root_key, file, conn, kind })
     }
 
     fn save_trackers(&self, ctx: &Ctx) -> ApiResult<()> {
@@ -497,16 +499,34 @@ impl Api {
         self.secrets().get(&secret_key(conn, write)).ok().flatten().is_some()
     }
 
-    /// Cliente con la credencial de lectura (o la de escritura).
-    fn tracker_client(&self, ctx: &Ctx, write: bool) -> ApiResult<Box<dyn Tracker>> {
+    /// Nombre para mostrar del tracker de la carpeta.
+    fn source(&self, ctx: &Ctx) -> String {
+        ctx.kind.source(self.lang())
+    }
+
+    /// Cliente con la credencial de lectura (o la de escritura, si el tracker tiene una aparte).
+    fn tracker_client<'a>(&'a self, ctx: &Ctx, write: bool) -> ApiResult<Box<dyn Tracker + 'a>> {
         let conn = ctx.conn()?;
+        if let Kind::Missing(k) = &ctx.kind {
+            return Err(plugin_missing(k).into());
+        }
+        let write = write && ctx.kind.write_secret();
         let secret = self.secrets().get(&secret_key(conn, write)).map_err(store_error)?.ok_or_else(|| {
             ApiError::new(
                 if write { "tracker.noWriteSecret" } else { "tracker.noSecret" },
-                &[("source", conn.source())],
+                &[("source", &self.source(ctx))],
             )
         })?;
-        Ok(conn.client(&secret, self.http())?)
+        match &ctx.kind {
+            Kind::Plugin(p) => Ok(Box::new(PluginClient {
+                api: self,
+                kind: (**p).clone(),
+                conn: conn.clone(),
+                secret,
+                lang: self.lang(),
+            })),
+            _ => Ok(conn.client(&secret, self.http())?),
+        }
     }
 
     fn tracker_config(&self, ctx: &Ctx) -> ApiResult<Json> {
@@ -524,14 +544,17 @@ impl Api {
         let conn = ctx.conn.clone().unwrap_or_default();
         let connected = ctx.conn.is_some();
         Ok(json!({
-            "kinds": wb_tracker::KINDS,
+            "kinds": self.tracker_kinds(self.lang())?,
             "connected": connected,
             "kind": if connected { conn.kind.as_str() } else { azure::KIND },
-            "source": if connected { conn.source() } else { azure::SOURCE },
+            "source": self.source(ctx),
+            // El plugin de la conexión está deshabilitado o no está: todo responde `tracker.pluginMissing`.
+            "kindMissing": connected && matches!(ctx.kind, Kind::Missing(_)),
+            "writeSecret": ctx.kind.write_secret(),
             "org": conn.org,
             "project": conn.project,
             "hasSecret": connected && self.has_secret(&conn, false),
-            "hasWriteSecret": connected && self.has_secret(&conn, true),
+            "hasWriteSecret": connected && self.has_secret(&conn, ctx.kind.write_secret()),
             "states": proc.states,
             "statesFetchedAt": proc.fetched_at,
             "map": proc.map,
@@ -555,7 +578,7 @@ impl Api {
         let ctx = self.tracker_ctx()?;
         Ok(ctx.conn.as_ref().map_or(
             Json::Null,
-            |c| json!({"kind": c.kind, "source": c.source(), "org": c.org, "project": c.project}),
+            |c| json!({"kind": c.kind, "source": self.source(&ctx), "org": c.org, "project": c.project}),
         ))
     }
 
@@ -614,10 +637,14 @@ impl Api {
             "tracker_push_states" => self.tracker_push_states(&ctx, a.get("changes"), a.opt_str("secret")),
             "tracker_open" => a.str("id").and_then(|id| {
                 let id = clean_id(id);
-                if !is_numeric_id(&id) {
+                let conn = ctx.conn()?;
+                if let Kind::Missing(k) = &ctx.kind {
+                    return Err(plugin_missing(k).into());
+                }
+                if !ctx.kind.accepts_id(&id) {
                     return Err(ApiError::new("tracker.badId", &[("id", &id)]));
                 }
-                wb_platform::open_url(&ctx.conn()?.item_url(&id))?;
+                wb_platform::open_url(&ctx.kind.item_url(conn, &id)?)?;
                 Ok(Json::Null)
             }),
             _ => Err(ApiError::new("error.unknownCommand", &[("name", cmd)])),
@@ -627,16 +654,31 @@ impl Api {
     /// Conecta la raíz abierta. Sin `secret` se usa la credencial guardada para esa organización.
     fn tracker_connect(&self, mut ctx: Ctx, a: &Args) -> ApiResult<Json> {
         let kind = a.opt_str("kind").filter(|k| !k.is_empty()).unwrap_or(azure::KIND);
-        let conn =
-            Connection::normalized(kind, a.opt_str("org").unwrap_or(""), a.opt_str("project").unwrap_or(""))?;
-        if let Some(secret) = a.opt_str("secret").map(str::trim).filter(|s| !s.is_empty()) {
-            self.secrets().set(&secret_key(&conn, false), secret).map_err(store_error)?;
-        }
+        let (org, project) = (a.opt_str("org").unwrap_or(""), a.opt_str("project").unwrap_or(""));
+        let secret = a.opt_str("secret").map(str::trim).filter(|s| !s.is_empty()).map(String::from);
+        let resolved = self.tracker_kind(kind);
+        let conn = match &resolved {
+            Kind::Azure => {
+                let conn = Connection::normalized(kind, org, project)?;
+                if let Some(secret) = &secret {
+                    self.secrets().set(&secret_key(&conn, false), secret).map_err(store_error)?;
+                }
+                conn
+            }
+            // El plugin valida y normaliza con la credencial (la escrita o la guardada).
+            Kind::Plugin(p) => {
+                let (conn, used) = self.plugin_tracker_connect(p, org, project, secret)?;
+                self.secrets().set(&secret_key(&conn, false), &used).map_err(store_error)?;
+                conn
+            }
+            Kind::Missing(k) => return Err(ApiError::new("tracker.unknownKind", &[("kind", k)])),
+        };
         if !self.has_secret(&conn, false) {
             return Err(ApiError::new("tracker.noSecretFor", &[("org", &conn.org)]));
         }
         ctx.file.connections.insert(ctx.root_key.clone(), conn.clone());
         ctx.conn = Some(conn);
+        ctx.kind = resolved;
         self.save_trackers(&ctx)?;
         self.tracker_config(&ctx)
     }
@@ -646,13 +688,14 @@ impl Api {
         let client = self.tracker_client(&ctx, false)?;
         let states = client.states()?;
         if states.is_empty() {
-            return Err(ApiError::new("tracker.noStates", &[("source", ctx.conn()?.source())]));
+            return Err(ApiError::new("tracker.noStates", &[("source", &self.source(&ctx))]));
         }
-        let fields = client.fields()?;
+        let catalog = ctx.kind.catalog(&client.fields()?);
+        drop(client);
         let proc = ctx.project_mut()?;
         proc.states = states;
         proc.fetched_at = Some(now());
-        proc.set_fields(&fields);
+        proc.set_fields(catalog);
         self.save_trackers(&ctx)?;
         self.tracker_config(&ctx)
     }
@@ -701,6 +744,7 @@ impl Api {
     fn tracker_disconnect(&self, mut ctx: Ctx) -> ApiResult<Json> {
         ctx.file.connections.remove(&ctx.root_key);
         ctx.conn = None;
+        ctx.kind = Kind::Azure;
         self.save_trackers(&ctx)?;
         self.write_cache(&ctx.root_key, None)?;
         self.tracker_config(&ctx)
@@ -715,12 +759,25 @@ impl Api {
             return Err(ApiError::new("tracker.noIds", &[]));
         }
         let client = self.tracker_client(&ctx, false)?;
+        // Solo los ids de este tracker (los de un plugin, según su `idPattern`).
+        let ids: Vec<String> = match ctx.kind {
+            Kind::Azure => ids,
+            _ => ids.into_iter().filter(|i| ctx.kind.accepts_id(i)).collect(),
+        };
+        if ids.is_empty() {
+            return Err(ApiError::new("tracker.noIds", &[]));
+        }
         let mut proc = ctx.project();
         let mut changed = false;
         // Campos sin leer, o una fecha pactada que no se pudo adivinar (como la v1, se reintenta en cada
         // sync hasta adivinarla o hasta que el usuario elija una, aunque sea «ninguna»).
         if proc.date_fields.is_none() || proc.num_fields.is_none() || proc.due_field.is_none() {
-            proc.set_fields(&client.fields()?);
+            proc.set_fields(ctx.kind.catalog(&client.fields()?));
+            changed = true;
+        }
+        // Un plugin dice cuál es el campo de horas (`role`): sin él, ninguno.
+        if proc.hours_field.is_none() && !matches!(ctx.kind, Kind::Azure) {
+            proc.hours_field = Some(String::new());
             changed = true;
         }
         if proc.hours_field.is_none() {
@@ -732,6 +789,7 @@ impl Api {
                     reference: f.reference.clone(),
                     name: f.name.clone(),
                     kind: String::new(),
+                    role: None,
                 })
                 .collect();
             let cands = azure::hours_candidates(&nums);
@@ -751,7 +809,7 @@ impl Api {
         let items = client.work_items(&ids, &proc.request())?;
         let conn = ctx.conn()?;
         let entry = CacheEntry {
-            source: conn.source().to_string(),
+            source: self.source(&ctx),
             kind: conn.kind.clone(),
             org: conn.org.clone(),
             project: conn.project.clone(),
@@ -813,8 +871,8 @@ impl Api {
     fn tracker_assigned(&self, mut ctx: Ctx, period: &str) -> ApiResult<Json> {
         let client = self.tracker_client(&ctx, false)?;
         if ctx.project().date_fields.is_none() {
-            let fields = client.fields()?;
-            ctx.project_mut()?.set_fields(&fields);
+            let catalog = ctx.kind.catalog(&client.fields()?);
+            ctx.project_mut()?.set_fields(catalog);
             self.save_trackers(&ctx)?;
         }
         let proc = ctx.project();
@@ -877,14 +935,14 @@ impl Api {
     fn tracker_import(&self, ctx: &Ctx, ids: &Json) -> ApiResult<Json> {
         let wf = ctx.ws.workflow();
         let ids: Vec<String> = str_list(ids).iter().map(|i| clean_id(i)).collect();
-        if ids.is_empty() || !ids.iter().all(|i| is_numeric_id(i) && wf.is_valid_item_id(i)) {
+        if ids.is_empty() || !ids.iter().all(|i| ctx.kind.accepts_id(i) && wf.is_valid_item_id(i)) {
             return Err(ApiError::new("tracker.pickItems", &[]));
         }
         let mut have: BTreeSet<String> = ctx.ws.list_items()?.into_iter().flat_map(|it| it.ids).collect();
         let client = self.tracker_client(ctx, false)?;
         let proc = ctx.project();
         let items = client.work_items(&ids, &FieldRequest { text: true, ..proc.request() })?;
-        let source = ctx.conn()?.source();
+        let source = self.source(ctx);
         let (mut done, mut skipped, mut errors) = (vec![], vec![], vec![]);
         for id in &ids {
             if have.contains(id) {
@@ -904,7 +962,7 @@ impl Api {
                 criteria: w.criteria.clone().unwrap_or_default(),
                 tracker_type: w.kind.clone(),
                 tracker_state: w.state.clone(),
-                source: source.to_string(),
+                source: source.clone(),
             };
             match self.create_new_item(&ctx.ws, &new, None) {
                 Ok(out) => {
@@ -919,7 +977,7 @@ impl Api {
         if entry.org != conn.org || entry.project != conn.project {
             // Nunca sincronizada con esta conexión: «último sync» sigue en nunca.
             entry = CacheEntry {
-                source: source.to_string(),
+                source: source.clone(),
                 kind: conn.kind.clone(),
                 org: conn.org.clone(),
                 project: conn.project.clone(),
@@ -949,7 +1007,10 @@ impl Api {
             ctx.ws.list_items()?.into_iter().filter(|it| it.ids.contains(&id)).map(|it| it.name).collect();
         let connected = ctx.conn.as_ref().is_some_and(|c| self.has_secret(c, false));
         let mut error = Json::Null;
-        let detail = if connected && is_numeric_id(&id) {
+        let detail = if let (true, Kind::Missing(k)) = (ctx.conn.is_some(), &ctx.kind) {
+            error = json!(ApiError::from(plugin_missing(k)));
+            None
+        } else if connected && ctx.kind.accepts_id(&id) {
             match self.tracker_client(ctx, false).and_then(|c| Ok(c.detail(&id)?)) {
                 Ok(d) => Some(d),
                 Err(e) if MANUAL_ON.contains(&e.code.as_str()) => {
@@ -973,7 +1034,7 @@ impl Api {
             "folder": folder_for(wf, &id, &d.title),
             "existing": existing,
             "fromTracker": detail.is_some(),
-            "source": ctx.conn.as_ref().map_or(azure::SOURCE, Connection::source),
+            "source": self.source(ctx),
             "error": error,
         }))
     }
@@ -1006,7 +1067,7 @@ impl Api {
             criteria: s("criteria"),
             tracker_type: s("trackerType"),
             tracker_state: s("trackerState"),
-            source: ctx.conn.as_ref().map_or(azure::SOURCE, Connection::source).to_string(),
+            source: self.source(ctx),
         };
         self.create_new_item(&ctx.ws, &new, a.bool("plan").then_some(a))
     }
@@ -1015,7 +1076,8 @@ impl Api {
     /// escritura (si viene `secret`, se guarda antes). Actualiza la caché con lo que devolvió el tracker.
     fn tracker_push_states(&self, ctx: &Ctx, changes: &Json, secret: Option<&str>) -> ApiResult<Json> {
         let conn = ctx.conn()?;
-        if let Some(secret) = secret.map(str::trim).filter(|s| !s.is_empty()) {
+        // Sin credencial de escritura aparte, se escribe con la de lectura (y `secret` no se usa).
+        if let Some(secret) = secret.map(str::trim).filter(|s| !s.is_empty() && ctx.kind.write_secret()) {
             self.secrets().set(&secret_key(conn, true), secret).map_err(store_error)?;
         }
         let client = self.tracker_client(ctx, true)?;
@@ -1025,7 +1087,7 @@ impl Api {
         for ch in changes.as_array().into_iter().flatten() {
             let id = clean_id(ch["id"].as_str().unwrap_or(""));
             let state = ch["state"].as_str().unwrap_or("").trim().to_string();
-            let res = if !is_numeric_id(&id) {
+            let res = if !ctx.kind.accepts_id(&id) {
                 Err(ApiError::new("tracker.badId", &[("id", &id)]))
             } else if state.is_empty() || (!known.is_empty() && !known.contains(&state)) {
                 Err(ApiError::new("tracker.unknownState", &[("state", &state)]))
@@ -1053,7 +1115,8 @@ impl Api {
 }
 
 /// Errores del tracker con los que «Traer» sigue en manual (como el `PermissionError` de la v1).
-const MANUAL_ON: &[&str] = &["tracker.noSecret", "tracker.auth", "tracker.loginPage"];
+const MANUAL_ON: &[&str] =
+    &["tracker.noSecret", "tracker.auth", "tracker.loginPage", "tracker.pluginAuth", "tracker.pluginMissing"];
 
 /// Carpeta sugerida: la plantilla del flujo con el id y el título.
 fn folder_for(wf: &Workflow, id: &str, title: &str) -> String {

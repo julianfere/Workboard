@@ -16,6 +16,7 @@ mod sessions;
 pub mod settings;
 mod stats;
 mod tracker;
+mod tracker_plugin;
 
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, OnceLock};

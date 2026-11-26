@@ -190,7 +190,7 @@ Requests the plugin sends to Workboard while handling a call. Errors come back a
 A plugin can also **be a tracker**: Jira, Trello, GitHub Issues… Workboard then treats it exactly like the
 built-in Azure DevOps one: connect a work folder to it in **Settings → Tracker**, sync states and types,
 agreed date and hours, the tracker column, the MCP cache and **Change state in the tracker** all work the
-same. Only Azure DevOps is built in (`kind: "azure"`).
+same. Only Azure DevOps is built in (`kind: "azure-devops"`).
 
 ### Manifest
 
@@ -209,16 +209,22 @@ same. Only Azure DevOps is built in (`kind: "azure"`).
 ]
 ```
 
-- `kind`: lowercase letters, digits and `-`, unique among the enabled plugins and different from the
-  built-in ones (`azure`). It is what the folder's connection stores, so renaming it disconnects folders.
+- `kind`: lowercase letters, digits and `-` (at most 40), unique among the enabled plugins and different from
+  the built-in ones (`azure-devops`, and `azure` is reserved too). It is what the folder's connection
+  stores, so renaming it disconnects folders. If two enabled plugins declare the same kind, the one whose
+  folder sorts first keeps it; **Settings → Plugins** shows the other one's tracker as not available.
+- `name`, labels, placeholders and hints: a string or `{ "en": …, "es": … }`. A missing label falls back to
+  Workboard's generic one (Organization, Project, Token).
 - `org` and `project`: the two connection fields (labels and placeholders). `org.required: false` hides
   nothing but lets it be empty; `project` is always required. Workboard only trims them; the plugin
   validates and normalizes them in `tracker/connect`.
 - `secret`: label and hint of the credential field. `writeSecret: true` means writes need a separate
   credential (like Azure's write PAT); otherwise `tracker/setState` gets the read credential.
-- `itemUrl`: page of an item; `{org}`, `{project}` and `{id}` are replaced (URL-encoded). Must be `https://`.
+- `itemUrl` (required): page of an item; `{org}`, `{project}` and `{id}` are replaced (URL-encoded). Must be
+  `https://`.
 - `idPattern`: which ids of the work folder belong to this tracker (a regex on the id, default any id). Ids
-  that don't match are skipped instead of sent.
+  that don't match are skipped instead of sent (and refused by **Change state**); ids the plugin returns
+  that don't match, or that were not asked for, are ignored. An invalid regex makes the manifest invalid.
 
 Declaring `trackers` needs no extra permission; **Settings → Plugins** lists the trackers a plugin adds.
 A connection whose plugin is disabled or missing keeps its configuration and cache; every call answers the
@@ -233,8 +239,12 @@ connection and the credential:
 {"method":"tracker/states","params":{"kind":"trello","connection":{"org":"…","project":"…"},"secret":"…"}}
 ```
 
-The credential travels only on the plugin's stdin; Workboard removes it from any error text the plugin
-returns. The plugin must not log it or write it anywhere.
+The credential travels only on the plugin's stdin; Workboard removes it (and its `:`-separated parts) from
+any error text the plugin returns and from what it writes to stderr before logging it. The plugin must not
+log it or write it anywhere.
+
+While handling a `tracker/*` call the plugin may only use `host/workflow`, `host/data/*` and
+`host/secret/*` (with the `secrets` permission); anything else answers `plugin.denied`.
 
 | Method | Extra params → result |
 |---|---|
@@ -248,7 +258,9 @@ returns. The plugin must not log it or write it anywhere.
 
 Errors are JSON-RPC errors whose `message` is shown to the user (after removing the credential). Use
 `tracker.auth` for a rejected credential and `tracker.notFound` for a missing project so the app can say
-which; anything else is shown as is.
+which (optionally followed by `: ` and a detail, e.g. `tracker.auth: token expired`); anything else is
+shown as is, prefixed with the tracker's name. A rejected credential lets **New item** go on by hand, like
+Azure's.
 
 ## SDKs
 

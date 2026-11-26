@@ -66,7 +66,8 @@ config real.
 - `crates/wb-plugins` — plugins: ejecutables aparte con `manifest.json` en `<config>/plugins/<carpeta>/` que hablan
   JSON-RPC por stdio (protocolo en `docs/plugins.md`). `manifest` (validación, lista, habilitados en
   `<config>/plugins.json`, presets aportados, `resolve_workflow`: el preset incluido o el de un plugin habilitado; lo
-  usan la app, las sesiones y el MCP), `rpc::call` (un proceso por paso: `initialize` + la llamada, atiende los pedidos
+  usan la app, las sesiones y el MCP), `trackers` (trackers que aporta un plugin: tipo, formulario de conexión,
+  `itemUrl`, `idPattern`; un tipo repetido entre plugins habilitados queda en `tracker_clashes`), `rpc::call` (un proceso por paso: `initialize` + la llamada, atiende los pedidos
   `host/…` del plugin, timeout del manifiesto y `kill_tree`) y `sdk::serve` (lado del plugin, para plugins en Rust y
   tests). En `wb-api`, `plugins.rs`: `plugins`, `plugin_enable`, `plugin_action` (valida el paso: formulario,
   resultado con links solo https, sesión que se abre acá, cerrar) y el `Host` con los permisos del manifiesto
@@ -85,7 +86,10 @@ config real.
   `SessionManager` se levanta a pedido y busca `wb-mcp`/`wb-hook` junto al exe (o `WORKBOARD_MCP_BIN`/`WORKBOARD_HOOK_BIN`). `git.rs`: comandos `git_*` y `review_item` (Revisar: paquete `<config>/review/<stamp>-<id>/REVIEW.md` + un `.diff` por rama, sesión en modo plan con `--model`); repos de cada carpeta de trabajos en
   `settings.json` → `git.repos[<raíz>]` (sin entrada = repos hermanos detectados) y ramas candidatas en `git.envRefs`.
   `tracker.rs`: comandos `tracker_*`; `<config>/trackers.json` (conexión por raíz; estados, mapeo y campos por
-  proyecto) y `<config>/tracker_cache.json` (última lectura por raíz, la lee el MCP); vista previa del sync en Rust
+  proyecto) y `<config>/tracker_cache.json` (última lectura por raíz, la lee el MCP). `tracker_plugin.rs`: el `Kind` de
+  cada conexión (Azure, un plugin habilitado o `Missing` → `tracker.pluginMissing`, sin tocar config ni caché) y
+  `PluginClient` (el trait `Tracker` sobre `tracker/*`, un proceso por llamada, credencial quitada de errores y
+  stderr); vista previa del sync en Rust
   (completar / tipo / avanza / retrocede; retroceder = categoría menor o antes en el preset), aplicar escribe solo
   estado y tipo; la fila «según git» (`git::env_reach`) propone el estado de `Workflow.git.envStates` cuando el trabajo ya está en ese ambiente en todos los repos del item. `stats.rs`: `time_report`, `stats_report`, `tool_*`, `reflect_items`, `apply_learnings` (sesión normal que aplica candidatos de una nota de aprendizajes), `save_export`/`reveal_export`
   (CSV con BOM: a la ruta de «Guardar como» en la app, nunca dentro de la raíz; sin ruta, a Descargas). `errlog.rs`: todo
