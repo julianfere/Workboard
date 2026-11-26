@@ -236,7 +236,8 @@ fn rank(wf: &Workflow, state: &str) -> Option<(usize, i64)> {
         StateCategory::Review,
         StateCategory::Done,
     ];
-    let cat = ORDER.iter().position(|c| *c == wf.state(state)?.category)?;
+    let category = wf.state(state)?.category;
+    let cat = ORDER.iter().position(|c| *c == category)?;
     Some((cat, wf.progress(state)?))
 }
 
