@@ -225,9 +225,10 @@ fn suggested_map(wf: &Workflow, states: &[TrackerState]) -> BTreeMap<String, Str
         .collect()
 }
 
-/// Avance de un estado del flujo: categoría y, dentro de ella, el orden del preset. Cancelados, sin
+/// Avance de un estado del flujo: categoría y, dentro de ella, su escalón de avance (`progress` del preset
+/// o el orden; estados con el mismo escalón empatan, como diag y en-curso en la v1). Cancelados, sin
 /// categoría y desconocidos quedan fuera de la escala (nunca "retroceden").
-fn rank(wf: &Workflow, state: &str) -> Option<(usize, usize)> {
+fn rank(wf: &Workflow, state: &str) -> Option<(usize, i64)> {
     const ORDER: [StateCategory; 5] = [
         StateCategory::Backlog,
         StateCategory::Planned,
@@ -235,9 +236,23 @@ fn rank(wf: &Workflow, state: &str) -> Option<(usize, usize)> {
         StateCategory::Review,
         StateCategory::Done,
     ];
-    let i = wf.states.iter().position(|s| s.id == state)?;
-    let cat = ORDER.iter().position(|c| *c == wf.states[i].category)?;
-    Some((cat, i))
+    let cat = ORDER.iter().position(|c| *c == wf.state(state)?.category)?;
+    Some((cat, wf.progress(state)?))
+}
+
+#[cfg(test)]
+mod rank_tests {
+    use super::*;
+
+    #[test]
+    fn diag_ties_with_in_progress() {
+        let wf = Workflow::preset("classic-es").unwrap();
+        assert_eq!(rank(&wf, "diag"), rank(&wf, "en-curso"));
+        assert!(rank(&wf, "codeado") < rank(&wf, "qa"));
+        assert!(rank(&wf, "plan") < rank(&wf, "diag"));
+        assert_eq!(rank(&wf, "descartado"), None);
+        assert_eq!(rank(&wf, "nope"), None);
+    }
 }
 
 /// Primer día de un período `AAAA-MM` y el primero del siguiente.

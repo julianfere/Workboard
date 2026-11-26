@@ -19,7 +19,7 @@ use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_json::Value as Json;
 use wb_core::frontmatter::{self, Meta, Value};
-use wb_core::{StateCategory, Workflow, Workspace};
+use wb_core::{Workflow, Workspace};
 
 use crate::agents;
 use crate::registry::{Session, epoch, normcase};
@@ -278,20 +278,17 @@ pub fn state_history(ws: &Workspace, name: &str, state_log: &[Json]) -> Vec<Tran
 pub struct Outcome {
     pub start: Option<String>,
     pub end: Option<String>,
-    /// Pasos que avanzó (posición en el flujo; negativo = terminó más atrás).
+    /// Pasos que avanzó (escalones de avance del flujo; negativo = terminó más atrás).
     pub advance: i64,
     /// Veces que volvió a un estado anterior (retrabajo).
     pub setbacks: u64,
     pub transitions: Vec<Transition>,
 }
 
-/// Posición de un estado para medir avance: descartado o desconocido no avanzan ni retroceden.
+/// Escalón de un estado para medir avance (`progress` del preset: estados que empatan no avanzan ni
+/// retroceden entre sí); descartado o desconocido no avanzan ni retroceden.
 fn rank(wf: &Workflow, id: &str) -> Option<i64> {
-    let s = wf.state(id)?;
-    if matches!(s.category, StateCategory::Cancelled | StateCategory::Unknown) {
-        return None;
-    }
-    wf.state_rank(id).map(|r| r as i64)
+    wf.progress(id)
 }
 
 pub fn outcome(wf: &Workflow, transitions: Vec<Transition>) -> Outcome {
@@ -479,6 +476,13 @@ mod tests {
         assert_eq!((o.start.as_deref(), o.end.as_deref()), (Some("plan"), Some("prod")));
         assert_eq!(o.setbacks, 1);
         assert!(o.advance > 0);
+        // diag y en-curso empatan, como en la v1: ni avance ni retrabajo.
+        let tie = outcome(&wf, vec![tr("en-curso", "diag"), tr("diag", "en-curso"), tr("en-curso", "diag")]);
+        assert_eq!((tie.advance, tie.setbacks), (0, 0));
+        let o = outcome(&wf, vec![tr("pendiente", "diag"), tr("diag", "qa")]);
+        assert_eq!((o.advance, o.setbacks), (4, 0));
+        let o = outcome(&wf, vec![tr("qa", "diag")]);
+        assert_eq!((o.advance, o.setbacks), (-2, 1));
         let none = outcome(&wf, vec![tr("en-curso", "descartado")]);
         assert_eq!((none.advance, none.setbacks), (0, 0));
         assert_eq!(outcome(&wf, vec![]).start, None);
