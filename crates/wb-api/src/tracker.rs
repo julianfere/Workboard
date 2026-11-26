@@ -685,7 +685,9 @@ impl Api {
         let client = self.tracker_client(&ctx, false)?;
         let mut proc = ctx.project();
         let mut changed = false;
-        if proc.date_fields.is_none() || proc.num_fields.is_none() {
+        // Campos sin leer, o una fecha pactada que no se pudo adivinar (como la v1, se reintenta en cada
+        // sync hasta adivinarla o hasta que el usuario elija una, aunque sea «ninguna»).
+        if proc.date_fields.is_none() || proc.num_fields.is_none() || proc.due_field.is_none() {
             proc.set_fields(&client.fields()?);
             changed = true;
         }

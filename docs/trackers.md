@@ -17,7 +17,8 @@ The rules:
 
 In **Settings → Tracker**, with the work folder open:
 
-1. **Organization**: `https://dev.azure.com/acme` or `https://acme.visualstudio.com`.
+1. **Organization**: `https://dev.azure.com/acme` or `https://acme.visualstudio.com` (`https://` may be left
+   out; a user name, query or fragment pasted along is dropped).
 2. **Project**: the project name.
 3. **Read token (PAT)**: a personal access token with the **Work Items: Read** scope and nothing else, so
    it could not write even if there were a bug.
@@ -65,8 +66,9 @@ preset).
 **Due date** and **Agreed hours** come from fields you choose per project among the project's date and
 numeric fields. If you don't choose:
 
-- the due date is guessed from field names (`target date`, `due date`…);
-- the hours field is the numeric field that sounds like hours/estimate/effort and has values in the most
+- the due date is guessed from field names (`pactad…`, `estimada finalizacion`, as Workboard v1 did); while
+  no field matches, every sync tries again, until one does or you pick one (even *none*);
+- the hours field is the numeric field that sounds like agreed hours (`pactad`, `horas`, `hs`, `duracion`, `estimate`, `estimacion`, `effort`) and has values in the most
   work items, falling back to Original Estimate.
 
 Priority comes from `Microsoft.VSTS.Common.Priority` when the project has it. A README's own `due`,

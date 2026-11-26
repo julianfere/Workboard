@@ -40,13 +40,12 @@ const DESCRIPTION_FIELD: &str = "System.Description";
 const CRITERIA_FIELD: &str = "Microsoft.VSTS.Common.AcceptanceCriteria";
 const REPRO_FIELD: &str = "Microsoft.VSTS.TCM.ReproSteps";
 /// Para autoelegir la fecha pactada entre los campos de fecha (nombre o referencia, en este orden; gana
-/// la primera palabra que coincide con un solo campo). Las primeras son las de la v1.
-pub const DUE_GUESS: &[&str] =
-    &["pactad", "estimada finalizacion", "fechaestimadafinalizacion", "target date", "due date"];
+/// la primera palabra que coincide con un solo campo). Las de la v1 (`PACTADA_GUESS`).
+pub const DUE_GUESS: &[&str] = &["pactad", "estimada finalizacion", "fechaestimadafinalizacion"];
 /// Candidatos a horas pactadas entre los campos numéricos (nombre o referencia en minúsculas, `_` y `.`
-/// como espacios). Gana el que más work items tienen cargado; la estimación original entra siempre.
-pub const HOURS_GUESS: &[&str] =
-    &["pactad", "horas", "hs ", "duracion", "estimate", "estimacion", "effort", "hours"];
+/// como espacios). Gana el que más work items tienen cargado; la estimación original entra siempre. Las
+/// de la v1 (`HORAS_GUESS`).
+pub const HOURS_GUESS: &[&str] = &["pactad", "horas", "hs ", "duracion", "estimate", "estimacion", "effort"];
 const CATEGORY_ORDER: &[&str] = &["Proposed", "InProgress", "Resolved", "Completed", "Removed"];
 
 /// Categoría de estado de Azure → categoría del flujo.
@@ -133,7 +132,11 @@ pub fn pick_hours(cands: &[String], items: &BTreeMap<String, WorkItem>) -> Strin
     }
 }
 
-/// `https://<org>.visualstudio.com` o `https://dev.azure.com/<org>` (sin `/` final).
+/// `https://<org>.visualstudio.com` o `https://dev.azure.com/<org>` (sin `/` final). Acepta lo mismo que
+/// la v1 (`ado.normalize_org`: `https` y el host de Azure; sin esquema se agrega `https://`), pero el
+/// resultado queda sin usuario, consulta ni fragmento, que solo podían romper las URLs de la API. Se
+/// rechazan `\`, espacios y caracteres de control: los parsers de URL no los entienden igual y podrían
+/// mandar el token a otro host.
 pub fn normalize_org(org: &str) -> Result<String> {
     let mut org = org.trim().trim_end_matches('/').to_string();
     if org.is_empty() {
@@ -144,16 +147,21 @@ pub fn normalize_org(org: &str) -> Result<String> {
     }
     let bad = || TrackerError::new("tracker.badOrg", vec![]);
     let rest = org.strip_prefix("https://").ok_or_else(bad)?;
-    let host = rest.split(['/', '?', '#']).next().unwrap_or_default().to_lowercase();
-    if host.contains(['@', ':']) || !(host == "dev.azure.com" || host.ends_with(".visualstudio.com")) {
+    if rest.chars().any(|c| c == '\\' || c.is_whitespace() || c.is_control()) {
         return Err(bad());
     }
-    if rest.contains(['?', '#'])
-        || (host == "dev.azure.com" && rest.split('/').nth(1).is_none_or(str::is_empty))
+    let end = rest.find(['/', '?', '#']).unwrap_or(rest.len());
+    let (authority, tail) = rest.split_at(end);
+    let hostport = authority.rsplit('@').next().unwrap_or_default();
+    let (host, port) = hostport.split_once(':').unwrap_or((hostport, ""));
+    let host = host.to_lowercase();
+    if !port.bytes().all(|b| b.is_ascii_digit())
+        || !(host == "dev.azure.com" || host.ends_with(".visualstudio.com"))
     {
         return Err(bad());
     }
-    Ok(org)
+    let path = tail.split(['?', '#']).next().unwrap_or_default().trim_end_matches('/');
+    Ok(format!("https://{hostport}{path}"))
 }
 
 pub fn normalize_project(project: &str) -> Result<String> {
@@ -533,12 +541,26 @@ mod tests {
     fn org_urls() {
         assert_eq!(normalize_org(" miorg.visualstudio.com/ ").unwrap(), "https://miorg.visualstudio.com");
         assert_eq!(normalize_org("https://dev.azure.com/miorg").unwrap(), "https://dev.azure.com/miorg");
+        assert_eq!(normalize_org("dev.azure.com/miorg//").unwrap(), "https://dev.azure.com/miorg");
+        // Lo que aceptaba la v1 (usuario, puerto, consulta, fragmento, dev.azure.com solo), sin lo que sobra.
+        assert_eq!(normalize_org("https://x@dev.azure.com/o").unwrap(), "https://dev.azure.com/o");
+        assert_eq!(normalize_org("https://Dev.Azure.com:443/o").unwrap(), "https://Dev.Azure.com:443/o");
+        assert_eq!(normalize_org("https://dev.azure.com/o/?a=1#x").unwrap(), "https://dev.azure.com/o");
+        assert_eq!(
+            normalize_org("https://miorg.visualstudio.com#f").unwrap(),
+            "https://miorg.visualstudio.com"
+        );
+        assert_eq!(normalize_org("https://dev.azure.com").unwrap(), "https://dev.azure.com");
         for bad in [
             "",
             "http://miorg.visualstudio.com",
             "https://evil.com",
-            "https://dev.azure.com",
-            "https://x@dev.azure.com/o",
+            "https://dev.azure.com.evil.com/o",
+            "https://dev.azure.com@evil.com/o",
+            "https://evil.com\\@dev.azure.com/o",
+            "https://dev.azure.com:x/o",
+            "https://dev.azure.com/o p",
+            "HTTPS://dev.azure.com/o",
         ] {
             assert!(normalize_org(bad).is_err(), "{bad}");
         }
@@ -574,11 +596,14 @@ mod tests {
             refs(&c.num_fields),
             ["Custom.AZ_DURACION_PACTADA", "Custom.Puntos", ESTIMATE_FIELD, PRIORITY_FIELD]
         );
-        // «pactad» gana antes que «due date».
         assert_eq!(c.due_guess.as_deref(), Some("Custom.FechaPactada"));
+        // Como la v1: «Due Date» o «Target Date» no se adivinan.
+        assert_eq!(catalog(&fields[..2]).due_guess, None);
 
         let cands = hours_candidates(&c.num_fields);
         assert_eq!(cands, ["Custom.AZ_DURACION_PACTADA", ESTIMATE_FIELD]);
+        // «hours» no es candidato (la v1 no lo tenía).
+        assert!(hours_candidates(&[field("Custom.Hours", "Hours", "double")]).is_empty());
         let item =
             |k: &str, v: f64| WorkItem { fields: [(k.to_string(), json!(v))].into(), ..Default::default() };
         let mut items = BTreeMap::new();
