@@ -357,7 +357,10 @@ impl Workflow {
         for f in &self.fields.extra {
             let template = f.link.starts_with("https://") && f.link.contains("{value}");
             if !(f.link.is_empty() || f.link == "tracker" || template) {
-                return bad(format!("fields.extra {}: link is \"tracker\" or an https template with {{value}}", f.key));
+                return bad(format!(
+                    "fields.extra {}: link is \"tracker\" or an https template with {{value}}",
+                    f.key
+                ));
             }
         }
         for (env, state) in &self.git.env_states {
@@ -412,7 +415,8 @@ impl Workflow {
     /// Estados del camino principal (los pasos del detalle), en orden.
     pub fn main_path(&self) -> Vec<&str> {
         if self.main_path.is_empty() {
-            let line = |s: &&StateDef| !matches!(s.category, StateCategory::Cancelled | StateCategory::Unknown);
+            let line =
+                |s: &&StateDef| !matches!(s.category, StateCategory::Cancelled | StateCategory::Unknown);
             self.states.iter().filter(line).map(|s| s.id.as_str()).collect()
         } else {
             self.main_path.iter().map(String::as_str).collect()
@@ -539,8 +543,14 @@ mod tests {
         assert!(broken(&|v| v["mainPath"] = serde_json::json!(["nope"])).is_err());
         assert!(broken(&|v| v["files"]["openFirst"] = serde_json::json!(["nope"])).is_err());
         assert!(broken(&|v| v["mainPath"] = serde_json::json!(["plan", "plan"])).is_err());
-        assert!(broken(&|v| v["fields"]["extra"] = serde_json::json!([{"key": "x", "link": "http://a/{value}"}])).is_err());
-        assert!(broken(&|v| v["fields"]["extra"] = serde_json::json!([{"key": "x", "link": "https://a/"}])).is_err());
+        assert!(
+            broken(&|v| v["fields"]["extra"] = serde_json::json!([{"key": "x", "link": "http://a/{value}"}]))
+                .is_err()
+        );
+        assert!(
+            broken(&|v| v["fields"]["extra"] = serde_json::json!([{"key": "x", "link": "https://a/"}]))
+                .is_err()
+        );
         assert!(broken(&|v| v["fields"]["extra"] = serde_json::json!([{"key": "x", "link": "https://a/{value}"}])).is_ok());
     }
 
