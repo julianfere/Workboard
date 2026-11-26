@@ -85,6 +85,22 @@ async function saveAgents(patch: Parameters<typeof api.setAgents>[0]): Promise<v
   render();
 }
 
+/** Secciones de Ajustes, para la navegación de la izquierda (como la v1). */
+function sections(): [string, string][] {
+  return [
+    ["project", t("project.open")],
+    ["appearance", t("settings.appearance")],
+    ["workflow", t("settings.workflow")],
+    ["notes", t("nav.notes")],
+    ["tracker", t("tracker.title")],
+    ["agents", t("settings.agents")],
+    ["git", t("git.settings")],
+    ["plugins", t("plugin.title")],
+    ...(S.info ? ([["about", t("settings.about")]] as [string, string][]) : []),
+  ];
+}
+const sec = (id: string, html: string) => `<div class="st-sec" id="st-${id}">${html}</div>`;
+
 function renderSettings(): string {
   const s = S.settings!;
   const langs: [string, string][] = [["", t("settings.auto")], ...LANGS.map((l): [string, string] => [l, l === "en" ? "English" : "Español"])];
@@ -93,30 +109,34 @@ function renderSettings(): string {
   const w = wf();
   const chips = (items: { id: string; labels: Record<string, string>; category?: string }[]) =>
     `<div class="chips">${items.map((it) => `<span class="chip" title="${esc(it.id)}">${it.category ? `<span class="dot ${it.category}"></span>` : ""}${esc(label(it.labels, it.id))}</span>`).join("")}</div>`;
-  return `<div class="page"><h1>${esc(t("settings.title"))}</h1>
-    ${projectPicker()}
-    <section class="card"><h2>${esc(t("settings.appearance"))}</h2>
+  const nav = sections()
+    .map(([id, text]) => `<button class="st-link" data-action="settings-jump" data-sec="${id}">${esc(text)}</button>`)
+    .join("");
+  return `<div class="page wide"><h1>${esc(t("settings.title"))}</h1>
+    <div class="st-wrap"><nav class="st-nav" aria-label="${esc(t("settings.sections"))}">${nav}</nav><div class="st-main">
+    ${sec("project", projectPicker())}
+    ${sec("appearance", `<section class="card"><h2>${esc(t("settings.appearance"))}</h2>
       <div class="set-row"><label for="set-lang">${esc(t("settings.language"))}</label><select id="set-lang" data-change="set-lang">${options(langs, s.lang ?? "")}</select></div>
       <div class="set-row"><label for="set-theme">${esc(t("settings.theme"))}</label><select id="set-theme" data-change="set-theme">${options(themes, s.theme)}</select></div>
       <p class="muted">${esc(t("settings.shortcuts"))}</p>
       <div class="set-row"><label for="set-discreet">${esc(t("discreet.label"))}</label><label class="check"><input type="checkbox" id="set-discreet" data-change="set-discreet"${hoursHidden() ? " checked" : ""}>${esc(t("discreet.hint"))}</label></div>
-    </section>
-    <section class="card"><h2>${esc(t("settings.workflow"))}</h2>
+    </section>`)}
+    ${sec("workflow", `<section class="card"><h2>${esc(t("settings.workflow"))}</h2>
       <div class="set-row"><label for="set-workflow">${esc(t("settings.workflow.preset"))}</label><select id="set-workflow" data-change="set-workflow">${options(presets, s.workflow)}</select></div>
       <div class="muted">${esc(t("workflow.states"))}</div>${chips(w.states)}
       <div class="muted">${esc(t("workflow.types"))}</div>${chips(w.types)}
       <div class="muted">${esc(t("workflow.environments"))}</div>${chips(w.environments)}
-      <p class="muted">${esc(t("workflow.period", { day: w.period.startDay }))}</p></section>
-    <section class="card"><h2>${esc(t("nav.notes"))}</h2>
+      <p class="muted">${esc(t("workflow.period", { day: w.period.startDay }))}</p></section>`)}
+    ${sec("notes", `<section class="card"><h2>${esc(t("nav.notes"))}</h2>
       <div class="set-row"><label for="set-notes">${esc(t("settings.notesFolder"))}</label><div class="set-inline"><input id="set-notes" data-change="set-notes" value="${esc(s.notesFolder ?? "")}" placeholder="${esc(t("settings.notesDefault"))}">
         ${inTauri ? `<button class="btn" data-action="notes-folder" title="${esc(t("notes.changeFolderHint"))}">${ico("folder")}${esc(t("project.browse"))}</button>` : ""}
-        ${s.notesFolder ? `<button class="btn ghost" data-action="notes-folder-reset">${esc(t("notes.useDefault"))}</button>` : ""}</div></div></section>
-    ${trackerSettingsCard()}
-    ${agentsCard()}
-    ${gitSettingsCard()}
-    ${pluginsSettingsCard()}
-    ${S.info ? `<section class="card"><h2>${esc(t("settings.about"))}</h2><p class="muted">${esc(t("about.version", { version: S.info.version, os: S.info.os }))}<br><code>${esc(S.info.configDir)}</code></p></section>` : ""}
-  </div>`;
+        ${s.notesFolder ? `<button class="btn ghost" data-action="notes-folder-reset">${esc(t("notes.useDefault"))}</button>` : ""}</div></div></section>`)}
+    ${sec("tracker", trackerSettingsCard())}
+    ${sec("agents", agentsCard())}
+    ${sec("git", gitSettingsCard())}
+    ${sec("plugins", pluginsSettingsCard())}
+    ${S.info ? sec("about", `<section class="card"><h2>${esc(t("settings.about"))}</h2><p class="muted">${esc(t("about.version", { version: S.info.version, os: S.info.os }))}<br><code>${esc(S.info.configDir)}</code></p></section>`) : ""}
+  </div></div></div>`;
 }
 
 async function update(patch: Partial<Settings>): Promise<void> {
@@ -150,6 +170,7 @@ export async function openRoot(path: string): Promise<void> {
 }
 
 registerView("settings", renderSettings);
+onAction("settings-jump", (el) => document.querySelector(`#st-${el.dataset.sec}`)?.scrollIntoView({ behavior: "smooth", block: "start" }));
 registerProject(renderProject);
 
 onChange("set-lang", (el) => update({ lang: (el as HTMLSelectElement).value || null }));

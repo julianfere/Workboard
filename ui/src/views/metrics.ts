@@ -10,8 +10,29 @@ import { agentLabel, openSession, sessionById } from "../sessions";
 import { itemByName, stateDef, stateLabel, typeLabel, wf } from "../state";
 import { D, exportCsv, fmtDateTime, fmtK, fmtMin, fmtNum, loadStats, loadTime, timeReady, toCsv } from "../stats";
 import type { SessionStats } from "../types";
+import { pref, setPref } from "../prefs";
 
-const V = { range: "90" as "30" | "90" | "all", type: "", all: false };
+type Range = "30" | "90" | "all";
+const V = { range: "90" as Range, type: "", all: false };
+
+/** Pref `metrics` (como `mxRange`/`mxTipo`/`mxAll` de la v1): `{range, type, all}`. */
+interface MetricsPref {
+  range?: string;
+  type?: string;
+  all?: boolean;
+}
+const PREF = "metrics";
+
+function loadV(): void {
+  const p = pref<MetricsPref>(PREF) ?? {};
+  V.range = (["30", "90", "all"] as string[]).includes(p.range ?? "") ? (p.range as Range) : "90";
+  V.type = typeof p.type === "string" && wf().types.some((x) => x.id === p.type) ? p.type : "";
+  V.all = p.all === true;
+}
+
+function saveV(): void {
+  setPref(PREF, { range: V.range, type: V.type, all: V.all });
+}
 const SHOWN = 40;
 
 interface Row extends SessionStats {
@@ -91,6 +112,7 @@ function result(r: SessionStats): string {
 }
 
 function renderMetrics(): string {
+  loadV();
   if (!D.stats && !D.statsLoading) void loadStats();
   timeReady();
   const ranges = (["30", "90", "all"] as const)
@@ -142,15 +164,18 @@ function renderMetrics(): string {
 registerView("metrics", renderMetrics);
 
 onAction("metrics-range", (el) => {
-  V.range = el.dataset.range as typeof V.range;
+  V.range = el.dataset.range as Range;
+  saveV();
   render();
 });
 onChange("metrics-type", (el) => {
   V.type = (el as HTMLSelectElement).value;
+  saveV();
   render();
 });
 onAction("metrics-all", () => {
   V.all = true;
+  saveV();
   render();
 });
 onAction("metrics-refresh", async () => {
@@ -160,6 +185,7 @@ onAction("metrics-open", (el) => openSession(el.dataset.id!));
 onAction("metrics-export", async () => {
   const cols = ["session", "id", "config", "agent", "model", "mode", "plan", "type", "items", "from", "to", "activeMin", "prompts", "asks", "interrupts", "input", "output", "cacheRead", "cacheWrite", "scripts", "advanced", "rework"];
   const d = (ts: number | null) => (ts ? new Date(ts * 1000).toISOString().slice(0, 16).replace("T", " ") : "");
+  loadV();
   const yes = (b: boolean) => (b ? t("metrics.csv.yes") : "");
   const out: (string | number | null | undefined)[][] = [cols.map((c) => t(`metrics.csv.${c}`))];
   for (const r of rows()) {
