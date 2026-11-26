@@ -141,19 +141,19 @@ Referencias: `v1 app.js:N` = `_v1/ui/app.js`.
 
 ## US-08 Detalle del item
 
-- [ ] Panel lateral sobre la grilla con fondo, ancho ajustable arrastrando, maximizable, ancho guardado
+- [x] Panel lateral sobre la grilla con fondo, ancho ajustable arrastrando, maximizable, ancho guardado
       (v1 app.js:739-779, 995-1005).
-- [ ] Pasos: camino principal + estado actual si es otro (app.js:1025, 2820).
-- [ ] Select de estado con todos los valores y «Sin estado»; pista del tipo de Azure (app.js:1134-1135).
-- [ ] Mover a grupo con selector, no prompt de texto; renombrar y sacar del grupo con aviso y Deshacer
+- [x] Pasos: camino principal + estado actual si es otro (app.js:1025, 2820).
+- [x] Select de estado con todos los valores y «Sin estado»; pista del tipo de Azure (app.js:1134-1135).
+- [x] Mover a grupo con selector, no prompt de texto; renombrar y sacar del grupo con aviso y Deshacer
       (app.js:2088, 2102).
-- [ ] Bloques: Info (creada, última actividad, archivos y tamaño, chips de scripts), resumen Git con «Ver ramas y
+- [x] Bloques: Info (creada, última actividad, archivos y tamaño, chips de scripts), resumen Git con «Ver ramas y
       commits →», Azure «Mapea a», link a Horas desde «Trabajadas», link «ReleaseManual #N» en cabecera y panel
       (app.js:1038, 1104, 1131, 1149-1162).
-- [ ] Archivos: lista y visor lado a lado, abre el primer MIGRATION/FIX, la pestaña se mantiene al cambiar de item
+- [x] Archivos: lista y visor lado a lado, abre el primer MIGRATION/FIX, la pestaña se mantiene al cambiar de item
       (app.js:999, 1215).
-- [ ] Borrar una tarea y Deshacer respeta el tildado (app.js:887).
-- [ ] Planear desde cualquier estado con confirmación «Volver a planear»; pregunta si ya hay sesión (app.js:4063-4082).
+- [x] Borrar una tarea y Deshacer respeta el tildado (app.js:887).
+- [x] Planear desde cualquier estado con confirmación «Volver a planear»; pregunta si ya hay sesión (app.js:4063-4082).
 - [ ] Implementar (plugin) solo en el estado de plan y confirma si hay sesión (app.js:1914, 4216).
 
 ## US-09 Git

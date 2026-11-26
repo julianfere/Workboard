@@ -24,6 +24,8 @@ interface ViewerState {
   url?: string;
   closed: boolean;
   runs?: RunToggles;
+  /** Dentro del detalle (al lado de la lista de archivos): sin botón de cerrar. */
+  inline?: boolean;
 }
 
 /** Marcas «corrido en» de un script, con los ambientes del flujo (las pone el detalle). */
@@ -60,7 +62,7 @@ function toolbar(v: ViewerState): string {
     ${v.f.text ? `<button class="btn" data-v="copy">${ico("copy")}${esc(t("viewer.copy"))}</button>` : ""}
     <button class="btn" data-v="open">${ico("external")}${esc(t("viewer.openWith"))}</button>
     <button class="icon-btn" data-v="reveal" title="${esc(t("detail.reveal"))}">${ico("folder")}</button>
-    <button class="icon-btn" data-v="close" title="${esc(t("common.close"))}">${ico("x")}</button>`;
+    ${v.inline ? "" : `<button class="icon-btn" data-v="close" title="${esc(t("common.close"))}">${ico("x")}</button>`}`;
 }
 
 function showPage(v: ViewerState, i: number): void {
@@ -127,25 +129,114 @@ async function load(v: ViewerState): Promise<void> {
   }
 }
 
-/** Abre el visor de un archivo del item (modal). */
-export function openFileViewer(f: FileEntry, runs?: RunToggles): void {
-  const back = document.createElement("div");
-  back.className = "modal-back";
+/** Clicks del visor (barra, páginas de un diagrama, zoom). */
+async function onViewerClick(v: ViewerState, root: HTMLElement, e: MouseEvent, close: () => void): Promise<void> {
+  const el = (e.target as HTMLElement).closest<HTMLElement>("[data-v]");
+  if (!el || !root.contains(el)) return;
+  const f = v.f;
+  switch (el.dataset.v) {
+    case "close":
+      return close();
+    case "source":
+      v.source = !v.source;
+      v.bar.innerHTML = toolbar(v);
+      return showDiagram(v);
+    case "page":
+      return showPage(v, Number(el.dataset.page));
+    case "ran":
+      if (!v.runs) return;
+      try {
+        const env = el.dataset.env!;
+        v.runs.marks = await v.runs.toggle(env, !v.runs.marks[env]);
+        v.bar.innerHTML = toolbar(v);
+        // El botón se rearmó: el foco vuelve a él (si no, Escape ya no llega al visor).
+        v.bar.querySelector<HTMLElement>(`[data-v="ran"][data-env="${CSS.escape(env)}"]`)?.focus();
+      } catch (err) {
+        toast(errorText(err), undefined, "error");
+      }
+      return;
+    case "zoom":
+      el.classList.toggle("full");
+      return;
+    case "copy":
+      try {
+        await navigator.clipboard.writeText(v.text ?? "");
+        toast(t("viewer.copied"));
+      } catch (err) {
+        toast(errorText(err), undefined, "error");
+      }
+      return;
+    case "open":
+    case "reveal":
+      try {
+        await (el.dataset.v === "open" ? api.openPath(f.path) : api.reveal(f.path));
+      } catch (err) {
+        toast(errorText(err), undefined, "error");
+      }
+      return;
+  }
+}
+
+function viewerHtml(f: FileEntry, cls: string, attrs: string): string {
   const dir = f.path.split("/").slice(0, -1).join("/");
-  back.innerHTML = `<div class="modal viewer" role="dialog" aria-modal="true" aria-label="${esc(f.name)}">
+  return `<div class="${cls}" ${attrs} aria-label="${esc(f.name)}">
     <div class="viewer-head"><div class="grow"><h2>${esc(f.name)}</h2><div class="muted">${esc(dir)} · ${esc(fmtSize(f.size))}</div></div><div class="viewer-bar"></div></div>
     <div class="viewer-body"></div></div>`;
-  document.body.append(back);
+}
+
+function newState(root: HTMLElement, f: FileEntry, runs: RunToggles | undefined, inline: boolean): ViewerState {
   const v: ViewerState = {
     f,
-    body: back.querySelector<HTMLElement>(".viewer-body")!,
-    bar: back.querySelector<HTMLElement>(".viewer-bar")!,
+    body: root.querySelector<HTMLElement>(".viewer-body")!,
+    bar: root.querySelector<HTMLElement>(".viewer-bar")!,
     source: false,
     page: 0,
     closed: false,
     runs,
+    inline,
   };
   v.bar.innerHTML = toolbar(v);
+  return v;
+}
+
+/** Visor dentro de la página (la pestaña Archivos del detalle). El elemento sobrevive a los re-render de la
+ *  página: quien lo usa lo vuelve a colgar y llama a `dispose` cuando ya no se muestra. */
+export interface InlineViewer {
+  path: string;
+  el: HTMLElement;
+  dispose: () => void;
+  /** Marcas «corrido en» actuales (cambiaron desde la lista): rearma la barra si son otras. */
+  setMarks: (marks: Record<string, number>) => void;
+}
+
+export function inlineFileViewer(f: FileEntry, runs?: RunToggles): InlineViewer {
+  const host = document.createElement("div");
+  host.innerHTML = viewerHtml(f, "viewer inline", 'role="region"');
+  const el = host.firstElementChild as HTMLElement;
+  const v = newState(el, f, runs, true);
+  const dispose = () => {
+    if (v.closed) return;
+    v.closed = true;
+    if (v.url) URL.revokeObjectURL(v.url);
+    el.remove();
+  };
+  el.addEventListener("click", (e) => void onViewerClick(v, el, e, dispose));
+  const setMarks = (marks: Record<string, number>) => {
+    if (!v.runs || JSON.stringify(marks) === JSON.stringify(v.runs.marks)) return;
+    v.runs.marks = { ...marks };
+    v.bar.innerHTML = toolbar(v);
+  };
+  void load(v);
+  return { path: f.path, el, dispose, setMarks };
+}
+
+/** Abre el visor de un archivo del item (modal). */
+export function openFileViewer(f: FileEntry, runs?: RunToggles): void {
+  const back = document.createElement("div");
+  back.className = "modal-back";
+  back.innerHTML = viewerHtml(f, "modal viewer", 'role="dialog" aria-modal="true"');
+  document.body.append(back);
+  const v = newState(back, f, runs, false);
 
   const close = () => {
     if (v.closed) return;
@@ -153,51 +244,9 @@ export function openFileViewer(f: FileEntry, runs?: RunToggles): void {
     if (v.url) URL.revokeObjectURL(v.url);
     back.remove();
   };
-  back.addEventListener("click", async (e) => {
+  back.addEventListener("click", (e) => {
     if (e.target === back) return close();
-    const el = (e.target as HTMLElement).closest<HTMLElement>("[data-v]");
-    if (!el || !back.contains(el)) return;
-    switch (el.dataset.v) {
-      case "close":
-        return close();
-      case "source":
-        v.source = !v.source;
-        v.bar.innerHTML = toolbar(v);
-        return showDiagram(v);
-      case "page":
-        return showPage(v, Number(el.dataset.page));
-      case "ran":
-        if (!v.runs) return;
-        try {
-          const env = el.dataset.env!;
-          v.runs.marks = await v.runs.toggle(env, !v.runs.marks[env]);
-          v.bar.innerHTML = toolbar(v);
-          // El botón se rearmó: el foco vuelve a él (si no, Escape ya no llega al visor).
-          v.bar.querySelector<HTMLElement>(`[data-v="ran"][data-env="${CSS.escape(env)}"]`)?.focus();
-        } catch (err) {
-          toast(errorText(err), undefined, "error");
-        }
-        return;
-      case "zoom":
-        el.classList.toggle("full");
-        return;
-      case "copy":
-        try {
-          await navigator.clipboard.writeText(v.text ?? "");
-          toast(t("viewer.copied"));
-        } catch (err) {
-          toast(errorText(err), undefined, "error");
-        }
-        return;
-      case "open":
-      case "reveal":
-        try {
-          await (el.dataset.v === "open" ? api.openPath(f.path) : api.reveal(f.path));
-        } catch (err) {
-          toast(errorText(err), undefined, "error");
-        }
-        return;
-    }
+    void onViewerClick(v, back, e, close);
   });
   back.tabIndex = -1;
   back.addEventListener("keydown", (e) => {

@@ -28,9 +28,12 @@ export function registerView(id: ViewId, fn: () => string): void {
   VIEWS[id] = fn;
 }
 
-export function registerDetail(fn: () => string): void {
+/** La vista del detalle y lo que pregunta antes de cerrarlo (cambios sin guardar). */
+export function registerDetail(fn: () => string, leave: () => Promise<boolean>): void {
   detailView = fn;
+  detailLeave = leave;
 }
+let detailLeave: () => Promise<boolean> = async () => true;
 
 export function registerProject(fn: () => string): void {
   projectView = fn;
@@ -162,6 +165,14 @@ export function startPolling(): void {
 // ---------- navegación ----------
 
 export function goView(view: ViewId): void {
+  if (S.detail) {
+    void detailLeave().then((ok) => ok && showView(view));
+    return;
+  }
+  showView(view);
+}
+
+function showView(view: ViewId): void {
   // En modo discreto (clase `discreet` en `<html>`, ver `discreet.ts`) la vista Horas no está.
   S.view = view === "hours" && document.documentElement.classList.contains("discreet") ? "today" : view;
   S.detail = null;
@@ -170,18 +181,124 @@ export function goView(view: ViewId): void {
   $("#main")?.scrollTo(0, 0);
 }
 
+/** Abre el detalle de un item en el panel lateral, sobre la vista actual. Al cambiar de item se queda en la
+ *  pestaña Archivos si estaba ahí (como la v1); si no, vuelve al Resumen. */
 export async function openDetail(name: string): Promise<void> {
-  S.detailTab = "summary";
-  S.fieldErrors = {};
-  S.fieldDrafts = {};
+  if (S.detail && S.detail !== name && !(await detailLeave())) return;
+  if (S.detail !== name) {
+    if (S.detailTab !== "files") S.detailTab = "summary";
+    S.fieldErrors = {};
+    S.fieldDrafts = {};
+  }
+  await loadPanelWidth();
   await loadDetail(name);
-  $("#main")?.scrollTo(0, 0);
 }
 
+/** Cierra el detalle sin preguntar. */
 export function closeDetail(): void {
   S.detail = null;
   S.detailData = null;
   render();
+}
+
+/** Cierra el detalle si no hay cambios sin guardar (o si se aceptan descartarlos). */
+export async function requestCloseDetail(): Promise<void> {
+  if (S.detail && (await detailLeave())) closeDetail();
+}
+
+// ---------- panel del detalle: ancho (arrastrando el borde), maximizado y guardado en `ui_prefs` ----------
+
+const PANEL_PREF = "detail";
+const PANEL_MIN = 560;
+const PANEL_NARROW = 900;
+const panel = { width: 1100, max: false, loaded: false };
+
+async function loadPanelWidth(): Promise<void> {
+  if (panel.loaded) return;
+  panel.loaded = true;
+  try {
+    const p = (await api.uiPrefs())[PANEL_PREF] as { width?: number; max?: boolean } | undefined;
+    if (typeof p?.width === "number" && p.width >= PANEL_MIN) panel.width = Math.round(p.width);
+    panel.max = p?.max === true;
+  } catch {
+    /* sin preferencias: el ancho por defecto */
+  }
+}
+
+function savePanelWidth(): void {
+  void api.setUiPref(PANEL_PREF, { width: panel.width, max: panel.max }).catch(() => {});
+}
+
+/** Ancho real: el guardado, sin pasar el espacio disponible (deja ver un poco de la vista de atrás). */
+function applyPanelWidth(el: HTMLElement): void {
+  const room = (el.parentElement?.clientWidth ?? innerWidth) - 40;
+  const w = Math.max(Math.min(PANEL_MIN, room), Math.min(panel.width, room));
+  el.classList.toggle("max", panel.max);
+  el.style.width = panel.max ? "" : `${w}px`;
+  el.classList.toggle("narrow", !panel.max && w < PANEL_NARROW);
+}
+
+export function togglePanelMax(): void {
+  panel.max = !panel.max;
+  savePanelWidth();
+  const el = $("#dpanel");
+  if (el) applyPanelWidth(el);
+}
+
+let drag: { x: number; w: number } | null = null;
+document.addEventListener("mousedown", (ev) => {
+  const el = $("#dpanel");
+  if (!el || !(ev.target as HTMLElement).closest(".dp-resizer")) return;
+  ev.preventDefault();
+  if (panel.max) {
+    panel.max = false;
+    panel.width = Math.round(el.getBoundingClientRect().width);
+  }
+  drag = { x: ev.clientX, w: el.getBoundingClientRect().width };
+  document.body.classList.add("resizing");
+});
+document.addEventListener("mousemove", (ev) => {
+  const el = $("#dpanel");
+  if (!drag || !el) return;
+  const room = (el.parentElement?.clientWidth ?? innerWidth) - 40;
+  panel.width = Math.max(PANEL_MIN, Math.min(room, Math.round(drag.w - (ev.clientX - drag.x))));
+  applyPanelWidth(el);
+});
+document.addEventListener("mouseup", () => {
+  if (!drag) return;
+  drag = null;
+  document.body.classList.remove("resizing");
+  savePanelWidth();
+});
+window.addEventListener("resize", () => {
+  const el = $("#dpanel");
+  if (el && S.detail) applyPanelWidth(el);
+});
+
+/** Arma el panel del detalle (o lo esconde). Mantiene el scroll de sus columnas si sigue el mismo item. */
+function renderPanel(): void {
+  const el = $("#dpanel");
+  const scrim = $("#dscrim");
+  if (!el || !scrim) return;
+  const open = !!(S.detail && S.detailData && detailView);
+  scrim.hidden = !open;
+  el.classList.toggle("open", open);
+  el.setAttribute("aria-hidden", String(!open));
+  if (!open) {
+    el.innerHTML = "";
+    delete el.dataset.item;
+    return;
+  }
+  const same = el.dataset.item === S.detail && el.dataset.tab === S.detailTab;
+  const scroll = same ? [...el.querySelectorAll<HTMLElement>("[data-keep-scroll]")].map((x) => [x.dataset.keepScroll!, x.scrollTop] as const) : [];
+  el.innerHTML = detailView!();
+  el.dataset.item = S.detail!;
+  el.dataset.tab = S.detailTab;
+  for (const [k, top] of scroll) {
+    const box = el.querySelector<HTMLElement>(`[data-keep-scroll="${k}"]`);
+    if (box) box.scrollTop = top;
+  }
+  applyPanelWidth(el);
 }
 
 // ---------- render ----------
@@ -190,7 +307,7 @@ function renderNav(): string {
   const projectName = S.root ? folderName(S.root) : t("project.none");
   const item = (id: ViewId, icon: string, key: string) => {
     const badge = navCounters[id] ? `<span class="nav-count${id === "tasks" ? " neutral" : ""}" id="${id}-count"></span>` : "";
-    return `<button class="nav-item${S.view === id && !S.detail ? " sel" : ""}${id === "hours" ? " hrs" : ""}" data-action="nav" data-view="${id}">${ico(icon)}<span>${esc(t(`nav.${id}`))}</span>${badge}<span class="nav-key">${key}</span></button>`;
+    return `<button class="nav-item${S.view === id ? " sel" : ""}${id === "hours" ? " hrs" : ""}" data-action="nav" data-view="${id}">${ico(icon)}<span>${esc(t(`nav.${id}`))}</span>${badge}<span class="nav-key">${key}</span></button>`;
   };
   return `<button class="brand" data-action="project-menu" title="${esc(S.root)}" aria-haspopup="menu"><span class="brand-icon">${ico("folder")}</span><span class="brand-name">${esc(projectName)}</span>${ico("chevronDown", "chev")}</button>
     ${NAV.map((v, i) => item(v.id, v.icon, String(i + 1))).join("")}
@@ -205,14 +322,13 @@ export function render(): void {
   nav.innerHTML = renderNav();
   if (!S.settings?.root && S.view !== "settings") {
     main.innerHTML = projectView ? projectView() : "";
-  } else if (S.detail && S.detailData && detailView) {
-    main.innerHTML = detailView();
   } else {
     const view = VIEWS[S.view];
     main.innerHTML = view
       ? view()
       : `<div class="page"><h1>${esc(t(`nav.${S.view}`))}</h1><p class="empty">${esc(t("view.placeholder", { view: t(`nav.${S.view}`) }))}</p></div>`;
   }
+  renderPanel();
   for (const [id, fn] of Object.entries(navCounters)) {
     const badge = $(`#${id}-count`);
     const count = S.items.length ? fn() : 0;
@@ -270,4 +386,10 @@ export function installEvents(): void {
     }
   });
   onAction("nav", (el) => goView(el.dataset.view as ViewId));
+  onAction("detail-close", () => requestCloseDetail());
+  onAction("detail-max", () => togglePanelMax());
+  // Click en el fondo del panel: cierra el detalle.
+  document.addEventListener("click", (ev) => {
+    if ((ev.target as HTMLElement).id === "dscrim") void requestCloseDetail();
+  });
 }

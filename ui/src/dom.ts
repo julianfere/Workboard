@@ -124,3 +124,29 @@ export function promptDialog(text: string, value = "", allowEmpty = false): Prom
     input.select();
   });
 }
+
+/** Elegir una opción de una lista en un diálogo propio (`Enter` acepta, `Esc` cancela). `null` = cancelado. */
+export function selectDialog(text: string, options: { value: string; label: string }[], okLabel = t("common.ok")): Promise<string | null> {
+  return new Promise((resolve) => {
+    const back = document.createElement("div");
+    back.className = "modal-back";
+    back.innerHTML = `<form class="modal small" role="dialog" aria-modal="true"><label>${esc(text)}<select name="v">${options
+      .map((o) => `<option value="${esc(o.value)}">${esc(o.label)}</option>`)
+      .join("")}</select></label>
+      <div class="modal-actions"><button type="button" class="btn" data-no>${esc(t("common.cancel"))}</button>
+      <button class="btn primary">${esc(okLabel)}</button></div></form>`;
+    document.body.append(back);
+    const form = back.querySelector("form")!;
+    const select = form.elements.namedItem("v") as HTMLSelectElement;
+    const done = (v: string | null) => { back.remove(); resolve(v); };
+    form.onsubmit = (e) => { e.preventDefault(); done(select.value); };
+    $("[data-no]", back)!.onclick = () => done(null);
+    back.onclick = (e) => {
+      if (e.target === back) done(null);
+    };
+    back.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") { e.stopPropagation(); done(null); }
+    });
+    select.focus();
+  });
+}

@@ -169,6 +169,8 @@ export function trackerCard(it: Item): string {
         w.estimate !== null && hrs(t("tracker.estimate", { hours: fmtHours(w.estimate) })),
         w.completed !== null && hrs(t("tracker.completed", { hours: fmtHours(w.completed) })),
         w.changed && esc(t("tracker.changed", { date: fmtIso(w.changed) })),
+        // A qué estado del flujo mapea su estado (v1 app.js:1149).
+        esc(t("tracker.mapsTo", { status: cfg.map[w.state] ? stateLabel(cfg.map[w.state]) : "—" })),
       ].filter((f): f is string => !!f);
       return `<li><span class="grow"><span class="chip">${trackerDot(w.state)}${esc(w.state)}</span> #${esc(id)} ${esc(w.title)}
         <div class="muted tr-facts">${facts.map((f) => (f.startsWith("<span") ? f : `<span>${f}</span>`)).join("")}</div></span>${open}</li>`;

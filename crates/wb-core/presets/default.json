@@ -10,6 +10,7 @@
     { "id": "done", "category": "done", "labels": { "en": "Done", "es": "Hecho" } },
     { "id": "cancelled", "category": "cancelled", "labels": { "en": "Cancelled", "es": "Cancelado" } }
   ],
+  "mainPath": ["backlog", "planned", "in-progress", "review", "testing", "done"],
   "types": [
     { "id": "bug", "labels": { "en": "Bug", "es": "Bug" }, "icon": "bug" },
     { "id": "feature", "labels": { "en": "Feature", "es": "Funcionalidad" }, "aliases": ["user story", "product backlog item", "epic"], "icon": "story" },
@@ -73,7 +74,8 @@
       { "id": "doc", "runnable": false, "kinds": ["PLAN", "HANDOFF", "QA"], "extensions": [".md", ".txt", ".docx", ".doc", ".pdf", ".drawio", ".dio", ".mmd", ".mermaid"], "labels": { "en": "Documentation", "es": "Documentación" } },
       { "id": "sql", "runnable": true, "extensions": [".sql"], "labels": { "en": "SQL", "es": "SQL" } }
     ],
-    "fallbackCategory": { "id": "other", "runnable": false, "labels": { "en": "Other", "es": "Otros" } }
+    "fallbackCategory": { "id": "other", "runnable": false, "labels": { "en": "Other", "es": "Otros" } },
+    "openFirst": ["migration", "fix"]
   },
   "git": {
     "idPattern": "(?:^|[^A-Za-z0-9])#?(?P<id>[A-Za-z][A-Za-z0-9]*-\\d+|\\d{2,})(?:[^0-9]|$)",

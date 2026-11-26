@@ -33,8 +33,8 @@ export interface ExtraField {
   noSpaces?: boolean;
   labels?: Labels;
   icon?: string;
-  /** `tracker`: el valor es el id de un work item del tracker. */
-  link?: "tracker";
+  /** `tracker` (el valor es el id de un work item del tracker) o una plantilla `https://…{value}`. */
+  link?: string;
 }
 
 export interface FieldKeys {
@@ -56,6 +56,8 @@ export interface Workflow {
   id: string;
   name: Labels;
   states: StateDef[];
+  /** Camino principal (pasos del detalle); sin él, los estados que no son descartados ni desconocidos. */
+  mainPath?: string[];
   types: Choice[];
   environments: Choice[];
   period: { startDay: number };
@@ -67,7 +69,7 @@ export interface Workflow {
   sections: { description: string; criteria: string };
   newItem: { defaultType: string; folderTemplate: string; origin: string; originState: string; unknownType: string; originNoId: string };
   group: { origin: string; ids: string; deployHeading: string };
-  files: { kinds: string[]; categories: FileCategory[]; fallbackCategory: FileCategory };
+  files: { kinds: string[]; categories: FileCategory[]; fallbackCategory: FileCategory; openFirst?: string[] };
   /** Palabras que identifican la sección «cómo deployar» del README. */
   deployKeywords?: string[];
   /** Vista Alertas: tipos de archivo que tienen que correrse en el último ambiente y estados vigilados. */

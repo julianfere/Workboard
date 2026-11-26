@@ -27,7 +27,7 @@ export const G = {
 };
 
 const STALE_FETCH = 24 * 3600;
-const OK_STATES = new Set(["merged", "equivalent", "content", "mentioned"]);
+export const OK_STATES = new Set(["merged", "equivalent", "content", "mentioned"]);
 const now = () => Date.now() / 1000;
 
 /** Texto de un mensaje del backend, con los ambientes por su nombre del flujo. */

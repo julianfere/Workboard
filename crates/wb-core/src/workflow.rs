@@ -97,19 +97,17 @@ pub struct ExtraField {
     pub key: String,
     #[serde(default)]
     pub no_spaces: bool,
-    /// Nombre para mostrar (columna de la grilla); sin nombre se muestra la clave.
+    /// Nombre para mostrar (sin él, la clave).
     #[serde(default, skip_serializing_if = "Labels::is_empty")]
     pub labels: Labels,
-    /// Ícono de la UI para el valor.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub icon: Option<String>,
-    /// Qué es el valor, para mostrarlo como link: `tracker` = el id de un work item del tracker.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub link: Option<String>,
+    /// El valor es un link: `"tracker"` (un id del tracker, se abre su página) o una plantilla `https://…{value}`.
+    /// El detalle lo muestra como link en la cabecera y en el panel.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub link: String,
+    /// Icono del link (nombre de `ui/src/icons.ts`).
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub icon: String,
 }
-
-/// Valores posibles de `ExtraField::link`.
-pub const EXTRA_LINKS: [&str; 1] = ["tracker"];
 
 /// Claves del frontmatter de cada dato que la app entiende.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -240,6 +238,10 @@ pub struct FileRules {
     /// Gana la primera categoría cuyo tipo o extensión coincide.
     pub categories: Vec<FileCategory>,
     pub fallback_category: FileCategory,
+    /// Categorías cuyo archivo abre primero la pestaña Archivos del detalle (el más reciente de la primera que
+    /// tenga). Sin ninguna, el primer archivo de texto.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub open_first: Vec<String>,
 }
 
 /// Reglas del panel Git (nada de nombres de ramas ni de remotes en el código).
@@ -294,6 +296,10 @@ pub struct Workflow {
     pub id: String,
     pub name: Labels,
     pub states: Vec<StateDef>,
+    /// Camino principal: los estados que muestra el detalle como pasos, en orden (un item en otro estado lo
+    /// muestra al final). Vacío = todos los que no son descartados ni desconocidos.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub main_path: Vec<String>,
     pub types: Vec<Choice>,
     pub environments: Vec<Choice>,
     pub period: PeriodRule,
@@ -380,15 +386,6 @@ impl Workflow {
         {
             return bad(format!("frontmatter keys use only a-z and _: {k:?}"));
         }
-        if let Some(f) =
-            self.fields.extra.iter().find(|f| f.link.as_deref().is_some_and(|l| !EXTRA_LINKS.contains(&l)))
-        {
-            return bad(format!(
-                "fields.extra {}: unknown link {:?}",
-                f.key,
-                f.link.as_deref().unwrap_or("")
-            ));
-        }
         for c in &self.files.categories {
             if let Some(k) = c.kinds.iter().find(|k| !self.files.kinds.contains(k)) {
                 return bad(format!("category {} uses unknown kind {k}", c.id));
@@ -414,6 +411,24 @@ impl Workflow {
         }
         if let Some(env) = self.git.env_refs.keys().find(|k| !self.environments.iter().any(|e| &e.id == *k)) {
             return bad(format!("git.envRefs uses unknown environment {env}"));
+        }
+        if let Some(c) = self.files.open_first.iter().find(|c| !self.categories().any(|x| &x.id == *c)) {
+            return bad(format!("files.openFirst uses unknown category {c}"));
+        }
+        let mut seen = HashSet::new();
+        for id in &self.main_path {
+            if self.state(id).is_none() || !seen.insert(id) {
+                return bad(format!("mainPath: unknown or repeated state {id:?}"));
+            }
+        }
+        for f in &self.fields.extra {
+            let template = f.link.starts_with("https://") && f.link.contains("{value}");
+            if !(f.link.is_empty() || f.link == "tracker" || template) {
+                return bad(format!(
+                    "fields.extra {}: link is \"tracker\" or an https template with {{value}}",
+                    f.key
+                ));
+            }
         }
         for (env, state) in &self.git.env_states {
             if !self.environments.iter().any(|e| &e.id == env) {
@@ -462,6 +477,17 @@ impl Workflow {
 
     pub fn state_ids(&self) -> impl Iterator<Item = &str> {
         self.states.iter().map(|s| s.id.as_str())
+    }
+
+    /// Estados del camino principal (los pasos del detalle), en orden.
+    pub fn main_path(&self) -> Vec<&str> {
+        if self.main_path.is_empty() {
+            let line =
+                |s: &&StateDef| !matches!(s.category, StateCategory::Cancelled | StateCategory::Unknown);
+            self.states.iter().filter(line).map(|s| s.id.as_str()).collect()
+        } else {
+            self.main_path.iter().map(String::as_str).collect()
+        }
     }
 
     /// Posición del estado en el flujo (para ordenar y detectar retrocesos).
@@ -581,12 +607,18 @@ mod tests {
         assert!(broken(&|v| v["fields"]["notes"] = v["fields"]["status"].clone()).is_err());
         assert!(broken(&|v| v["files"]["categories"][1]["kinds"] = serde_json::json!(["NOPE"])).is_err());
         assert!(broken(&|v| v["extra"] = 1.into()).is_err(), "unknown fields are rejected");
+        assert!(broken(&|v| v["mainPath"] = serde_json::json!(["nope"])).is_err());
+        assert!(broken(&|v| v["files"]["openFirst"] = serde_json::json!(["nope"])).is_err());
+        assert!(broken(&|v| v["mainPath"] = serde_json::json!(["plan", "plan"])).is_err());
         assert!(
-            broken(&|v| v["fields"]["extra"] = serde_json::json!([{"key": "rm", "link": "web"}])).is_err()
+            broken(&|v| v["fields"]["extra"] = serde_json::json!([{"key": "x", "link": "http://a/{value}"}]))
+                .is_err()
         );
         assert!(
-            broken(&|v| v["fields"]["extra"] = serde_json::json!([{"key": "rm", "link": "tracker"}])).is_ok()
+            broken(&|v| v["fields"]["extra"] = serde_json::json!([{"key": "x", "link": "https://a/"}]))
+                .is_err()
         );
+        assert!(broken(&|v| v["fields"]["extra"] = serde_json::json!([{"key": "x", "link": "https://a/{value}"}])).is_ok());
         assert!(broken(&|v| v["alerts"]["finalEnvKinds"] = serde_json::json!(["NOPE"])).is_err());
         assert!(broken(&|v| v["alerts"]["staleStates"] = serde_json::json!(["nope"])).is_err());
         assert!(broken(&|v| v["alerts"]["nope"] = 1.into()).is_err());
@@ -624,6 +656,18 @@ mod tests {
     }
 
     #[test]
+    fn main_path() {
+        let classic = Workflow::preset("classic-es").unwrap();
+        assert_eq!(classic.main_path(), ["pendiente", "plan", "en-curso", "codeado", "qa", "prod"]);
+        let wf = Workflow::preset("default").unwrap();
+        assert_eq!(wf.main_path(), ["backlog", "planned", "in-progress", "review", "testing", "done"]);
+        let mut v: serde_json::Value = serde_json::from_str(PRESETS[0].1).unwrap();
+        v.as_object_mut().unwrap().remove("mainPath");
+        let derived = Workflow::from_json(&v.to_string()).unwrap();
+        assert!(!derived.main_path().contains(&"cancelled") && !derived.main_path().is_empty());
+    }
+
+    #[test]
     fn presets_give_types_an_icon() {
         for id in Workflow::preset_ids() {
             let wf = Workflow::preset(id).unwrap();
@@ -635,7 +679,7 @@ mod tests {
             .extra
             .into_iter()
             .find(|f| f.key == "release_manual");
-        assert_eq!(rm.and_then(|f| f.link).as_deref(), Some("tracker"));
+        assert_eq!(rm.map(|f| f.link).as_deref(), Some("tracker"));
     }
 
     #[test]

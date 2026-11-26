@@ -2,7 +2,7 @@
 
 import "./styles.css";
 import { api } from "./api";
-import { applyTheme, closeDetail, goView, installEvents, NAV, onFsRefresh, refresh, refreshAll, render, startPolling } from "./app";
+import { applyTheme, goView, installEvents, NAV, onFsRefresh, refresh, refreshAll, render, requestCloseDetail, startPolling } from "./app";
 import { esc } from "./dom";
 import { errorText, setLang, t } from "./i18n";
 import { loadDiscreet, toggleDiscreet } from "./discreet";
@@ -87,7 +87,7 @@ document.addEventListener("keydown", (ev) => {
     void deleteSelection();
     return;
   }
-  if (ev.key === "Escape" && S.detail) closeDetail();
+  if (ev.key === "Escape" && S.detail) void requestCloseDetail();
   else if (ev.key === "Escape" && inGrid) clearSelection();
   else if (ev.key === "/") {
     const search = document.querySelector<HTMLInputElement>("#global-search, #notes-search");
