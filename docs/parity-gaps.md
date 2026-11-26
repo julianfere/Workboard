@@ -184,11 +184,14 @@ Referencias: `v1 app.js:N` = `_v1/ui/app.js`.
 
 ## US-11 Migración desde la v1
 
-- [ ] `plan_prefix` de Claude (`/go `).
-- [ ] PAT de escritura para ReleaseManual (o el compartido de US-10).
-- [ ] Vistas guardadas, columnas, orden y filtros (`views`, `activeView`, `gridCols`, `gridSort`) → `ui_prefs.json`;
+- [x] `plan_prefix` de Claude (`/go `).
+- [x] PAT de escritura para ReleaseManual (o el compartido de US-10).
+- [x] Vistas guardadas, columnas, orden y filtros (`views`, `activeView`, `gridCols`, `gridSort`) → `ui_prefs.json`;
       alertas desestimadas (`alertsOff:<raíz>`) → `alerts_off.json`. Corregir `docs/migrate-v1.md`.
-- [ ] Configuración de ReleaseManual (`ado.rm[org|proyecto]`) → datos del plugin.
+- [x] Configuración de ReleaseManual (`ado.rm[org|proyecto]`) → datos del plugin.
+
+  También: última vista, Horas (período por carpeta, orden, ver todas), Métricas, filtros de Pendientes, ancho del
+  detalle, modo discreto, avisos de sesión larga ocultos y sesiones fijadas/reabiertas.
 
 ## US-12 Horas, métricas, paleta, ajustes y general
 

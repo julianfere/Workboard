@@ -48,11 +48,13 @@ v1 = `%APPDATA%\Workboard`, v2 = the destination. Keys are those of the v1 `conf
 | `notesFolder` | `settings.json` → `notesFolder` | The folder stays where it is (it can be an Obsidian vault). |
 | `notas/` (when there was no `notesFolder`) | `notes/` (or the v2 `notesFolder`) | Files copied, recursive, without overwriting. Same note format. |
 | `agents.default`, `agents.custom` | `settings.json` → `agents.default`, `agents.custom` | Same keys (`label`, `command`, `args`, `resumeArgs`) and placeholders. |
+| — (hard-coded in the v1: `/go ` for Claude, `harness.py` `PLAN_PREFIX`) | `settings.json` → `agents.planPrefix.claude` = `/go ` | Usually *already there* (it is the v2 default). An empty `planPrefix: {}` saved by an earlier v2 counts as another value: kept, `--force` sets `/go `. |
 | `git[<root>]` = `[{name, path, envs}]` | `settings.json` → `git.repos[<root>]` | The root key goes from lower case to the path as written; environment keys (`DEV`) to the workflow ids (`dev`). |
 | `ado.conn[<root>]` = `{org, project}` | `trackers.json` → `connections[<root key>]` = `{kind: "azure-devops", org, project}` | Org URL normalized as in the v2. |
 | `ado.procs["org\|project"]` | `trackers.json` → `projects["azure-devops\|org\|project"]` | `states` (plus `suggested` from the Azure category), `fetchedAt`, `map`, `mapSaved`, `dateFields`, `numFields`, `hasPriority`, `hasEffort`; `pactadaField` → `dueField`, `horasField` → `hoursField` (`""` = "none" is kept). Mapped states the preset does not have are left out and reported. |
 | `ado.pats[org]` (DPAPI, base64) | credential store, `azure-devops:read:<org>` | Decrypted with DPAPI (current user). |
-| `ado.wpats[org]` (DPAPI, base64) | credential store, `azure-devops:write:<org>` | Same. |
+| `ado.wpats[org]` (DPAPI, base64) | credential store, `azure-devops:write:<org>` | Same. This is the write token of **Change status in the tracker** and also the one ReleaseManual (private plugin, `host/tracker/writeToken`) uses, as in the v1. |
+| `ado.rm["org\|project"]` | `plugin-data/private.json` → `rm["<org>\|<project>"]` | ReleaseManual settings for the private plugin (`private`): `type`, `repo`, `base`, `prefix`, `scriptPath`, `commitMsg`, `link`, `form`, `formFetchedAt`, `visible`, `last` (same format; other keys left out). Key: normalized org URL and project, lower case (what the plugin builds from the folder connection). Other keys of the file are kept. Written even if the plugin is not installed yet: it picks it up once enabled. |
 | `runs.json` | `runs.json` | Same format; root keys recomputed; marks merged per file and environment. |
 | `state_log.jsonl` | `state_log.jsonl` | Same format; rows merged without duplicates, sorted by `ts`. |
 | `mcp_events.jsonl` | `mcp_events.jsonl` | Same. |
@@ -61,6 +63,25 @@ v1 = `%APPDATA%\Workboard`, v2 = the destination. Keys are those of the v1 `conf
 | `backups/` | `backups/` | Same layout (`<root>-<sha1[:12]>/<item>/…`); files added without overwriting. Keeps **Versions** and the status history of Metrics. |
 | `sessions/<root>.json` | `sessions/<root>.json` | Same file name (same root key). Each session goes from the v1 keys (`nombre`, `raiz`, `wis`, `estado`, `modo`, `agente`, `modelo`, `creada`, `ultimaActividad`, `forkDe`) to the v2 ones; `cerrada` → `closed`, anything else → `paused` (resume them with **Resume**: same id, same Claude Code transcript). Merged by id. |
 | `sessions/<id>.activity.jsonl`, `<id>.events.jsonl` | same names | Merged without duplicates. The v2 reads the v1 rows (`wis`), so Hours and Metrics keep the history. |
+| `prefs["pinnedSess@<root>"]`, `prefs["keepSess@<root>"]` | `sessions/<root>.json` → `pinned`, `keepOpen` of each session | Pinned sessions and sessions reopened by hand (they do not close by themselves). |
+
+### Window preferences (`prefs`)
+
+The v1 kept the view state in `config.json` → `prefs` (written by `setPref` in `ui/app.js`); the v2 keeps it in
+`ui_prefs.json` (one key per view, read by the UI) and `alerts_off.json`. Ids are translated; states, types and
+environments are checked against the preset. Values the v2 does not have are left out and counted in the report.
+
+| v1 `prefs` | v2 | How |
+|---|---|---|
+| `views`, `activeView` and the current `stateFilter`, `hideClosed`, `typeFilter`, `pactFilter`, `period`, `groupBy`, `gridCols`, `gridSort`, `density` | `ui_prefs.json` → `grid` = `{views, active, current, flipped: {}, open: {}}` (`grid.ts`) | Each view and the current values become a `Snap`: `stateFilter` → `status` (`none` → `""`), `typeFilter` → `type`, `pactFilter` → `due`, `period` → `activity`, `groupBy` (`week-last` → `weekLast`, `week-created` → `weekCreated`, `periodo` → `period`, `state` → `status`, `tipo` → `type`, `azure` → `tracker`, `prio` → `priority`; `none` → `[]`), `gridCols` (`state` → `status`, `wi` → `id`, `tipo` → `type`, `session` → `sessions`, `notas` → `notes`, `azure` → `tracker`, `rama` → `branch`, `prio` → `priority`, `pactada` → `due`, `horas` → `hours`, `real` → `worked`, `rm` → `x:release_manual` if the preset has that field; widths kept), `gridSort` (`asc` → `1`, `desc` → `-1`), `density` (`compacta` → `compact`). Factory view ids `mia`, `activos`, `qa`, `todo` → `mine`, `active`, `review`, `all` (names kept). Without `views` the v2 factory views are used. |
+| `tasksState`, `tasksSess`, `tasksEnv`, `tasksPact`, `tasksShowDone` | `ui_prefs.json` → `tasks` = `{status, session, env, due, showDone}` | Environment to the workflow id (`QA` → `qa`). |
+| `detailWidth` (px or `"max"`), `detailWidthRestore` | `ui_prefs.json` → `detail` = `{width, max}` | At least 560 px, as the v2 panel. |
+| `hideHours` | `ui_prefs.json` → `hideHours` | Discreet mode. |
+| `view` | `ui_prefs.json` → `view` | Last view: `hoy` → `today`, `backlog` → `items`, the others keep their id. |
+| `hoursAll`, `hoursSort`, `hoursPeriod@<root>` (period start, ms) | `ui_prefs.json` → `hours` = `{all, sort, period: {<root>: "YYYY-MM"}}` | The period code is the year and month of its start (local time), as the v1 `periodCode`. |
+| `mxRange`, `mxTipo`, `mxAll` | `ui_prefs.json` → `metrics` = `{range, type, all}` | Type checked against the preset. |
+| `heavyOff@<root>` = `{<session>: "larga" \| "alta"}` | `ui_prefs.json` → `sessionWeightHidden` = `{<session>: "long" \| "heavy"}` | Hidden long-session warnings; merged per session from all roots. |
+| `alertsOff@<root>` = `{"<item>\|<code>": fingerprint}` | `alerts_off.json` → `{<root key>: {"<item>\|<kind>": fingerprint}}` (`alerts.rs`, `alerts.ts`) | Merged per alert. Codes: `dup` → `dupes`, `migration` → `finalEnv`, `stale`, `nostate` → `noStatus`, `noprefix` → `noPrefix`, `noreadme` → `noReadme`, `gitdesync` → `gitDesync`, `gituncommitted` → `gitDirty`, `planincomplete` → `plan`. Fingerprints are recomputed as the v2 does: plan gaps `pendientes` → `tasks`; git desyncs with the workflow environment ids in workflow order; the rest are already equal. An alert that cannot be translated is left out (reported): it shows again and can be dismissed again. |
 
 ## What is not migrated
 
@@ -72,8 +93,7 @@ v1 = `%APPDATA%\Workboard`, v2 = the destination. Keys are those of the v1 `conf
 | `ctx/`, `claude/` | Per-session context and Claude Code settings: rebuilt when a session starts or resumes. |
 | `reflect/`, `review/` | Reflect and Review packs already generated; the sessions that used them keep their transcripts. |
 | `notas-borradas/`, `tools/_removed/` | Deleted notes and removed tools. |
-| `prefs` other than `theme` | View state (filters, columns, sizes, active view, pinned sessions): the v2 keeps it in the window. |
-| `ado.rm` | ReleaseManual settings. In the v2 ReleaseManual belongs to a plugin, with its own data (`plugin-data/<id>.json`) and its own write token; set it up from the plugin. |
+| Other `prefs`: `openGroups@`/`closedGrps@`/`periodFlip@`/`subFlip@` (open groups), `dockH`, `detailSide`, `detailTab`, `closedCats`, `promoTarget`/`promoMode`/`promoShell`, `planMode`, `reviewModel`, `noteSort`/`noteWi`, `alertsShowOff`, `sessMore@` | The v2 does not keep them, or keeps them elsewhere (promotion and notes choices in the window storage) or with other keys (open groups use the v2 group keys). They go back to their defaults. |
 
 ## Code
 
