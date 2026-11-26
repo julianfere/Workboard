@@ -285,7 +285,7 @@ export interface ApiError {
   conflict?: boolean;
 }
 
-// ---------- trackers (Azure DevOps) ----------
+// ---------- trackers (Azure DevOps o de plugins) ----------
 
 export interface TrackerState {
   name: string;
@@ -324,11 +324,33 @@ export interface TrackerCache {
   items: Record<string, TrackerWorkItem>;
 }
 
+/** Texto de un manifiesto: uno solo o por idioma. */
+export type ManifestText = string | Labels;
+
+/** Un tracker que se puede conectar (el incluido o el de un plugin habilitado). En el incluido los textos son
+ * claves de traducción; en los de plugins, el texto del manifiesto (`null` = el genérico). */
+export interface TrackerKind {
+  kind: string;
+  name: ManifestText;
+  org: { label: ManifestText | null; placeholder: ManifestText | null; required: boolean };
+  project: { label: ManifestText | null; placeholder: ManifestText | null };
+  secret: { label: ManifestText | null; hint: ManifestText | null };
+  /** Las escrituras usan una credencial aparte. */
+  writeSecret: boolean;
+  builtin: boolean;
+  /** Id del plugin que lo aporta. */
+  plugin: string | null;
+}
+
 export interface TrackerConfig {
-  kinds: string[];
+  kinds: TrackerKind[];
   connected: boolean;
   kind: string;
   source: string;
+  /** El plugin de la conexión está deshabilitado o no está (todo responde `tracker.pluginMissing`). */
+  kindMissing: boolean;
+  /** El tracker conectado usa una credencial aparte para escribir. */
+  writeSecret: boolean;
   org: string;
   project: string;
   hasSecret: boolean;
@@ -699,6 +721,10 @@ export interface PluginInfo {
   fields?: string[];
   presets?: string[];
   presetErrors?: string[];
+  /** Trackers que aporta. */
+  trackers?: { kind: string; name: string }[];
+  /** Trackers que no se pueden usar (tipo repetido con otro plugin habilitado). */
+  trackerErrors?: ApiError[];
   /** Por qué no se encuentra el ejecutable (null = se encuentra). */
   command?: string | null;
   actions?: PluginAction[];

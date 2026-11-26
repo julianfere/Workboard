@@ -72,6 +72,9 @@ pub struct FieldInfo {
     pub name: String,
     #[serde(rename = "type", default)]
     pub kind: String,
+    /// Para qué sirve, si el tracker lo dice (`due`, `hours`, `priority` o `effort`; los de los plugins).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub role: Option<String>,
 }
 
 /// Qué pedir de cada work item además de lo básico. Los campos opcionales se piden solo si existen en el
@@ -163,6 +166,28 @@ pub trait Tracker: Send + Sync {
     fn detail(&self, id: &str) -> Result<Detail>;
     /// ESCRIBE en el tracker: cambia el estado de un work item.
     fn set_state(&self, id: &str, state: &str) -> Result<StateChange>;
+}
+
+/// Campos para planificar de un tracker que dice el papel de cada uno (`role`, los de los plugins): fechas
+/// `date`/`dateTime`, números `number`/`double`/`integer`, en el orden en que vienen. La fecha y las horas
+/// pactadas se autoeligen por su papel.
+pub fn role_catalog(fields: &[FieldInfo]) -> azure::Catalog {
+    let role = |r: &str| fields.iter().find(|f| f.role.as_deref() == Some(r)).map(|f| f.reference.clone());
+    let of = |kinds: &[&str]| -> Vec<FieldInfo> {
+        fields.iter().filter(|f| kinds.contains(&f.kind.as_str())).cloned().collect()
+    };
+    let date_fields = of(&["date", "dateTime"]);
+    let num_fields = of(&["number", "double", "integer"]);
+    let due_guess = role("due").filter(|r| date_fields.iter().any(|f| &f.reference == r));
+    let hours_guess = role("hours").filter(|r| num_fields.iter().any(|f| &f.reference == r));
+    azure::Catalog {
+        has_priority: role("priority").is_some(),
+        has_effort: role("effort").is_some(),
+        date_fields,
+        num_fields,
+        due_guess,
+        hours_guess,
+    }
 }
 
 /// Trackers soportados.

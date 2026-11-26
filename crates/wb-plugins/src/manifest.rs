@@ -66,6 +66,9 @@ pub struct Manifest {
     pub presets: Vec<String>,
     #[serde(default)]
     pub actions: Vec<Action>,
+    /// Trackers que aporta (ver `trackers.rs`).
+    #[serde(default)]
+    pub trackers: Vec<crate::trackers::TrackerDecl>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -142,7 +145,7 @@ impl Manifest {
                 return Err(format!("action {}: when.kind must be item or group", a.id));
             }
         }
-        Ok(())
+        crate::trackers::validate(&self.trackers)
     }
 
     pub fn action(&self, id: &str) -> Option<&Action> {

@@ -10,6 +10,7 @@ import { ico } from "./icons";
 import { launched } from "./sessions";
 import { S, itemByName, stateDef, statusOf } from "./state";
 import { termSize } from "./terminal";
+import { invalidateTracker } from "./views/tracker";
 import type { Item, PluginAction, PluginButton, PluginField, PluginInfo, PluginList, PluginStep } from "./types";
 
 const P: { list: PluginList | null; loading: boolean } = { list: null, loading: false };
@@ -112,11 +113,12 @@ export function pluginsSettingsCard(): string {
       }
       const perms = (p.permissions ?? []).map((x) => t(PERMISSION_KEYS[x] ?? x));
       const settings = p.enabled ? (p.actions ?? []).filter((a) => a.placements.includes("settings")).map((a) => button(p, a, [], "settings")).join("") : "";
-      const problems = [p.command ? t("plugin.noCommand", { detail: p.command }) : "", ...(p.presetErrors ?? [])].filter(Boolean);
+      const problems = [p.command ? t("plugin.noCommand", { detail: p.command }) : "", ...(p.presetErrors ?? []), ...(p.trackerErrors ?? []).map((e) => errorText(e))].filter(Boolean);
+      const trackers = (p.trackers ?? []).map((x) => x.name);
       return `<li class="plugin-row"><div class="grow">
           <div><b>${esc(p.name ?? p.id)}</b> <span class="muted">${esc(p.version ?? "")} · ${esc(p.folder)}</span></div>
           ${p.description ? `<div class="muted">${esc(p.description)}</div>` : ""}
-          <div class="muted small">${esc(perms.length ? t("plugin.permissions", { list: perms.join(", ") }) : t("plugin.noPermissions"))}${p.presets?.length ? ` · ${esc(t("plugin.presets", { n: p.presets.length }))}` : ""}</div>
+          <div class="muted small">${esc(perms.length ? t("plugin.permissions", { list: perms.join(", ") }) : t("plugin.noPermissions"))}${p.presets?.length ? ` · ${esc(t("plugin.presets", { n: p.presets.length }))}` : ""}${trackers.length ? ` · ${esc(t("plugin.trackers", { list: trackers.join(", ") }))}` : ""}</div>
           ${problems.map((x) => `<div class="flag">${esc(x)}</div>`).join("")}
           ${settings ? `<div class="card-actions">${settings}</div>` : ""}</div>
         <label class="check"><input type="checkbox" data-change="plugin-enable" data-id="${esc(p.id)}"${p.enabled ? " checked" : ""}>${esc(t("plugin.enabled"))}</label></li>`;
@@ -138,6 +140,8 @@ export async function setPluginEnabled(id: string, on: boolean): Promise<void> {
   }
   try {
     P.list = await pluginApi.enable(id, on);
+    // Los trackers que se pueden conectar dependen de los plugins habilitados.
+    invalidateTracker();
   } catch (err) {
     toast(errorText(err), undefined, "error");
   }

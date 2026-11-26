@@ -1,4 +1,4 @@
-// Trackers (Azure DevOps): conexión y mapeo en Ajustes, sincronización con previsualización, asignados del
+// Trackers (Azure DevOps o el de un plugin): conexión y mapeo en Ajustes, sincronización con previsualización, asignados del
 // período, datos del tracker en el detalle, cambiar el estado en el tracker y «Nuevo item» con id.
 // Todo lee salvo «Cambiar estado en el tracker», que escribe con la credencial de escritura.
 
@@ -8,7 +8,7 @@ import { $, confirmDialog, esc, fmtDate, toast } from "../dom";
 import { errorText, label, lang, t } from "../i18n";
 import { ico } from "../icons";
 import { S, envLabel, itemByName, stateDef, stateLabel, statusOf, titleOf, typeLabel, wf } from "../state";
-import type { ApiError, AssignedList, Item, NewItemResult, SyncPreview, SyncRow, TrackerConfig, TrackerItem, TrackerWorkItem } from "../types";
+import type { ApiError, AssignedList, Item, ManifestText, NewItemResult, SyncPreview, SyncRow, TrackerConfig, TrackerItem, TrackerKind, TrackerWorkItem } from "../types";
 
 // ---------- estado ----------
 
@@ -21,7 +21,15 @@ export const TR = {
   draftMap: null as Record<string, string> | null,
   /** Estados que aparecieron al volver a traerlos. */
   newStates: new Set<string>(),
+  /** Tracker elegido en el formulario de conexión (null = el conectado). */
+  formKind: null as string | null,
 };
+
+/** Vuelve a leer la config la próxima vez (por ejemplo, al habilitar o deshabilitar un plugin). */
+export function invalidateTracker(): void {
+  TR.loadedFor = "";
+  TR.formKind = null;
+}
 
 /** Relee la config (y la caché) del tracker de la carpeta abierta. */
 export async function loadTracker(): Promise<void> {
@@ -192,6 +200,53 @@ function options(values: [string, string][], selected: string): string {
   return values.map(([v, text]) => `<option value="${esc(v)}"${v === selected ? " selected" : ""}>${esc(text)}</option>`).join("");
 }
 
+/** Texto de un manifiesto en el idioma de la UI. */
+const manifestText = (v: ManifestText | null | undefined) => (typeof v === "string" ? v : v ? label(v, "") : "");
+/** Texto de un formulario de conexión: clave de traducción en el incluido, texto del plugin si no. */
+function kindText(k: TrackerKind, v: ManifestText | null | undefined, fallback: string): string {
+  const text = k.builtin && typeof v === "string" ? t(v) : manifestText(v);
+  return text || (fallback ? t(fallback) : "");
+}
+
+/** El tracker que muestra el formulario: el elegido, el conectado o el primero. */
+function formKind(cfg: TrackerConfig): TrackerKind {
+  return cfg.kinds.find((k) => k.kind === TR.formKind) ?? cfg.kinds.find((k) => k.kind === cfg.kind) ?? cfg.kinds[0];
+}
+
+/** Organización y proyecto de la conexión (algunos trackers de plugins no tienen organización). */
+const connPath = (cfg: TrackerConfig) => (cfg.org ? `${cfg.org} / ${cfg.project}` : cfg.project);
+
+/** Aviso cuando el plugin del tracker conectado está deshabilitado o no está. */
+function missingNote(cfg: TrackerConfig): string {
+  return cfg.kindMissing ? `<p class="warn">${ico("alert")}${esc(t("tracker.pluginMissing", { kind: cfg.kind }))}</p>` : "";
+}
+
+/** Tracker, organización, proyecto y credencial; etiquetas, ejemplos y obligatorios según el tracker. */
+function connFields(prefix: string, cfg: TrackerConfig): string {
+  const k = formKind(cfg);
+  const same = cfg.connected && k.kind === cfg.kind;
+  const kinds: [string, string][] = cfg.kinds.map((x) => [x.kind, x.builtin ? t(`tracker.kind.${x.kind}`) : manifestText(x.name)]);
+  const optional = k.org.required ? "" : ` <span class="muted">${esc(t("tracker.optional"))}</span>`;
+  const secretPh = same && cfg.hasSecret ? t("tracker.secretSaved") : k.builtin ? t("tracker.secretHint") : "";
+  return `<div class="set-row"><label for="${prefix}-kind">${esc(t("tracker.kind"))}</label><select id="${prefix}-kind" data-change="trk-form-kind">${options(kinds, k.kind)}</select></div>
+    <div class="set-row"><label for="${prefix}-org">${esc(kindText(k, k.org.label, "tracker.org"))}${optional}</label><input id="${prefix}-org" value="${esc(same ? cfg.org : "")}" placeholder="${esc(kindText(k, k.org.placeholder, ""))}"${k.org.required ? " required" : ""}></div>
+    <div class="set-row"><label for="${prefix}-project">${esc(kindText(k, k.project.label, "tracker.project"))}</label><input id="${prefix}-project" value="${esc(same ? cfg.project : "")}" placeholder="${esc(kindText(k, k.project.placeholder, ""))}" required></div>
+    <div class="set-row"><label for="${prefix}-secret">${esc(kindText(k, k.secret.label, "tracker.secretPlugin"))}</label><input id="${prefix}-secret" type="password" autocomplete="off" placeholder="${esc(secretPh)}"></div>`;
+}
+
+/** Ayuda de la credencial del tracker del formulario. */
+function secretHelp(cfg: TrackerConfig): string {
+  const k = formKind(cfg);
+  return k.builtin ? kindText(k, k.secret.hint, "tracker.secretHelp") : [manifestText(k.secret.hint), t("tracker.secretKept")].filter(Boolean).join(" ");
+}
+
+/** Categoría propia del tracker: traducida si es una de Azure, tal cual si no. */
+function categoryLabel(category: string): string {
+  const key = `tracker.category.${category}`;
+  const text = t(key);
+  return text === key ? category : text;
+}
+
 function fieldSelect(which: "due" | "hours", cfg: TrackerConfig): string {
   const list = which === "due" ? cfg.dateFields : cfg.numFields;
   const current = which === "due" ? cfg.dueField : cfg.hoursField;
@@ -220,7 +275,7 @@ function mappingTable(cfg: TrackerConfig): string {
       const v = map[s.name] ?? "";
       const sug = !cfg.mapSaved && v && v === cfg.suggested[s.name];
       return `<tr><td><span class="chip">${trackerDot(s.name)}${esc(s.name)}</span></td>
-        <td class="muted">${esc(s.category ? t(`tracker.category.${s.category}`) : t("tracker.map.outside"))}</td>
+        <td class="muted">${esc(s.category ? categoryLabel(s.category) : t("tracker.map.outside"))}</td>
         <td class="muted" title="${esc(s.types.join(", "))}">${esc(s.types.slice(0, 3).join(", "))}${s.types.length > 3 ? ` +${s.types.length - 3}` : ""}</td>
         <td class="num muted">${counts[s.name] ?? ""}</td>
         <td><select data-change="trk-map" data-state="${esc(s.name)}">${stateOptions(v)}</select>
@@ -235,21 +290,17 @@ export function trackerSettingsCard(): string {
   if (!S.root) return "";
   const cfg = ensureLoaded();
   if (!cfg) return `<section class="card"><h2>${ico("cloud")}${esc(t("tracker.title"))}</h2><p class="muted">${esc(t("common.loading"))}</p></section>`;
-  const kinds: [string, string][] = cfg.kinds.map((k) => [k, t(`tracker.kind.${k}`)]);
-  const conn = `<div class="set-row"><label for="trk-kind">${esc(t("tracker.kind"))}</label><select id="trk-kind">${options(kinds, cfg.kind)}</select></div>
-    <div class="set-row"><label for="trk-org">${esc(t("tracker.org"))}</label><input id="trk-org" value="${esc(cfg.org)}" placeholder="https://dev.azure.com/my-org"></div>
-    <div class="set-row"><label for="trk-project">${esc(t("tracker.project"))}</label><input id="trk-project" value="${esc(cfg.project)}"></div>
-    <div class="set-row"><label for="trk-secret">${esc(t("tracker.secret"))}</label><input id="trk-secret" type="password" autocomplete="off" placeholder="${esc(t(cfg.hasSecret ? "tracker.secretSaved" : "tracker.secretHint"))}"></div>
-    <p class="muted">${esc(t("tracker.secretHelp"))}</p>
+  const conn = `${missingNote(cfg)}${connFields("trk", cfg)}
+    <p class="muted">${esc(secretHelp(cfg))}</p>
     <div class="card-actions"><button class="btn primary" data-action="trk-connect">${ico("cloud")}${esc(t("tracker.connect"))}</button>
       ${cfg.connected && cfg.hasSecret ? `<button class="btn" data-action="trk-clear-secret">${esc(t("tracker.clearSecret"))}</button>` : ""}
-      ${cfg.connected && cfg.hasWriteSecret ? `<button class="btn" data-action="trk-clear-secret" data-write="1">${esc(t("tracker.clearWriteSecret"))}</button>` : ""}
+      ${cfg.connected && cfg.writeSecret && cfg.hasWriteSecret ? `<button class="btn" data-action="trk-clear-secret" data-write="1">${esc(t("tracker.clearWriteSecret"))}</button>` : ""}
       ${cfg.connected ? `<button class="btn danger" data-action="trk-disconnect">${esc(t("tracker.disconnect"))}</button>` : ""}</div>`;
-  if (!cfg.connected || !cfg.states.length) {
+  if (!cfg.connected || !cfg.states.length || cfg.kindMissing) {
     return `<section class="card"><h2>${ico("cloud")}${esc(t("tracker.title"))}</h2><p class="muted">${esc(t("tracker.readOnly"))}</p>${conn}</section>`;
   }
   const fetched = cfg.statesFetchedAt ? fmtDate(cfg.statesFetchedAt) : "";
-  return `<section class="card"><h2>${ico("cloud")}${esc(cfg.source)} <span class="muted">${esc(cfg.org)} / ${esc(cfg.project)}</span></h2>
+  return `<section class="card"><h2>${ico("cloud")}${esc(cfg.source)} <span class="muted">${esc(connPath(cfg))}</span></h2>
     <p class="muted">${esc(t("tracker.readOnly"))}</p>${conn}
     <h3>${esc(t("tracker.fields"))}</h3>
     <div class="set-row"><label>${esc(t("tracker.field.due"))}</label>${fieldSelect("due", cfg)}</div>
@@ -272,6 +323,7 @@ onAction("trk-connect", async (el) => {
     TR.cfg = await trackerApi.fetch();
     TR.newStates = before.size ? new Set(TR.cfg.states.filter((s) => !before.has(s.name)).map((s) => s.name)) : new Set();
     TR.draftMap = null;
+    TR.formKind = null;
     toast(t("tracker.connected", { n: TR.cfg.states.length }));
   } catch (err) {
     toast(errorText(err), undefined, "error");
@@ -280,6 +332,11 @@ onAction("trk-connect", async (el) => {
     done();
   }
   render();
+});
+onChange("trk-form-kind", (el) => {
+  TR.formKind = (el as HTMLSelectElement).value;
+  render();
+  rerender();
 });
 onAction("trk-refetch", async () => {
   const before = new Set(TR.cfg?.states.map((s) => s.name) ?? []);
@@ -339,7 +396,7 @@ onAction("trk-clear-secret", async (el) => {
   rerender();
 });
 onAction("trk-disconnect", async () => {
-  if (!(await confirmDialog(t("tracker.disconnectConfirm", { org: TR.cfg!.org, project: TR.cfg!.project }), t("tracker.disconnect")))) return;
+  if (!(await confirmDialog(t("tracker.disconnectConfirm", { org: TR.cfg!.org || TR.cfg!.source, project: TR.cfg!.project }), t("tracker.disconnect")))) return;
   TR.cfg = await trackerApi.disconnect();
   TR.draftMap = null;
   if (wizard) {
@@ -357,7 +414,7 @@ let wizard: { step: 1 | 2; thenSync: boolean; only: string[] | null } | null = n
 
 /** Abre el asistente de conexión y mapeo. Con `thenSync`, guardar el mapeo sincroniza. */
 export function openWizard(step: 1 | 2, thenSync = false, only: string[] | null = null): void {
-  wizard = { step: step === 2 && TR.cfg?.states.length ? 2 : 1, thenSync, only };
+  wizard = { step: step === 2 && TR.cfg?.states.length && !TR.cfg.kindMissing ? 2 : 1, thenSync, only };
   TR.draftMap = null;
   openModal(wizardView);
 }
@@ -367,19 +424,15 @@ const wizardButton = () => `<button class="btn ghost" data-action="trk-wizard">$
 function wizardView(): string {
   const cfg = TR.cfg!;
   const w = wizard!;
-  const can2 = cfg.states.length > 0;
+  const can2 = cfg.states.length > 0 && !cfg.kindMissing;
   const steps = `<div class="trk-steps"><button class="chip${w.step === 1 ? " on" : ""}" data-action="trk-wz-step" data-step="1">1 · ${esc(t("tracker.wizard.connection"))}</button>
     <button class="chip${w.step === 2 ? " on" : ""}" data-action="trk-wz-step" data-step="2"${can2 ? "" : " disabled"}>2 · ${esc(t("tracker.map.title"))}</button></div>`;
   if (w.step === 1) {
-    const kinds: [string, string][] = cfg.kinds.map((k) => [k, t(`tracker.kind.${k}`)]);
     return `<h2>${ico("cloud")}${esc(cfg.source)}</h2>${steps}
       <p class="muted">${esc(t("tracker.readOnly"))}</p>
       <div class="trk-body">
-        <div class="set-row"><label for="trkw-kind">${esc(t("tracker.kind"))}</label><select id="trkw-kind">${options(kinds, cfg.kind)}</select></div>
-        <div class="set-row"><label for="trkw-org">${esc(t("tracker.org"))}</label><input id="trkw-org" value="${esc(cfg.org)}" placeholder="https://dev.azure.com/my-org"></div>
-        <div class="set-row"><label for="trkw-project">${esc(t("tracker.project"))}</label><input id="trkw-project" value="${esc(cfg.project)}"></div>
-        <div class="set-row"><label for="trkw-secret">${esc(t("tracker.secret"))}</label><input id="trkw-secret" type="password" autocomplete="off" placeholder="${esc(t(cfg.hasSecret ? "tracker.secretSaved" : "tracker.secretHint"))}"></div>
-        <p class="muted">${esc(t("tracker.secretHelp"))}
+        ${missingNote(cfg)}${connFields("trkw", cfg)}
+        <p class="muted">${esc(secretHelp(cfg))}
           ${cfg.connected && cfg.hasSecret ? `<button class="link" data-action="trk-clear-secret">${esc(t("tracker.clearSecret"))}</button>` : ""}
           ${cfg.connected ? ` · <button class="link" data-action="trk-disconnect">${esc(t("tracker.disconnect"))}</button>` : ""}</p>
       </div>
@@ -387,7 +440,7 @@ function wizardView(): string {
         <button class="btn primary" data-action="trk-wz-connect">${ico("cloud")}${esc(t("tracker.connect"))}</button></div>`;
   }
   const fetched = cfg.statesFetchedAt ? fmtDate(cfg.statesFetchedAt) : "";
-  return `<h2>${ico("cloud")}${esc(cfg.source)} <span class="muted">${esc(cfg.org)} / ${esc(cfg.project)}</span></h2>${steps}
+  return `<h2>${ico("cloud")}${esc(cfg.source)} <span class="muted">${esc(connPath(cfg))}</span></h2>${steps}
     <p class="muted">${esc(t("tracker.map.help", { n: cfg.states.length, date: fetched }))} <button class="link" data-action="trk-refetch">${esc(t("tracker.refetch"))}</button></p>
     <div class="trk-body">
       <div class="set-row"><label>${esc(t("tracker.field.due"))}</label>${fieldSelect("due", cfg)}</div>
@@ -424,6 +477,7 @@ onAction("trk-wz-connect", async (el) => {
     TR.cfg = await trackerApi.fetch();
     TR.newStates = before.size ? new Set(TR.cfg.states.filter((s) => !before.has(s.name)).map((s) => s.name)) : new Set();
     TR.draftMap = null;
+    TR.formKind = null;
     if (wizard) wizard.step = 2;
     toast(t("tracker.connected", { n: TR.cfg.states.length }));
   } catch (err) {
@@ -476,6 +530,8 @@ const SETUP_ERRORS = new Set([
   "tracker.badOrg",
   "tracker.noOrg",
   "tracker.noProject",
+  "tracker.pluginAuth",
+  "tracker.pluginMissing",
 ]);
 
 /** Sincronizar (todo o solo unas carpetas). Sin configurar abre el asistente y sincroniza al guardar. */
@@ -488,7 +544,7 @@ async function startSync(only: string[] | null): Promise<void> {
     toast(errorText(err), undefined, "error");
     return;
   }
-  if (!cfg.connected || !cfg.hasSecret) return openWizard(1, true, only);
+  if (!cfg.connected || !cfg.hasSecret || cfg.kindMissing) return openWizard(1, true, only);
   if (!cfg.states.length || !cfg.mapSaved) return openWizard(2, true, only);
   toast(t("tracker.sync.reading", { source: cfg.source }));
   try {
@@ -755,8 +811,8 @@ const statesFor = (type: string | undefined) => (TR.cfg?.states ?? []).filter((s
 export async function openPush(names: string[]): Promise<void> {
   TR.cfg = await trackerApi.config();
   const cfg = TR.cfg;
-  if (!cfg.connected) {
-    toast(t("tracker.push.setupConn", { source: cfg.source }), undefined, "error");
+  if (!cfg.connected || cfg.kindMissing) {
+    toast(cfg.kindMissing ? t("tracker.pluginMissing", { kind: cfg.kind }) : t("tracker.push.setupConn", { source: cfg.source }), undefined, "error");
     return openWizard(1);
   }
   if (!cfg.states.length || !cfg.mapSaved) {
@@ -805,9 +861,9 @@ function pushView(): string {
       <td><select data-change="trk-push-target" data-i="${i}">${r.target ? "" : `<option value="" selected>—</option>`}${opts(r)}</select>${r.cands.length ? "" : ` <span class="muted">${esc(t("tracker.push.noMap"))}</span>`}</td></tr>`)
     .join("");
   return `<h2>${esc(t("tracker.push.title", { source: cfg.source }))}</h2>
-    <p class="warn">${ico("alert")}${esc(t("tracker.push.warning", { source: cfg.source, org: cfg.org, project: cfg.project }))}</p>
+    <p class="warn">${ico("alert")}${esc(t("tracker.push.warning", { source: cfg.source, org: cfg.org || cfg.source, project: cfg.project }))}</p>
     <div class="trk-body">
-      ${cfg.hasWriteSecret ? "" : `<div class="set-row"><label for="trk-write-secret">${esc(t("tracker.writeSecret"))}</label><input id="trk-write-secret" type="password" autocomplete="off" placeholder="${esc(t("tracker.writeSecretHint"))}"></div>
+      ${!cfg.writeSecret || cfg.hasWriteSecret ? "" : `<div class="set-row"><label for="trk-write-secret">${esc(t("tracker.writeSecret"))}</label><input id="trk-write-secret" type="password" autocomplete="off" placeholder="${esc(t("tracker.writeSecretHint"))}"></div>
         <p class="muted">${esc(t("tracker.writeSecretHelp"))}</p>`}
       <table class="grid trk-table"><thead><tr><th></th><th>${esc(t("tracker.sync.folder"))}</th><th>${esc(t("tracker.sync.ids"))}</th><th>${esc(t("tracker.push.local"))}</th>
         <th>${esc(t("tracker.push.now", { source: cfg.source }))}</th><th>${esc(t("tracker.push.new", { source: cfg.source }))}</th></tr></thead><tbody>${rows}</tbody></table>
@@ -838,7 +894,7 @@ onChange("trk-push-target", (el) => {
 onAction("trk-push-go", async (el) => {
   const picked = pushPicked();
   const secret = $<HTMLInputElement>("#trk-write-secret")?.value.trim() ?? "";
-  if (!TR.cfg!.hasWriteSecret && !secret) {
+  if (TR.cfg!.writeSecret && !TR.cfg!.hasWriteSecret && !secret) {
     toast(t("tracker.noWriteSecret", { source: TR.cfg!.source }), undefined, "error");
     return;
   }

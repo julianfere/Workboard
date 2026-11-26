@@ -71,6 +71,9 @@ pub struct Catalog {
     pub num_fields: Vec<FieldInfo>,
     /// Fecha pactada autoelegida (ver [`DUE_GUESS`]).
     pub due_guess: Option<String>,
+    /// Horas pactadas autoelegidas sin mirar los work items (solo por el `role` de un plugin; en Azure se
+    /// eligen con [`pick_hours`]).
+    pub hours_guess: Option<String>,
 }
 
 pub fn catalog(fields: &[FieldInfo]) -> Catalog {
@@ -97,6 +100,7 @@ pub fn catalog(fields: &[FieldInfo]) -> Catalog {
         date_fields: dates,
         num_fields: nums,
         due_guess,
+        hours_guess: None,
     }
 }
 
@@ -420,6 +424,7 @@ impl Tracker for AzureDevOps {
                     name: f["name"].as_str().map_or_else(|| reference.clone(), String::from),
                     kind: text(&f["type"]),
                     reference,
+                    role: None,
                 })
             })
             .collect())
@@ -577,7 +582,7 @@ mod tests {
     }
 
     fn field(reference: &str, name: &str, kind: &str) -> FieldInfo {
-        FieldInfo { reference: reference.into(), name: name.into(), kind: kind.into() }
+        FieldInfo { reference: reference.into(), name: name.into(), kind: kind.into(), role: None }
     }
 
     #[test]

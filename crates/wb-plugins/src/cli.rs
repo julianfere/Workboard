@@ -301,19 +301,9 @@ plugin.tracker("{kind}", {{
     s
 }
 
-/// El manifiesto sin las claves que esta versión no conoce todavía (`trackers`, si el host no lo valida):
-/// `Err` con el problema, `Ok(notas)` si valida.
+/// Valida el manifiesto con las mismas reglas que la app (trackers incluidos): `Err` con el problema.
 fn validate(text: &str) -> Result<(Manifest, Vec<String>), String> {
-    match Manifest::parse(text) {
-        Ok(m) => Ok((m, vec![])),
-        Err(e) if e.contains("unknown field `trackers`") => {
-            let mut v: Json = serde_json::from_str(text).map_err(|e| e.to_string())?;
-            v.as_object_mut().map(|o| o.remove("trackers"));
-            let m = Manifest::parse(&v.to_string())?;
-            Ok((m, vec!["trackers: not validated by this Workboard version (ignored here)".into()]))
-        }
-        Err(e) => Err(e),
-    }
+    Manifest::parse(text).map(|m| (m, vec![]))
 }
 
 /// Crea la carpeta del plugin. Nunca pisa una que ya existe.
@@ -321,9 +311,6 @@ pub fn create(opts: &NewOptions) -> Result<PathBuf, String> {
     let manifest = manifest_for(opts);
     let text = serde_json::to_string_pretty(&manifest).map_err(|e| e.to_string())?;
     validate(&text)?;
-    if opts.tracker && opts.id == "azure" {
-        return Err("tracker kind \"azure\" is built in: choose another id".into());
-    }
     let dir = opts.parent.join(&opts.id);
     if dir.exists() {
         return Err(format!("{} already exists", dir.display()));

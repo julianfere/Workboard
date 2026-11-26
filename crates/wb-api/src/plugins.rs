@@ -10,7 +10,7 @@ use serde_json::{Value as Json, json};
 use wb_core::frontmatter::Value;
 use wb_core::workspace::{Item, ItemKind};
 use wb_core::{Workflow, Workspace};
-use wb_plugins::{Manifest, Plugins};
+use wb_plugins::{Manifest, Plugin, PluginError, Plugins};
 use wb_sessions::registry::{Registry, Session, State as SessionState};
 
 use crate::{Api, ApiError, ApiResult, Args};
@@ -218,7 +218,40 @@ impl wb_plugins::Host for ApiHost<'_> {
     }
 }
 
+/// Lo que puede pedir un plugin mientras atiende una llamada `tracker/*`: su flujo, sus datos y sus
+/// secretos. Nada de la carpeta ni del tracker (esas llamadas corren con el lock de los trackers tomado).
+struct TrackerHost<'a>(ApiHost<'a>);
+
+impl wb_plugins::Host for TrackerHost<'_> {
+    fn request(&mut self, method: &str, params: &Json) -> Result<Json, String> {
+        match method {
+            "host/workflow" | "host/data/get" | "host/data/set" | "host/secret/get" | "host/secret/set"
+            | "host/secret/delete" => self.0.request(method, params),
+            _ => Err("plugin.denied".into()),
+        }
+    }
+}
+
 impl Api {
+    /// Una llamada `tracker/*` a un plugin. Lo que escribe en stderr va al log sin la credencial.
+    pub(crate) fn plugin_tracker_call(
+        &self,
+        plugin: &Plugin,
+        manifest: &Manifest,
+        lang: &str,
+        method: &str,
+        params: Json,
+        secret: &str,
+    ) -> Result<Json, PluginError> {
+        let mut host = TrackerHost(ApiHost { api: self, manifest, ws: None });
+        let mut stderr = String::new();
+        let out = wb_plugins::call(plugin, lang, method, params, &mut host, &mut stderr);
+        if !stderr.trim().is_empty() {
+            log_stderr(&self.config_dir, &manifest.id, &crate::tracker_plugin::scrub(&stderr, secret));
+        }
+        out
+    }
+
     pub(crate) fn plugin_command(&self, cmd: &str, a: &Args) -> Option<ApiResult<Json>> {
         let out = match cmd {
             "plugins" => self.plugins_list(),
@@ -238,7 +271,7 @@ impl Api {
         Some(out)
     }
 
-    fn lang(&self) -> &'static str {
+    pub(crate) fn lang(&self) -> &'static str {
         wb_i18n::resolve_lang(self.settings().lang.as_deref().unwrap_or(wb_i18n::DEFAULT_LANG))
     }
 
@@ -246,6 +279,7 @@ impl Api {
         let lang = self.lang();
         let all = Plugins::load(&self.config_dir);
         let preset_errors = all.preset_errors();
+        let clashes = all.tracker_clashes();
         let list: Vec<Json> = all
             .list
             .iter()
@@ -266,6 +300,15 @@ impl Api {
                     "fields": m.fields,
                     "presets": m.presets,
                     "presetErrors": errors,
+                    "trackers": m.trackers.iter().map(|t| json!({
+                        "kind": t.kind,
+                        "name": t.name.get(lang),
+                    })).collect::<Vec<_>>(),
+                    // Trackers cuyo tipo ya usa otro plugin habilitado: no se pueden conectar.
+                    "trackerErrors": clashes.iter().filter(|c| c.plugin == m.id).map(|c| json!({
+                        "code": "plugin.trackerClash",
+                        "params": {"kind": c.kind, "plugin": c.owner},
+                    })).collect::<Vec<_>>(),
                     "command": p.argv().err(),
                     "actions": m.actions.iter().map(|x| json!({
                         "id": x.id,
