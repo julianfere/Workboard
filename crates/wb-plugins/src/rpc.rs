@@ -194,20 +194,41 @@ pub fn call(
         plugin.manifest.as_ref().ok_or_else(|| PluginError::new("plugin.error.command", "no manifest"))?;
     let deadline = Instant::now() + m.timeout();
     let mut run = spawn(plugin)?;
-    let init = json!({
-        "jsonrpc": "2.0", "id": 1, "method": "initialize",
-        "params": {
-            "protocol": PROTOCOL,
-            "host": {"name": "workboard", "version": env!("CARGO_PKG_VERSION")},
-            "lang": lang,
-            "plugin": {"id": m.id, "dir": plugin.dir.display().to_string()},
-        },
-    });
+    let init = init_message(plugin, &m.id, lang);
     let out = run
         .send(&init)
         .and_then(|_| await_reply(&mut run, 1, deadline, host))
         .and_then(|_| run.send(&json!({"jsonrpc": "2.0", "id": 2, "method": method, "params": params})))
         .and_then(|_| await_reply(&mut run, 2, deadline, host));
+    *stderr = run.finish();
+    out
+}
+
+fn init_message(plugin: &Plugin, id: &str, lang: &str) -> Json {
+    json!({
+        "jsonrpc": "2.0", "id": 1, "method": "initialize",
+        "params": {
+            "protocol": PROTOCOL,
+            "host": {"name": "workboard", "version": env!("CARGO_PKG_VERSION")},
+            "lang": lang,
+            "plugin": {"id": id, "dir": plugin.dir.display().to_string()},
+        },
+    })
+}
+
+/// Solo `initialize` (lo usa `workboard plugin check`): lanza el plugin, espera la respuesta y lo cierra.
+pub fn handshake(
+    plugin: &Plugin,
+    lang: &str,
+    host: &mut dyn Host,
+    stderr: &mut String,
+) -> Result<Json, PluginError> {
+    let m =
+        plugin.manifest.as_ref().ok_or_else(|| PluginError::new("plugin.error.command", "no manifest"))?;
+    let deadline = Instant::now() + m.timeout();
+    let mut run = spawn(plugin)?;
+    let out =
+        run.send(&init_message(plugin, &m.id, lang)).and_then(|_| await_reply(&mut run, 1, deadline, host));
     *stderr = run.finish();
     out
 }
