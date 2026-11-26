@@ -1,0 +1,39 @@
+{
+  "id": "trello",
+  "name": { "en": "Trello (example tracker)", "es": "Trello (tracker de ejemplo)" },
+  "description": {
+    "en": "Connects a work folder to a Trello board: lists are states, card numbers are ids.",
+    "es": "Conecta una carpeta de trabajos a un tablero de Trello: las listas son estados y el número de tarjeta es el id."
+  },
+  "version": "0.1.0",
+  "protocol": 1,
+  "command": "python",
+  "args": ["plugin.py"],
+  "timeoutSeconds": 60,
+  "permissions": [],
+  "trackers": [
+    {
+      "kind": "trello",
+      "name": "Trello",
+      "org": {
+        "label": { "en": "Workspace (optional)", "es": "Espacio de trabajo (opcional)" },
+        "placeholder": "my-team",
+        "required": false
+      },
+      "project": {
+        "label": { "en": "Board", "es": "Tablero" },
+        "placeholder": "https://trello.com/b/AbCd1234/my-board"
+      },
+      "secret": {
+        "label": { "en": "API key:token", "es": "API key:token" },
+        "hint": {
+          "en": "Create a Power-Up at https://trello.com/power-ups/admin to get its API key, then open https://trello.com/1/authorize?expiration=never&scope=read,write&response_type=token&key=YOUR_KEY to get a token. Paste them as key:token.",
+          "es": "Creá un Power-Up en https://trello.com/power-ups/admin para obtener su API key y después abrí https://trello.com/1/authorize?expiration=never&scope=read,write&response_type=token&key=TU_KEY para obtener un token. Pegalos como key:token."
+        }
+      },
+      "writeSecret": false,
+      "itemUrl": "https://trello.com/b/{project}",
+      "idPattern": "^[0-9]+$"
+    }
+  ]
+}
