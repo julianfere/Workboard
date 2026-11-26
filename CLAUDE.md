@@ -88,7 +88,9 @@ config real.
   proyecto) y `<config>/tracker_cache.json` (última lectura por raíz, la lee el MCP); vista previa del sync en Rust
   (completar / tipo / avanza / retrocede; retroceder = categoría menor o antes en el preset), aplicar escribe solo
   estado y tipo; la fila «según git» (`git::env_reach`) propone el estado de `Workflow.git.envStates` cuando el trabajo ya está en ese ambiente en todos los repos del item. `stats.rs`: `time_report`, `stats_report`, `tool_*`, `reflect_items`, `apply_learnings` (sesión normal que aplica candidatos de una nota de aprendizajes), `save_export`/`reveal_export`
-  (CSV a Descargas con BOM). Los `*_command` se encadenan en el fallback de `dispatch`. Binario `wb-devserver`: la misma API por HTTP (`POST /api/<cmd>`,
+  (CSV con BOM: a la ruta de «Guardar como» en la app, nunca dentro de la raíz; sin ruta, a Descargas). `errlog.rs`: todo
+  error de `dispatch` va a `<config>/workboard.log` (comando + código y parámetros, nunca los argumentos; rota a `.log.1`
+  pasado 1 MB). Los `*_command` se encadenan en el fallback de `dispatch`. Binario `wb-devserver`: la misma API por HTTP (`POST /api/<cmd>`,
   header `X-Workboard: 1`) para desarrollar la UI en el navegador contra el backend real; `--fake-tracker <archivo.json>`
   responde las llamadas al tracker sin red.
 - `src-tauri/` — la ventana: un único comando `api(cmd, args)` (async: un overview de git lento no congela la ventana) que llama a `Api::dispatch`, `session_attach`
@@ -108,7 +110,8 @@ config real.
   promoción, alertas, sondea `git_signature` cada 3 s), `views/tracker.ts`, `views/hours.ts`, `views/metrics.ts`,
   `views/tools.ts` (datos compartidos en `stats.ts`; horas y fecha pactadas: las del README y, si faltan, las del tracker) y `reflect.ts`.
   Trabajos: `views/items.ts` (render, menús, selección y lote con deshacer) + `views/grid.ts` (columnas, filtros, agrupación,
-  vistas guardadas; se guardan con `ui_prefs`/`ui_pref_set` en `<config>/ui_prefs.json`, clave `grid`) y `planning.ts`
+  vistas guardadas; se guardan con `ui_prefs`/`ui_pref_set` en `<config>/ui_prefs.json`, clave `grid`; las demás
+  prefs chicas pasan por `prefs.ts`: `view`, `hours`, `metrics`) y `planning.ts`
   (prioridad, pactada, período, horas y la marca «local» cuando el README pisa al tracker).
 - `tests/golden/` — comportamiento de la v1 capturado como JSON (ver su README y `KNOWN_ISSUES.md`).
 - `_v1/` — copia de la v1 de referencia (versionada; se actualiza copiando la v1 en uso).

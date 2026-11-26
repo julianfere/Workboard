@@ -192,13 +192,13 @@ Referencias: `v1 app.js:N` = `_v1/ui/app.js`.
 
 ## US-12 Horas, métricas, paleta, ajustes y general
 
-- [ ] Horas: clic en la fila abre el detalle y el número de sesiones el desglose; etiqueta de origen local/Azure,
+- [x] Horas: clic en la fila abre el detalle y el número de sesiones el desglose; etiqueta de origen local/Azure,
       vencido, «· actual/anterior», chip de grupo «N WI» (app.js:2726-2741). CSV con «Fecha pactada» y «Origen».
-- [ ] Persistir período, modo y orden de Horas (por carpeta) y rango/tipo/«ver todas» de Métricas.
-- [ ] Paleta: Ctrl+K cierra, ↑↓ dan la vuelta, «Nueva sesión» usa la selección de la grilla (app.js:3113, 3664).
-- [ ] Escape con foco en un campo cierra el detalle o limpia la búsqueda (app.js:3693).
-- [ ] Ajustes: navegación por secciones (app.js:3198, 3345).
-- [ ] Abrir en la última vista usada (pref `view`, por defecto Hoy; app.js:211).
-- [ ] Exportar CSV con diálogo «Guardar como» (v1 `app.py:1006`).
-- [ ] `mark_ran` valida que el archivo exista dentro de la raíz (v1 `app.py:787`).
-- [ ] Log de errores de la API con rotación (v1 `workboard.log`, 1 MB).
+- [x] Persistir período, modo y orden de Horas (por carpeta) y rango/tipo/«ver todas» de Métricas.
+- [x] Paleta: Ctrl+K cierra, ↑↓ dan la vuelta, «Nueva sesión» usa la selección de la grilla (app.js:3113, 3664).
+- [x] Escape con foco en un campo cierra el detalle o limpia la búsqueda (app.js:3693).
+- [x] Ajustes: navegación por secciones (app.js:3198, 3345).
+- [x] Abrir en la última vista usada (pref `view`, por defecto Hoy; app.js:211).
+- [x] Exportar CSV con diálogo «Guardar como» (v1 `app.py:1006`).
+- [x] `mark_ran` valida que el archivo exista dentro de la raíz (v1 `app.py:787`).
+- [x] Log de errores de la API con rotación (v1 `workboard.log`, 1 MB).
