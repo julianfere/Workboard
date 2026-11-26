@@ -135,6 +135,11 @@ impl Ctx {
 
     /// Items de la sesión según el registro de la app; `None` fuera de una sesión.
     fn session_items(&self) -> Option<BTreeSet<String>> {
+        self.session_item_list().map(|l| l.into_iter().collect())
+    }
+
+    /// Items de la sesión en el orden del registro (el primero es el principal).
+    fn session_item_list(&self) -> Option<Vec<String>> {
         self.session.as_ref()?;
         let rec = self.session_record().unwrap_or(Json::Null);
         let items = rec.get("items").or_else(|| rec.get("wis")).and_then(Json::as_array);
@@ -643,13 +648,14 @@ pub fn run_tool(ctx: &Ctx, name: &str, args: &[String], item: &str) -> ToolResul
         return Err(ToolError::new("mcp.tool.sessionOnly", vec![]));
     }
     let t = Tools::new(ctx)?;
-    let items = ctx.session_items().unwrap_or_default();
+    let items = ctx.session_item_list().unwrap_or_default();
     let folder = if !item.is_empty() {
         let it = t.resolve(item)?;
         ctx.check_writable(&it.name)?;
         it.name
     } else {
-        items.iter().next().cloned().ok_or_else(|| ToolError::new("mcp.tool.noItem", vec![]))?
+        // El primero de la sesión (no el primero alfabético), como la v1.
+        items.first().cloned().ok_or_else(|| ToolError::new("mcp.tool.noItem", vec![]))?
     };
     let path = t.ws.folder_of(&folder)?;
     if tools::get(&ctx.config_dir, name).is_none() {
@@ -658,7 +664,13 @@ pub fn run_tool(ctx: &Ctx, name: &str, args: &[String], item: &str) -> ToolResul
             vec![("name", name.into()), ("tool", names::LIST_TOOLS.into())],
         ));
     }
-    let out = tools::run(&ctx.config_dir, name, args, &path, tools::RUN_TIMEOUT)?;
-    ctx.event("run_tool", &folder, name);
+    let out = tools::run(&ctx.config_dir, name, args, &path, tools::RUN_TIMEOUT, &ctx.lang())?;
+    ctx.event("run_tool", &folder, &run_detail(name, args, &out["exitCode"]));
     Ok(out)
+}
+
+/// Detalle del evento de una corrida, como la v1: `nombre args → código`.
+fn run_detail(name: &str, args: &[String], code: &Json) -> String {
+    let code = code.as_i64().map_or_else(|| "—".to_string(), |c| c.to_string());
+    format!("{name} {} → {code}", args.join(" "))
 }

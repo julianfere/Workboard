@@ -92,6 +92,8 @@
   "mcp.tool.noItem": "The session has no work items: pass `item`",
   "mcp.tool.notFound": "There is no tool «{name}». The available ones come from {tool}.",
   "mcp.tool.unavailable": "The tool «{name}» cannot run from this version yet.",
+  "mcp.tool.cut": "…(truncated)",
+  "mcp.tool.timeout": "(stopped after {seconds} s)",
   "mcp.fromTracker": "{value} ({source})",
   "mcp.periodSpan": "{period} (from day {start} of that month to day {end} of the next)",
   "mcp.periodMonth": "{period} (calendar month)",

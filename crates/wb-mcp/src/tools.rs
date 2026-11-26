@@ -303,18 +303,27 @@ pub fn describe(path: &Path) -> (String, String) {
     (desc, pos.chain(opt).collect::<Vec<_>>().join(" "))
 }
 
-fn decode(b: &[u8]) -> String {
+/// Salida de una tool: si es larga, el final con la marca de recortada delante (como la v1).
+fn decode(b: &[u8], cut: &str) -> String {
     let s = String::from_utf8_lossy(b);
     let n = s.chars().count();
     if n <= OUTPUT_MAX {
         return s.to_string();
     }
     let tail: String = s.chars().skip(n - OUTPUT_MAX).collect();
-    format!("…\n{tail}")
+    format!("{cut}\n{tail}")
 }
 
-/// Corre una tool promovida en `cwd`. Falla si el script cambió desde que se promovió.
-pub fn run(config_dir: &Path, name: &str, args: &[String], cwd: &Path, timeout: Duration) -> Result<Json> {
+/// Corre una tool promovida en `cwd`. Falla si el script cambió desde que se promovió. `lang`: idioma de
+/// las marcas que se suman a la salida (recortada, cortada por tiempo).
+pub fn run(
+    config_dir: &Path,
+    name: &str,
+    args: &[String],
+    cwd: &Path,
+    timeout: Duration,
+    lang: &str,
+) -> Result<Json> {
     let tool = get(config_dir, name)
         .ok_or_else(|| err(ErrorKind::NotFound, "tools.error.notFound", vec![("name", name.into())]))?;
     if !tool.ok {
@@ -330,14 +339,16 @@ pub fn run(config_dir: &Path, name: &str, args: &[String], cwd: &Path, timeout: 
     argv.extend(args.iter().map(Into::into));
     let start = Instant::now();
     let out = wb_platform::run_captured(&argv, cwd, timeout)?;
-    let mut stderr = decode(&out.stderr);
+    let cut = wb_i18n::t(lang, "mcp.tool.cut", &[]);
+    let mut stderr = decode(&out.stderr, &cut);
     if out.timed_out {
-        stderr.push_str(&format!("\n(timeout: {} s)", timeout.as_secs()));
+        let secs = timeout.as_secs().to_string();
+        stderr.push_str(&format!("\n{}", wb_i18n::t(lang, "mcp.tool.timeout", &[("seconds", &secs)])));
     }
     Ok(json!({
         "tool": name,
         "exitCode": out.code,
-        "stdout": decode(&out.stdout),
+        "stdout": decode(&out.stdout, &cut),
         "stderr": stderr,
         "seconds": (start.elapsed().as_secs_f64() * 10.0).round() / 10.0,
         "timedOut": out.timed_out,
@@ -416,7 +427,7 @@ mod tests {
         // Cambiar la copia la congela.
         std::fs::write(&t.path, "@echo off\necho otro\n").unwrap();
         assert!(!get(&cfg, "count").unwrap().ok);
-        assert_eq!(run(&cfg, "count", &[], &d, RUN_TIMEOUT).unwrap_err().code, "tools.error.changed");
+        assert_eq!(run(&cfg, "count", &[], &d, RUN_TIMEOUT, "es").unwrap_err().code, "tools.error.changed");
         // Promover de nuevo desde la copia acepta el cambio.
         let again = promote(&cfg, &t.path, "count", "d", "", t.meta.origin.clone(), true).unwrap();
         assert!(again.ok);
@@ -430,6 +441,15 @@ mod tests {
         std::fs::remove_dir_all(&d).unwrap();
     }
 
+    #[test]
+    fn long_output_keeps_the_tail_with_the_cut_mark() {
+        assert_eq!(decode(b"corto", "CUT"), "corto");
+        let long = "a".repeat(OUTPUT_MAX) + "fin";
+        let out = decode(long.as_bytes(), "CUT");
+        assert!(out.starts_with("CUT\n") && out.ends_with("fin"), "{}", &out[..10]);
+        assert_eq!(out.chars().count(), OUTPUT_MAX + 4);
+    }
+
     #[cfg(windows)]
     #[test]
     fn run_a_tool_in_a_folder() {
@@ -440,7 +460,7 @@ mod tests {
         promote(&cfg, &src, "hello", "Saluda", "<nombre>", json!({}), false).unwrap();
         let work = d.join("work");
         std::fs::create_dir_all(&work).unwrap();
-        let out = run(&cfg, "hello", &["mundo".into()], &work, RUN_TIMEOUT).unwrap();
+        let out = run(&cfg, "hello", &["mundo".into()], &work, RUN_TIMEOUT, "es").unwrap();
         assert_eq!(out["exitCode"], 2);
         let stdout = out["stdout"].as_str().unwrap();
         assert!(stdout.contains("hola mundo"), "{stdout}");

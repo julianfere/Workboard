@@ -92,6 +92,8 @@
   "mcp.tool.noItem": "La sesión no tiene trabajos: pasá `item`",
   "mcp.tool.notFound": "No existe la tool «{name}». Las disponibles salen de {tool}.",
   "mcp.tool.unavailable": "La tool «{name}» todavía no se puede correr desde esta versión.",
+  "mcp.tool.cut": "…(recortado)",
+  "mcp.tool.timeout": "(cortado a los {seconds} s)",
   "mcp.fromTracker": "{value} ({source})",
   "mcp.periodSpan": "{period} (del {start} de ese mes al {end} del siguiente)",
   "mcp.periodMonth": "{period} (mes calendario)",
