@@ -283,13 +283,118 @@ class Trello:
 plugin.run()
 ```
 
-`workboard plugin new <id> [--lang python|node] [--tracker]` creates a ready-to-enable plugin folder in
-`<config>/plugins/<id>/` with the manifest, the SDK file and a starting handler; `workboard plugin check
-<folder>` validates the manifest and runs `initialize` plus a harmless call against it.
+The same in Node (handlers may be `async`):
+
+```js
+import { Plugin, form, text, result } from "./workboard-plugin.mjs";
+
+const plugin = new Plugin();
+
+plugin.action("greet", {
+  open: (ctx) => form("Hello", [text("name", "Your name", { required: true })], { buttons: [["greet", "Greet"]] }),
+  async submit(ctx, button, values, state) {
+    await ctx.host.updateItem(ctx.items[0].name, { notes: `greeted ${values.name}` });
+    return result("Hello", `Hello, ${values.name}!`);
+  },
+});
+
+plugin.tracker("trello", {
+  connect(conn, secret) { /* … */ },
+  states(conn, secret) { /* … */ },
+  // fields, workItems(conn, secret, ids, request), assignedToMe(conn, secret, dueField, start, end, exclude),
+  // detail(conn, secret, id), setState(conn, secret, id, state)
+});
+
+plugin.run();
+```
+
+Handlers return a step built with the helpers; a plain dict/object with the same keys works too.
+
+| Python | Node | Builds |
+|---|---|---|
+| `form(title, fields, buttons=, intro=, error=, state=)` | `form(title, fields, { buttons, intro, error, state })` | a form |
+| `text`, `textarea`, `password`, `select`, `checkbox`, `number` `(id, label, …)` | same names, options as the last argument | a field. Options: `value`, `required`, `wide`, `hint`, `placeholder`, `refresh`, `rows` (textarea); `select` takes `options` (`{value, label}`, `(value, label)` pairs or plain values) |
+| `info(text, id=None)` | `info(text, { id })` | a paragraph |
+| `button(id, label, primary=, validate=, confirm=)` | `button(id, label, { primary, validate, confirm })` | a button; an `(id, label)` pair also works in `buttons` |
+| `result(title, message=None, ok=True, steps=, links=, buttons=, state=)` | `result(title, message, { ok, steps, links, buttons, state })` | a result; `steps` as `(label, ok[, error])`, `links` as `(label, url)` |
+| `session(items, prompt=, name=, mode="default", model=)` | `session(items, { prompt, name, mode, model })` | an agent session |
+| `close(message=None)` | `close(message)` | close the dialog |
+
+**Context.** The open handler gets `ctx`, the submit handler `ctx, button, values, state` (`values` and
+`state` are `{}` when Workboard sends none). `ctx` has `lang`, `root`, `placement`, `items` (the `ItemRef`s),
+`item` (the first one or `None`), `action`, `plugin_id`/`pluginId`, `plugin_dir`/`pluginDir` and `host`.
+
+**Host.** `ctx.host` has one method per host request; in Node they return promises.
+
+| Python | Node | Request |
+|---|---|---|
+| `workflow()`, `items()`, `item(name)` | same | `host/workflow`, `host/items`, `host/item` |
+| `update_item(name, fields)` | `updateItem(name, fields)` | `host/updateItem` |
+| `read_file(path)` → text | `readFile(path)` | `host/readFile` |
+| `secret_get(key)` → value or `None`, `secret_set(key, value)`, `secret_delete(key)` | `secretGet`, `secretSet`, `secretDelete` | `host/secret/*` |
+| `data_get()`, `data_set(data)` | `dataGet`, `dataSet` | `host/data/*` |
+| `tracker()` | `tracker()` | `host/tracker` |
+| `tracker_write_token_get()`, `…_set(value)`, `…_delete()` | `trackerWriteTokenGet`, `…Set`, `…Delete` | `host/tracker/writeToken/*` |
+
+A JSON-RPC error raises (rejects with) `HostError`, whose `code` is the error's message (`plugin.denied`…).
+Uncaught, it fails the step with `host/readFile failed: plugin.denied`.
+
+**Trackers.** In Python the decorated class is instantiated once (an instance also works); in Node
+`plugin.tracker(kind, impl)` takes an object or a class. The methods are `connect`, `states`, `fields`,
+`work_items`/`workItems`, `assigned_to_me`/`assignedToMe`, `detail` and `set_state`/`setState`; every one
+gets `(conn, secret, …)` with the extra params of the call in the order of the table above (`assigned_to_me`
+gets `due_field, start, end, exclude`). `conn` has `org` and `project` (in Python also as attributes). A
+`connect` that returns nothing accepts the connection as it is. A missing method answers an error.
+
+**Errors.** Anything a handler raises (throws) becomes a JSON-RPC error with a readable message
+(`ValueError: …`); the traceback (stack) goes to stderr, which Workboard logs. `PluginError(message)`
+shows only the message. `TrackerError(code, message)` answers `code` as the message (`tracker.auth`,
+`tracker.notFound`) and `message` as `data.detail`. The SDKs also replace the call's credential with `***`
+in any error and traceback they write. An unknown method answers error `-32601`; an `initialize` with a
+newer `protocol` than the SDK speaks answers an error.
+
+**Streams.** Both SDKs read and write UTF-8 regardless of the console code page, send exactly one line per
+message and exit when Workboard closes stdin. While handlers run, `print`/`console.log` go to stderr, so a
+stray debug line cannot break the protocol.
+
+### Tests
+
+The SDKs' own tests run the fixture plugin as a subprocess that speaks the protocol (initialize, actions
+with interleaved host requests, trackers, errors, protocol mismatch):
+
+```sh
+python -m unittest discover -s sdk/python/tests      # py on Windows
+node --test "sdk/node/tests/*.test.mjs"              # also part of npm test
+```
+
+`crates/wb-plugins/tests/sdk.rs` runs a Python SDK plugin through the real runner (`wb_plugins::call`) and
+`workboard plugin new|check`; it passes with a note when `python`/`py` or `node` is not on the `PATH`.
+To test your own plugin the same way, write a JSON line per message to its stdin and read its stdout.
+
+### `workboard plugin`
+
+```sh
+workboard plugin new <id> [--lang python|node] [--tracker] [--dir <parent>]
+workboard plugin check <folder>
+```
+
+`new` creates `<config>/plugins/<id>/` (or `<parent>/<id>/`; `WORKBOARD_CONFIG_DIR` changes `<config>`)
+with `manifest.json` (one sample action `hello`; with `--tracker` also a `trackers` entry whose `kind` is
+the id), the SDK file and a starting handler (`plugin.py` or `plugin.mjs`) that already answers the action
+and, with `--tracker`, every tracker method with sample data. The id is validated like the manifest's, an
+existing folder is never overwritten, and it prints the next steps (enable it in **Settings → Plugins**).
+For Python the command is `python`, or `py` (Windows) / `python3` when `python` is not on the `PATH`.
+
+`check` validates the folder's manifest with the same rules Workboard uses (printing each problem: the
+manifest, its presets, its command), then starts the plugin and sends `initialize` through the real runner.
+It never calls actions or trackers. Exit code 0 when everything passed, 1 otherwise (2 for bad arguments).
+A Workboard that does not know `trackers` yet reports them as not validated instead of failing.
 
 ## Example
 
-`examples/plugins/hello/` is a minimal plugin in Python (copy the folder into `<config>/plugins/`; on
-Windows, if `python` is not on the `PATH`, change `command` to `py`). Plugins written in Rust can use
+`examples/plugins/hello/` is a minimal plugin written with the Python SDK; it carries its own copy of
+`workboard_plugin.py`, so the folder works on its own (copy it into `<config>/plugins/`; on Windows, if
+`python` is not on the `PATH`, change `command` to `py`). A test checks that the copy matches
+`sdk/python/workboard_plugin.py`. Plugins written in Rust can use
 `wb_plugins::sdk::serve`, which handles the framing and `initialize`; the tests in
 `crates/wb-plugins/tests/rpc.rs` and `crates/wb-api/tests/plugins.rs` use it.
