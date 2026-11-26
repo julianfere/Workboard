@@ -289,6 +289,7 @@ environment.
 - `runnable`: files in this category can be marked as ran in dev/staging/prod (stored in
   `<config>/runs.json`; the MCP tool `workboard_mark_ran` writes the same marks).
 - `fallbackCategory`: everything else.
+- `openFirst` (*optional*): category ids, in order; the **Files** tab of the item detail opens the newest file of the first one the item has (else its first text file).
 
 Agents are told about these prefixes in their guide, so the files they create land in the right category.
 

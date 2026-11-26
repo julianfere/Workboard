@@ -56,7 +56,7 @@ export interface Workflow {
   plan: { heading: string; placeholder: string; minChars: number };
   /** Títulos de las secciones que se completan al crear un item desde un tracker. */
   sections: { description: string; criteria: string };
-  files: { kinds: string[]; categories: FileCategory[]; fallbackCategory: FileCategory };
+  files: { kinds: string[]; categories: FileCategory[]; fallbackCategory: FileCategory; openFirst?: string[] };
   /** Palabras que identifican la sección «cómo deployar» del README. */
   deployKeywords?: string[];
 }

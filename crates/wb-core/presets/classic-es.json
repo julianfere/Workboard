@@ -63,7 +63,8 @@
       { "id": "doc", "runnable": false, "kinds": ["PLAN", "HANDOFF", "QA"], "extensions": [".md", ".txt", ".docx", ".doc", ".pdf", ".drawio", ".dio", ".mmd", ".mermaid"], "labels": { "en": "Documentation", "es": "Documentación" } },
       { "id": "sql", "runnable": true, "extensions": [".sql"], "labels": { "en": "Other SQL", "es": "Otros SQL" } }
     ],
-    "fallbackCategory": { "id": "otro", "runnable": false, "labels": { "en": "Other", "es": "Otros" } }
+    "fallbackCategory": { "id": "otro", "runnable": false, "labels": { "en": "Other", "es": "Otros" } },
+    "openFirst": ["migracion", "fix"]
   },
   "git": {
     "idPattern": "(?:^|\\D)(?P<id>\\d{6})(?:\\D|$)",

@@ -203,6 +203,10 @@ pub struct FileRules {
     /// Gana la primera categoría cuyo tipo o extensión coincide.
     pub categories: Vec<FileCategory>,
     pub fallback_category: FileCategory,
+    /// Categorías cuyo archivo abre primero la pestaña Archivos del detalle (el más reciente de la primera que
+    /// tenga). Sin ninguna, el primer archivo de texto.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub open_first: Vec<String>,
 }
 
 /// Reglas del panel Git (nada de nombres de ramas ni de remotes en el código).
@@ -340,6 +344,9 @@ impl Workflow {
         }
         if let Some(env) = self.git.env_refs.keys().find(|k| !self.environments.iter().any(|e| &e.id == *k)) {
             return bad(format!("git.envRefs uses unknown environment {env}"));
+        }
+        if let Some(c) = self.files.open_first.iter().find(|c| !self.categories().any(|x| &x.id == *c)) {
+            return bad(format!("files.openFirst uses unknown category {c}"));
         }
         let mut seen = HashSet::new();
         for id in &self.main_path {
@@ -530,6 +537,7 @@ mod tests {
         assert!(broken(&|v| v["files"]["categories"][1]["kinds"] = serde_json::json!(["NOPE"])).is_err());
         assert!(broken(&|v| v["extra"] = 1.into()).is_err(), "unknown fields are rejected");
         assert!(broken(&|v| v["mainPath"] = serde_json::json!(["nope"])).is_err());
+        assert!(broken(&|v| v["files"]["openFirst"] = serde_json::json!(["nope"])).is_err());
         assert!(broken(&|v| v["mainPath"] = serde_json::json!(["plan", "plan"])).is_err());
         assert!(broken(&|v| v["fields"]["extra"] = serde_json::json!([{"key": "x", "link": "http://a/{value}"}])).is_err());
         assert!(broken(&|v| v["fields"]["extra"] = serde_json::json!([{"key": "x", "link": "https://a/"}])).is_err());
