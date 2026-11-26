@@ -28,6 +28,8 @@ use crate::settings::{self, MAX_RECENTS, Settings, Theme};
 use crate::tracker::{self, FieldRef, ProjectCfg, TrackerFile};
 use crate::{ApiError, ApiResult};
 
+mod prefs;
+
 /// Preset que equivale al flujo de la v1.
 pub const DEFAULT_PRESET: &str = "classic-es";
 /// La v1 era solo en castellano.
@@ -476,6 +478,23 @@ fn migrate_settings(run: &mut Run, v1: &Json) -> Settings {
         }
     }
 
+    // Prefijo del pedido de planificación: la v1 lo tenía fijo (`harness.py` `PLAN_PREFIX`: `/go ` para
+    // Claude), igual que el valor por defecto de la v2. Un `planPrefix` vacío guardado por una versión anterior
+    // de la v2 cuenta como otro valor: se conserva salvo `--force`.
+    for (agent, prefix) in wb_sessions::agents::default_plan_prefixes() {
+        let current = s.agents.plan_prefix.get(&agent).cloned().unwrap_or_default();
+        let plan = plan_value(Some(&current), &prefix, force);
+        run.record(
+            plan,
+            "migrate.item.planPrefix",
+            vec![("agent", agent.clone()), ("prefix", prefix.trim().to_string())],
+        );
+        if plan == Plan::Write {
+            s.agents.plan_prefix.insert(agent, prefix);
+            changed = true;
+        }
+    }
+
     // Repos del panel Git por raíz. La v1 guardaba los ambientes en mayúsculas (`DEV`).
     if let Some(git) = v1["git"].as_object() {
         for (key, list) in git {
@@ -704,6 +723,210 @@ fn migrate_trackers(run: &mut Run, v1: &Json) {
     }
 }
 
+/// Id del plugin privado que aporta ReleaseManual (`workboard-private`, `manifest.json`).
+const RELEASE_MANUAL_PLUGIN: &str = "private";
+/// Lo que guarda ReleaseManual por proyecto: las mismas claves en la v1 (`ado.rm`) y en el plugin.
+const RELEASE_MANUAL_FIELDS: [&str; 11] = [
+    "type",
+    "repo",
+    "base",
+    "prefix",
+    "scriptPath",
+    "commitMsg",
+    "link",
+    "form",
+    "formFetchedAt",
+    "visible",
+    "last",
+];
+
+/// Marca como fallidas las líneas escritas desde `first` (todo iba al mismo archivo).
+fn fail_from(run: &mut Run, first: usize, e: &io::Error) {
+    for entry in &mut run.entries[first..] {
+        if entry.outcome == Outcome::Done {
+            entry.outcome = Outcome::Failed;
+            entry.note = Some("migrate.note.error");
+            entry.params.push(("error", e.to_string()));
+        }
+    }
+}
+
+fn json_object(v: Json) -> serde_json::Map<String, Json> {
+    match v {
+        Json::Object(m) => m,
+        _ => serde_json::Map::new(),
+    }
+}
+
+/// Configuración de ReleaseManual por proyecto (`ado.rm["org|proyecto"]`) → datos del plugin privado
+/// (`plugin-data/private.json` → `rm["<org>|<proyecto>"]`, en minúsculas con la organización normalizada,
+/// como la arma el plugin con la conexión de la carpeta). Las demás claves del archivo no se tocan. El PAT de
+/// escritura ya es el compartido del tracker (`azure-devops:write:<org>`, ver `migrate_trackers`).
+fn migrate_release_manual(run: &mut Run, v1: &Json) {
+    let Some(rms) = v1["ado"]["rm"].as_object().filter(|r| !r.is_empty()) else { return };
+    let path = run.o.to.join("plugin-data").join(format!("{RELEASE_MANUAL_PLUGIN}.json"));
+    let mut data = json_object(read_json(&path));
+    let mut store = json_object(data.get("rm").cloned().unwrap_or(Json::Null));
+    let first = run.entries.len();
+    let mut changed = false;
+    for (key, cfg) in rms {
+        let (org, project) = key.split_once('|').unwrap_or((key, ""));
+        let conn = match Connection::normalized(azure::KIND, org, project) {
+            Ok(conn) => conn,
+            Err(e) => {
+                let params = vec![("project", project.to_string())];
+                run.fail("migrate.item.releaseManual", params, "migrate.note.error", e.code.to_string());
+                continue;
+            }
+        };
+        let value: serde_json::Map<String, Json> = RELEASE_MANUAL_FIELDS
+            .iter()
+            .filter_map(|k| Some((k.to_string(), cfg.get(*k)?.clone())))
+            .collect();
+        let value = Json::Object(value);
+        let pkey = format!("{}|{}", conn.org, conn.project).to_lowercase();
+        let plan = plan_value(store.get(&pkey), &value, run.o.force);
+        run.record(plan, "migrate.item.releaseManual", vec![("project", conn.project.clone())]);
+        if plan == Plan::Write {
+            store.insert(pkey, value);
+            changed = true;
+        }
+    }
+    if changed && !run.o.dry_run {
+        data.insert("rm".into(), Json::Object(store));
+        if let Err(e) = write_json(&path, &data) {
+            fail_from(run, first, &e);
+        }
+    }
+}
+
+/// Preferencias de la ventana de la v1 (`prefs`) → `ui_prefs.json` (grilla, Pendientes, panel del detalle,
+/// modo discreto, avisos de sesión larga ocultos). Las otras claves del archivo no se tocan.
+fn migrate_ui_prefs(run: &mut Run, v1: &Json) {
+    let Some(p) = v1["prefs"].as_object() else { return };
+    let path = run.o.to.join("ui_prefs.json");
+    let mut ui = json_object(read_json(&path));
+    let first = run.entries.len();
+    let mut changed = false;
+    let force = run.o.force;
+    let mut put = |run: &mut Run, key: &str, value: Json, item, params, note: Option<&'static str>| {
+        let plan = plan_value(ui.get(key), &value, force);
+        run.record(plan, item, params);
+        if let Some(note) = note {
+            run.note_last(note);
+        }
+        if plan == Plan::Write {
+            ui.insert(key.to_string(), value);
+            changed = true;
+        }
+    };
+
+    if let Some((grid, views, dropped)) = prefs::grid(&run.wf, p) {
+        let note = (dropped > 0).then_some("migrate.note.prefsDropped");
+        let params = vec![("views", views.to_string()), ("dropped", dropped.to_string())];
+        put(run, "grid", grid, "migrate.item.gridPrefs", params, note);
+    }
+    if let Some(tasks) = prefs::tasks(&run.wf, p) {
+        put(run, "tasks", tasks, "migrate.item.taskFilters", vec![], None);
+    }
+    if let Some(detail) = prefs::detail(p) {
+        put(run, "detail", detail, "migrate.item.detailWidth", vec![], None);
+    }
+    if let Some(view) = prefs::view(p) {
+        let params = vec![("view", view.as_str().unwrap_or_default().to_string())];
+        put(run, "view", view, "migrate.item.lastView", params, None);
+    }
+    let root = |r: &str| canon(&display_root(v1, r));
+    if let Some(hours) = prefs::hours(p, &root) {
+        put(run, "hours", hours, "migrate.item.hoursPrefs", vec![], None);
+    }
+    if let Some(metrics) = prefs::metrics(&run.wf, p) {
+        put(run, "metrics", metrics, "migrate.item.metricsPrefs", vec![], None);
+    }
+    // Modo discreto: misma clave y valor; apagado = sin la clave.
+    if p.get("hideHours") == Some(&Json::Bool(true)) {
+        put(run, "hideHours", Json::Bool(true), "migrate.item.hideHours", vec![], None);
+    }
+    // Avisos de sesión larga ocultos: se suman por sesión.
+    let hidden = prefs::weight_hidden(p);
+    if !hidden.is_empty() {
+        let mut map = json_object(ui.get("sessionWeightHidden").cloned().unwrap_or(Json::Null));
+        let (mut added, mut kept) = (0, 0);
+        for (id, level) in hidden {
+            match map.get(&id).and_then(Json::as_str) {
+                Some(cur) if cur == level => {}
+                Some(_) if !force => kept += 1,
+                _ => {
+                    map.insert(id, Json::String(level));
+                    added += 1;
+                }
+            }
+        }
+        run.record(plan_counts(added, kept), "migrate.item.weightHidden", vec![("count", added.to_string())]);
+        if added > 0 {
+            ui.insert("sessionWeightHidden".into(), Json::Object(map));
+            changed = true;
+        }
+    }
+
+    if changed
+        && !run.o.dry_run
+        && let Err(e) = write_json(&path, &ui)
+    {
+        fail_from(run, first, &e);
+    }
+}
+
+/// Alertas desestimadas por carpeta (`prefs["alertsOff@<raíz>"]`) → `alerts_off.json` (`{<raíz>: {"<item>|<tipo>":
+/// huella}}`, con la clave de raíz de `alerts.rs`). Se suman por alerta; las que la v2 no reconocería (tipo o
+/// huella de otra forma) se dejan afuera y se informan.
+fn migrate_alerts_off(run: &mut Run, v1: &Json) {
+    let Some(p) = v1["prefs"].as_object() else { return };
+    let roots = prefs::per_root(p, "alertsOff");
+    if roots.is_empty() {
+        return;
+    }
+    let path = run.o.to.join("alerts_off.json");
+    let mut store: BTreeMap<String, BTreeMap<String, String>> =
+        serde_json::from_value(read_json(&path)).unwrap_or_default();
+    let first = run.entries.len();
+    let mut changed = false;
+    for (root, map) in roots {
+        let (entries, dropped) = prefs::alerts_off(&run.wf, map);
+        let display = canon(&display_root(v1, root));
+        let slot = store.entry(normcase(&display)).or_default();
+        let (mut added, mut kept) = (0, 0);
+        for (k, fp) in entries {
+            match slot.get(&k) {
+                Some(cur) if *cur == fp => {}
+                Some(_) if !run.o.force => kept += 1,
+                _ => {
+                    slot.insert(k, fp);
+                    added += 1;
+                }
+            }
+        }
+        let params = vec![
+            ("root", display),
+            ("count", added.to_string()),
+            ("kept", kept.to_string()),
+            ("dropped", dropped.to_string()),
+        ];
+        run.record(plan_counts(added, kept), "migrate.item.alertsOff", params);
+        if dropped > 0 {
+            run.note_last("migrate.note.alertsDropped");
+        }
+        changed |= added > 0;
+    }
+    store.retain(|_, m| !m.is_empty());
+    if changed
+        && !run.o.dry_run
+        && let Err(e) = write_json(&path, &store)
+    {
+        fail_from(run, first, &e);
+    }
+}
+
 fn migrate_runs(run: &mut Run) {
     let src = run.o.from.join("runs.json");
     let Some(v1) = read_json(&src).as_object().cloned() else { return };
@@ -802,7 +1025,7 @@ fn migrate_tree(run: &mut Run, src: &Path, dst: &Path, item: &'static str) {
 }
 
 /// Sesión del registro de la v1 (claves en castellano) en el formato de la v2.
-fn v1_session(v: &Json) -> Option<Session> {
+fn v1_session(v: &Json, pinned: &BTreeSet<String>, keep: &BTreeSet<String>) -> Option<Session> {
     let s = |k: &str| str_of(&v[k]).unwrap_or_default();
     Some(Session {
         id: str_of(&v["id"])?,
@@ -820,12 +1043,16 @@ fn v1_session(v: &Json) -> Option<Session> {
         last_activity: s("ultimaActividad"),
         fork_of: str_of(&v["forkDe"]),
         repos: str_list(&v["repos"]),
-        pinned: false,
-        keep_open: false,
+        // Fijadas y reabiertas a mano: en la v1 eran prefs de la ventana (`pinnedSess@`, `keepSess@`).
+        pinned: v["id"].as_str().is_some_and(|id| pinned.contains(id)),
+        keep_open: v["id"].as_str().is_some_and(|id| keep.contains(id)),
     })
 }
 
-fn migrate_sessions(run: &mut Run) {
+fn migrate_sessions(run: &mut Run, v1: &Json) {
+    let no_prefs = serde_json::Map::new();
+    let p = v1["prefs"].as_object().unwrap_or(&no_prefs);
+    let (pinned, keep) = (prefs::session_ids(p, "pinnedSess"), prefs::session_ids(p, "keepSess"));
     let src = run.o.from.join("sessions");
     let Ok(rd) = std::fs::read_dir(&src) else { return };
     let mut files: Vec<PathBuf> = rd.flatten().map(|e| e.path()).filter(|p| p.is_file()).collect();
@@ -859,8 +1086,12 @@ fn migrate_sessions(run: &mut Run) {
         }
         // Registro de una raíz: `{"sessions": [...]}`; mismo nombre de archivo en las dos versiones.
         let v1 = read_json(&file);
-        let list: Vec<Session> =
-            v1["sessions"].as_array().into_iter().flatten().filter_map(v1_session).collect();
+        let list: Vec<Session> = v1["sessions"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter_map(|v| v1_session(v, &pinned, &keep))
+            .collect();
         if list.is_empty() {
             continue;
         }
@@ -895,7 +1126,7 @@ fn migrate_sessions(run: &mut Run) {
     }
 }
 
-/// Lo que la v1 tiene y no se migra (se regenera, no existe en la v2 o es de la ventana).
+/// Lo que la v1 tiene y no se migra (se regenera, no existe en la v2 o la v2 no lo guarda).
 fn ignored(from: &Path, v1: &Json) -> Vec<&'static str> {
     let has = |name: &str| from.join(name).exists();
     let mut out = vec![];
@@ -920,11 +1151,8 @@ fn ignored(from: &Path, v1: &Json) -> Vec<&'static str> {
     if has("tools/_removed") {
         out.push("migrate.ignored.removedTools");
     }
-    if v1["prefs"].as_object().is_some_and(|p| p.keys().any(|k| k != "theme")) {
+    if v1["prefs"].as_object().is_some_and(prefs::has_unmigrated) {
         out.push("migrate.ignored.prefs");
-    }
-    if v1["ado"]["rm"].as_object().is_some_and(|r| !r.is_empty()) {
-        out.push("migrate.ignored.releaseManual");
     }
     out
 }
@@ -947,6 +1175,9 @@ pub fn run(o: &Options, secrets: &dyn SecretStore, unprotect: Unprotect) -> ApiR
 
     let s = migrate_settings(&mut r, &v1);
     migrate_trackers(&mut r, &v1);
+    migrate_release_manual(&mut r, &v1);
+    migrate_ui_prefs(&mut r, &v1);
+    migrate_alerts_off(&mut r, &v1);
     migrate_runs(&mut r);
     migrate_jsonl(&mut r, "state_log.jsonl", "migrate.item.stateLog");
     migrate_jsonl(&mut r, "mcp_events.jsonl", "migrate.item.mcpEvents");
@@ -959,7 +1190,7 @@ pub fn run(o: &Options, secrets: &dyn SecretStore, unprotect: Unprotect) -> ApiR
         migrate_tree(&mut r, &o.from.join("notas"), &dst, "migrate.item.notes");
     }
     migrate_tree(&mut r, &o.from.join("backups"), &o.to.join("backups"), "migrate.item.backups");
-    migrate_sessions(&mut r);
+    migrate_sessions(&mut r, &v1);
 
     Ok(Report {
         from: o.from.clone(),
