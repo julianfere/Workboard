@@ -119,6 +119,10 @@ export const api = {
   noteSetTitle: (id: string, title: string, mtime: number) => call<Note>("note_set_title", { id, title, mtime }),
   noteLink: (id: string, key: string, add: boolean) => call<Note>("note_link", { id, key, add }),
   noteReveal: (id: string) => call<null>("note_reveal", { id }),
+  /** Abre la nota afuera: en Obsidian (`obsidian://open`) o con la app predeterminada para `.md`. */
+  noteOpen: (id: string, mode: "obsidian" | "app") => call<null>("note_open", { id, mode }),
+  /** Link del Markdown en el navegador (o cliente de correo) del sistema: solo https, http y mailto. */
+  openUrl: (url: string) => call<null>("open_url", { url }),
   noteDelete: (id: string) => call<{ trash: boolean; movedTo?: string }>("note_delete", { id }),
   alertsDismissed: () => call<Record<string, string>>("alerts_dismissed"),
   alertsDismiss: (entries: { key: string; fp: string }[], on: boolean) => call<Record<string, string>>("alerts_dismiss", { entries, on }),
