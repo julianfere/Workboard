@@ -316,8 +316,9 @@ impl Api {
     }
 
     /// Los trackers que se pueden conectar, para el formulario. En el incluido, los textos son claves de
-    /// `locales/*.json`; en los de plugins, el texto del manifiesto en el idioma de la app (o `null`).
-    pub(crate) fn tracker_kinds(&self, lang: &str) -> ApiResult<Vec<Json>> {
+    /// `locales/*.json`; en los de plugins, el texto del manifiesto tal cual (uno solo o `{en, es}`, que
+    /// elige la UI con su idioma; `null` = el genérico).
+    pub(crate) fn tracker_kinds(&self) -> ApiResult<Vec<Json>> {
         let mut out = vec![json!({
             "kind": azure::KIND,
             "name": azure::SOURCE,
@@ -329,15 +330,14 @@ impl Api {
             "plugin": null,
         })];
         let plugins = Plugins::load(&self.config_dir);
-        let text = |t: &Option<wb_plugins::Text>| t.as_ref().map(|t| t.get(lang)).filter(|s| !s.is_empty());
         for t in plugins.trackers() {
             let d = t.decl;
             out.push(json!({
                 "kind": d.kind,
-                "name": d.name.get(lang),
-                "org": {"label": text(&d.org.label), "placeholder": text(&d.org.placeholder), "required": !d.org_optional()},
-                "project": {"label": text(&d.project.label), "placeholder": text(&d.project.placeholder)},
-                "secret": {"label": text(&d.secret.label), "hint": text(&d.secret.hint)},
+                "name": d.name,
+                "org": {"label": d.org.label, "placeholder": d.org.placeholder, "required": !d.org_optional()},
+                "project": {"label": d.project.label, "placeholder": d.project.placeholder},
+                "secret": {"label": d.secret.label, "hint": d.secret.hint},
                 "writeSecret": d.write_secret,
                 "builtin": false,
                 "plugin": t.manifest.id,

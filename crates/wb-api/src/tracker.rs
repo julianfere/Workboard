@@ -544,7 +544,7 @@ impl Api {
         let conn = ctx.conn.clone().unwrap_or_default();
         let connected = ctx.conn.is_some();
         Ok(json!({
-            "kinds": self.tracker_kinds(self.lang())?,
+            "kinds": self.tracker_kinds()?,
             "connected": connected,
             "kind": if connected { conn.kind.as_str() } else { azure::KIND },
             "source": self.source(ctx),

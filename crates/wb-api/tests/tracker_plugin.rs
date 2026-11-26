@@ -237,10 +237,12 @@ fn main() {
     check(
         "the connect form comes from the manifest",
         kinds[1]["plugin"] == "fake"
-            && kinds[1]["name"] == "Jira falso"
-            && kinds[1]["org"] == json!({"label": "Sitio", "placeholder": "my-site", "required": false})
-            && kinds[1]["project"]["label"] == "Tablero"
-            && kinds[1]["secret"] == json!({"label": "API token", "hint": "Del perfil"})
+            && kinds[1]["name"] == json!({"en": "Fake Jira", "es": "Jira falso"})
+            && kinds[1]["org"]
+                == json!({"label": {"en": "Site", "es": "Sitio"}, "placeholder": "my-site", "required": false})
+            && kinds[1]["project"]["label"] == json!({"en": "Board", "es": "Tablero"})
+            && kinds[1]["secret"]
+                == json!({"label": "API token", "hint": {"en": "From your profile", "es": "Del perfil"}})
             && kinds[1]["writeSecret"] == false,
         &kinds[1],
     );
