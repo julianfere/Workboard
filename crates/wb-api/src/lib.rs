@@ -645,6 +645,51 @@ mod tests {
     }
 
     #[test]
+    fn promote_tool_replaces_with_another_script_and_needs_no_description() {
+        let (root, base) = fixture_copy("promote");
+        let exe = std::env::current_exe().unwrap();
+        let api = Api::new(base.join("cfg"));
+        api.set_session_bins(exe.clone(), exe);
+        api.dispatch("open_root", &json!({"path": root})).unwrap();
+        let first = base.join("count.py");
+        std::fs::write(
+            &first,
+            "print(1)
+",
+        )
+        .unwrap();
+        wb_sessions::tools::promote(
+            &base.join("cfg"),
+            &first,
+            "count",
+            "Cuenta",
+            "",
+            json!({"wis": ["1"]}),
+            false,
+        )
+        .unwrap();
+        let other = base.join("count2.py");
+        std::fs::write(
+            &other,
+            "print(2)
+",
+        )
+        .unwrap();
+        let args = |replace: bool| json!({"path": other, "name": "count", "replace": replace});
+        // Sin reemplazar, un script que no es candidato no se promueve.
+        assert_eq!(api.dispatch("tool_promote", &args(false)).unwrap_err().code, "tools.error.notCandidate");
+        let t = api.dispatch("tool_promote", &args(true)).unwrap();
+        assert_eq!(t["file"], "count2.py");
+        assert_eq!(t["description"], "");
+        assert_eq!(t["origin"]["items"], json!(["1"]));
+        // Una tool que no existe no se "reemplaza".
+        let nope = json!({"path": other, "name": "nope", "replace": true});
+        assert_eq!(api.dispatch("tool_promote", &nope).unwrap_err().code, "tools.error.notCandidate");
+        api.shutdown();
+        std::fs::remove_dir_all(&base).ok();
+    }
+
+    #[test]
     fn sessions_plan_and_agents() {
         let (root, base) = fixture_copy("sessions");
         // Este agente no lanza el MCP ni el hook: cualquier archivo existente sirve de binario.

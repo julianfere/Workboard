@@ -1056,7 +1056,6 @@
   "tools.error.changed": "The tool «{name}» changed since it was promoted: promote it again from Workboard",
   "tools.error.noInterpreter": "Could not find the {interpreter} interpreter on the PATH",
   "tools.error.notCandidate": "That file is not a session script",
-  "tools.error.noDescription": "Say in one line what it does: it is what the agent reads to pick it",
   "reflect.action": "Reflect",
   "reflect.hint": "Plan-mode session that reads the sessions of this work and suggests improvements (saved as a note)",
   "reflect.confirmOne": "A plan-mode session will read the sessions of this work item and suggest improvements to instructions, skills, tools or the app. It saves them in a «Learnings» note; it changes nothing.",

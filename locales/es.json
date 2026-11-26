@@ -1056,7 +1056,6 @@
   "tools.error.changed": "La tool «{name}» cambió desde que se promovió: promovela de nuevo desde Workboard",
   "tools.error.noInterpreter": "No encontré el intérprete de {interpreter} en el PATH",
   "tools.error.notCandidate": "Ese archivo no es un script de las sesiones",
-  "tools.error.noDescription": "Contá en una línea qué hace: es lo que lee el agente para elegirla",
   "reflect.action": "Reflexionar",
   "reflect.hint": "Sesión en modo plan que lee las sesiones de este trabajo y propone mejoras (quedan en una nota)",
   "reflect.confirmOne": "Se abre una sesión en modo plan que lee las sesiones de este trabajo y propone mejoras para las instrucciones, skills, tools o la app. Las deja en una nota «Aprendizajes»; no cambia nada.",
