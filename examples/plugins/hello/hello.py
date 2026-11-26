@@ -1,9 +1,10 @@
-"""Minimal Workboard plugin (see docs/plugins.md). Python 3.8+, no dependencies.
+"""Minimal Workboard plugin (see docs/plugins.md), written with the Python SDK.
 
-One process per step: read `initialize`, answer it, read the call, answer it and exit.
+`workboard_plugin.py` is a copy of `sdk/python/workboard_plugin.py`, so this folder works on its own once
+copied into `<config>/plugins/`. One process per step: the SDK answers `initialize`, calls the handler for
+the step and exits when Workboard closes stdin.
 """
-import json
-import sys
+from workboard_plugin import Plugin, button, form, result, session, text
 
 TEXTS = {
     "en": {"title": "Hello", "name": "Your name", "greet": "Greet", "session": "Open a session",
@@ -12,60 +13,32 @@ TEXTS = {
            "done": "¡Hola, {name}!", "items": "Empezó en: {items}", "none": "(ningún trabajo)"},
 }
 
-
-def send(msg):
-    sys.stdout.write(json.dumps(msg, ensure_ascii=False) + "\n")
-    sys.stdout.flush()
+plugin = Plugin()
 
 
-def request(next_id, method, params):
-    """Asks Workboard something and waits for the answer (not used by this example's flow)."""
-    send({"jsonrpc": "2.0", "id": next_id, "method": method, "params": params})
-    for line in sys.stdin:
-        msg = json.loads(line)
-        if msg.get("id") == next_id:
-            if "error" in msg:
-                raise RuntimeError(msg["error"]["message"])
-            return msg["result"]
-    raise RuntimeError("Workboard closed the connection")
+def started_on(ctx, tx):
+    return tx["items"].format(items=", ".join(it["name"] for it in ctx.items) or tx["none"])
 
 
-def handle(method, params, lang):
-    tx = TEXTS.get(lang, TEXTS["en"])
-    items = [it["name"] for it in params["context"]["items"]]
-    if method == "action/open":
-        return {
-            "type": "form",
-            "title": tx["title"],
-            "intro": tx["items"].format(items=", ".join(items) or tx["none"]),
-            "fields": [{"id": "name", "type": "text", "label": tx["name"], "required": True}],
-            "buttons": [{"id": "greet", "label": tx["greet"], "primary": True}]
-            + ([{"id": "session", "label": tx["session"]}] if items else []),
-        }
-    name = params["values"].get("name", "")
-    if params["button"] == "session":
-        return {"type": "session", "items": items, "name": tx["title"], "mode": "plan",
-                "prompt": tx["done"].format(name=name)}
-    return {"type": "result", "title": tx["title"], "ok": True, "message": tx["done"].format(name=name),
-            "steps": [{"label": tx["items"].format(items=", ".join(items) or tx["none"]), "ok": True}]}
+@plugin.action("greet")
+def greet(ctx):
+    tx = TEXTS.get(ctx.lang, TEXTS["en"])
+    buttons = [button("greet", tx["greet"], primary=True)]
+    if ctx.items:
+        buttons.append(button("session", tx["session"]))
+    return form(tx["title"], [text("name", tx["name"], required=True)], buttons=buttons,
+                intro=started_on(ctx, tx))
 
 
-def main():
-    lang = "en"
-    for line in sys.stdin:
-        msg = json.loads(line)
-        method, msg_id = msg.get("method"), msg.get("id")
-        if method == "initialize":
-            lang = msg["params"].get("lang", "en")
-            send({"jsonrpc": "2.0", "id": msg_id, "result": {}})
-            continue
-        try:
-            send({"jsonrpc": "2.0", "id": msg_id, "result": handle(method, msg["params"], lang)})
-        except Exception as exc:  # noqa: BLE001 - reported to Workboard
-            send({"jsonrpc": "2.0", "id": msg_id, "error": {"code": -32000, "message": str(exc)}})
+@greet.submit
+def greet_submit(ctx, button, values, state):
+    tx = TEXTS.get(ctx.lang, TEXTS["en"])
+    name = values.get("name", "")
+    if button == "session":
+        return session([it["name"] for it in ctx.items], prompt=tx["done"].format(name=name),
+                       name=tx["title"], mode="plan")
+    return result(tx["title"], tx["done"].format(name=name), steps=[(started_on(ctx, tx), True)])
 
 
 if __name__ == "__main__":
-    sys.stdin.reconfigure(encoding="utf-8")
-    sys.stdout.reconfigure(encoding="utf-8")
-    main()
+    plugin.run()
