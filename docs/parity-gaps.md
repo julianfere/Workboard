@@ -154,7 +154,7 @@ Referencias: `v1 app.js:N` = `_v1/ui/app.js`.
       (app.js:999, 1215).
 - [x] Borrar una tarea y Deshacer respeta el tildado (app.js:887).
 - [x] Planear desde cualquier estado con confirmación «Volver a planear»; pregunta si ya hay sesión (app.js:4063-4082).
-- [ ] Implementar (plugin) solo en el estado de plan y confirma si hay sesión (app.js:1914, 4216).
+- [x] Implementar (plugin) solo en el estado de plan y confirma si hay sesión (app.js:1914, 4216). Hecho en el plugin privado (US-10).
 
 ## US-09 Git
 
