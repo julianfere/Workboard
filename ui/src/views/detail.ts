@@ -720,8 +720,17 @@ onAction("sess-remove-item", async (el, ev) => {
   ev.stopPropagation();
   const s = sessionById(el.dataset.id!);
   if (!s || !(await confirmDialog(t("session.removeConfirm", { item: item().name, name: s.name }), t("session.removeItem")))) return;
-  await api.sessionRemoveItem(s.id, item().name);
+  const name = item().name;
+  await api.sessionRemoveItem(s.id, name);
   await loadSessions();
+  toast(t("session.removed", { item: name, name: s.name }), {
+    label: t("common.undo"),
+    run: async () => {
+      await api.sessionAddItems(s.id, [name]);
+      await refresh();
+      await loadSessions();
+    },
+  });
 });
 onAction("sess-split", async (el, ev) => {
   ev.stopPropagation();
