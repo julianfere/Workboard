@@ -64,6 +64,9 @@ pub struct Choice {
     /// work item de un tracker: `User Story` → `us`).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub aliases: Vec<String>,
+    /// Ícono de la UI (un nombre de `ui/src/icons.ts`; por ejemplo, el de cada tipo en la grilla).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -94,7 +97,19 @@ pub struct ExtraField {
     pub key: String,
     #[serde(default)]
     pub no_spaces: bool,
+    /// Nombre para mostrar (columna de la grilla); sin nombre se muestra la clave.
+    #[serde(default, skip_serializing_if = "Labels::is_empty")]
+    pub labels: Labels,
+    /// Ícono de la UI para el valor.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon: Option<String>,
+    /// Qué es el valor, para mostrarlo como link: `tracker` = el id de un work item del tracker.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub link: Option<String>,
 }
+
+/// Valores posibles de `ExtraField::link`.
+pub const EXTRA_LINKS: [&str; 1] = ["tracker"];
 
 /// Claves del frontmatter de cada dato que la app entiende.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -311,6 +326,15 @@ impl Workflow {
         {
             return bad(format!("frontmatter keys use only a-z and _: {k:?}"));
         }
+        if let Some(f) =
+            self.fields.extra.iter().find(|f| f.link.as_deref().is_some_and(|l| !EXTRA_LINKS.contains(&l)))
+        {
+            return bad(format!(
+                "fields.extra {}: unknown link {:?}",
+                f.key,
+                f.link.as_deref().unwrap_or("")
+            ));
+        }
         for c in &self.files.categories {
             if let Some(k) = c.kinds.iter().find(|k| !self.files.kinds.contains(k)) {
                 return bad(format!("category {} uses unknown kind {k}", c.id));
@@ -493,6 +517,12 @@ mod tests {
         assert!(broken(&|v| v["fields"]["notes"] = v["fields"]["status"].clone()).is_err());
         assert!(broken(&|v| v["files"]["categories"][1]["kinds"] = serde_json::json!(["NOPE"])).is_err());
         assert!(broken(&|v| v["extra"] = 1.into()).is_err(), "unknown fields are rejected");
+        assert!(
+            broken(&|v| v["fields"]["extra"] = serde_json::json!([{"key": "rm", "link": "web"}])).is_err()
+        );
+        assert!(
+            broken(&|v| v["fields"]["extra"] = serde_json::json!([{"key": "rm", "link": "tracker"}])).is_ok()
+        );
     }
 
     #[test]
@@ -506,6 +536,21 @@ mod tests {
         assert_eq!(wf.file_category("MIGRATION_add.sql").id, "migration");
         assert_eq!(Workflow::label(&wf.states[0].labels, "es", "backlog"), "Pendiente");
         assert_eq!(Workflow::label(&wf.states[0].labels, "fr", "backlog"), "Backlog");
+    }
+
+    #[test]
+    fn presets_give_types_an_icon() {
+        for id in Workflow::preset_ids() {
+            let wf = Workflow::preset(id).unwrap();
+            assert!(wf.types.iter().all(|t| t.icon.is_some()), "{id}: every type has an icon");
+        }
+        let rm = Workflow::preset("classic-es")
+            .unwrap()
+            .fields
+            .extra
+            .into_iter()
+            .find(|f| f.key == "release_manual");
+        assert_eq!(rm.and_then(|f| f.link).as_deref(), Some("tracker"));
     }
 
     #[test]

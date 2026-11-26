@@ -15,6 +15,8 @@ export interface Choice {
   labels: Labels;
   /** Otros nombres (por ejemplo, tipos de un tracker que corresponden a este). */
   aliases?: string[];
+  /** Ícono de la UI (nombre de `icons.ts`). */
+  icon?: string;
 }
 
 export interface FileCategory {
@@ -23,6 +25,16 @@ export interface FileCategory {
   kinds?: string[];
   extensions?: string[];
   labels: Labels;
+}
+
+/** Campo extra del flujo (o de un plugin): también es una columna de la grilla. */
+export interface ExtraField {
+  key: string;
+  noSpaces?: boolean;
+  labels?: Labels;
+  icon?: string;
+  /** `tracker`: el valor es el id de un work item del tracker. */
+  link?: "tracker";
 }
 
 export interface FieldKeys {
@@ -37,7 +49,7 @@ export interface FieldKeys {
   period: string;
   hours: string;
   sessions: string;
-  extra: { key: string; noSpaces?: boolean }[];
+  extra: ExtraField[];
 }
 
 export interface Workflow {
