@@ -132,11 +132,47 @@ function ensureTab(id: string): Tab {
   term.onData((d) => {
     if (tab.live) tab.writes = tab.writes.then(() => api.sessionWrite(id, d)).catch(() => {});
   });
+  // Ctrl+C con selección copia (sin selección va al proceso, como siempre). Ctrl+V no se manda como tecla:
+  // el webview dispara su "paste" nativo y xterm lo escribe (con bracketed paste), sin permisos de portapapeles.
+  term.attachCustomKeyEventHandler((ev) => {
+    if (ev.type !== "keydown" || !ev.ctrlKey || ev.altKey || ev.metaKey || ev.shiftKey) return true;
+    const key = ev.key.toLowerCase();
+    if (key === "c" && term.hasSelection()) {
+      copyText(term.getSelection());
+      term.clearSelection();
+      ev.preventDefault();
+      return false;
+    }
+    return key !== "v";
+  });
   term.onResize(({ cols, rows }) => {
     if (tab.live) api.sessionResize(id, cols, rows).catch(() => {});
   });
   tabs.set(id, tab);
   return tab;
+}
+
+/** Copia al portapapeles: la API del navegador (anda en el webview de Tauri sin permisos, dentro de una
+ *  tecla) y, si falla, el `execCommand` de siempre. */
+function copyText(text: string): void {
+  const fallback = () => {
+    const prev = document.activeElement as HTMLElement | null;
+    const area = document.createElement("textarea");
+    area.value = text;
+    area.style.position = "fixed";
+    area.style.opacity = "0";
+    document.body.append(area);
+    area.select();
+    try {
+      document.execCommand("copy");
+    } catch {
+      /* sin portapapeles */
+    }
+    area.remove();
+    prev?.focus();
+  };
+  if (navigator.clipboard?.writeText) navigator.clipboard.writeText(text).catch(fallback);
+  else fallback();
 }
 
 function ended(tab: Tab, gen: number): void {
