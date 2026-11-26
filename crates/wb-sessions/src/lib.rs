@@ -410,9 +410,9 @@ impl SessionManager {
         // PostToolUse llega con cada herramienta: solo se anota si reabre trabajo (tras un permiso).
         if event != "PostToolUse" || prev != Some(Live::Working) {
             let ev = if event == "PostToolUse" { "resume" } else { event };
-            // Las métricas cuentan los pedidos del agente (permiso o respuesta), no los avisos de reposo.
-            let extra = if status == Live::NeedsYou { json!({"st": "needsYou"}) } else { json!({}) };
-            self.activity(sid, ev, None, extra);
+            // El estado en vivo va en cada evento, como la v1: las métricas cuentan los pedidos del agente
+            // (`Notification` con `st: needsYou`), no los avisos de reposo.
+            self.activity(sid, ev, None, json!({"st": status}));
         }
         if (event == "UserPromptSubmit" || event == "Stop")
             && let Some(reg) = self.registry_of(sid)

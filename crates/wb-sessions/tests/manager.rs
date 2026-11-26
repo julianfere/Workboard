@@ -174,6 +174,23 @@ fn hooks_update_live_status_and_reply() {
     assert!(mgr.hook("Stop", &sess.id, &json!({})).is_empty());
     assert!(mgr.hook("Nope", &sess.id, &json!({})).is_empty());
     assert!(mgr.rev() > 1);
+    mgr.hook("Notification", &sess.id, &json!({"notification_type": "permission_prompt"}));
+    // Cada evento lleva el estado en vivo (`st`), como la v1.
+    let activity = std::fs::read_to_string(mgr.activity_path(&sess.id)).unwrap();
+    let st: Vec<(String, String)> = activity
+        .lines()
+        .filter_map(|l| serde_json::from_str::<serde_json::Value>(l).ok())
+        .filter(|e| ["UserPromptSubmit", "Stop", "Notification"].contains(&e["ev"].as_str().unwrap_or("")))
+        .map(|e| (e["ev"].as_str().unwrap().to_string(), e["st"].as_str().unwrap_or("").to_string()))
+        .collect();
+    assert_eq!(
+        st,
+        [
+            ("UserPromptSubmit".into(), "working".into()),
+            ("Stop".into(), "idle".into()),
+            ("Notification".into(), "needsYou".into())
+        ]
+    );
 
     // Por HTTP, como el hook real: sin token, 403.
     let port = std::fs::read_to_string(cfg.join(format!("agents/mcp-{}.json", sess.id))).map(|_| ()).ok();
@@ -227,6 +244,9 @@ fn time_stats_and_reflect() {
     let rows = [
         json!({"ts": t0, "ev": "UserPromptSubmit", "items": items}),
         json!({"ts": t0 + 120.0, "ev": "Notification", "items": items, "st": "needsYou"}),
+        // Sesión migrada de la v1: el pedido se anotaba `te-necesita`. Un aviso de reposo no cuenta.
+        json!({"ts": t0 + 121.0, "ev": "Notification", "items": items, "st": "te-necesita"}),
+        json!({"ts": t0 + 122.0, "ev": "Notification", "items": items, "st": "idle"}),
         json!({"ts": t0 + 130.0, "ev": "resume", "items": items}),
         json!({"ts": t0 + 300.0, "ev": "Stop", "items": items}),
     ];
@@ -248,7 +268,7 @@ fn time_stats_and_reflect() {
 
     let stats = mgr.stats_report(&ws);
     let row = stats.iter().find(|r| r.id == sess.id).unwrap();
-    assert_eq!((row.prompts, row.asks), (1, 1));
+    assert_eq!((row.prompts, row.asks), (1, 2));
     assert!(row.tokens.is_none());
     let out = &row.outcome[&items[0]];
     assert_eq!(out.end.as_deref(), Some("prod"));
@@ -261,7 +281,7 @@ fn time_stats_and_reflect() {
     assert!(text.contains("# Evidencia para reflexionar"), "{text}");
     assert!(text.contains(&format!("### {}", items[0])), "{text}");
     assert!(text.contains(&format!("`{}`", sess.id)), "{text}");
-    assert!(text.contains("pedidos de permiso o respuesta: 1"), "{text}");
+    assert!(text.contains("pedidos de permiso o respuesta: 2"), "{text}");
     output_until_exit(&mgr, &refl.id);
     mgr.shutdown();
     std::fs::remove_dir_all(&base).ok();

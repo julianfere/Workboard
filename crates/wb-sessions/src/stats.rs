@@ -311,6 +311,13 @@ pub fn outcome(wf: &Workflow, transitions: Vec<Transition>) -> Outcome {
 
 // ---------- reporte ----------
 
+/// Valores de `st` de un pedido del agente: el de la app y el de la v1 (sesiones migradas).
+const ASK_STATUS: [&str; 2] = ["needsYou", "te-necesita"];
+
+fn is_ask(st: &Json) -> bool {
+    st.as_str().is_some_and(|s| ASK_STATUS.contains(&s))
+}
+
 #[derive(Debug, Clone, Default, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Scripts {
@@ -395,8 +402,7 @@ pub fn report(
             out_items.insert(w.clone(), outcome(ws.workflow(), during));
         }
         let count = |ev: &str| events.iter().filter(|e| e["ev"] == ev).count() as u64;
-        let asks =
-            events.iter().filter(|e| e["ev"] == "Notification" && e["st"] == "needsYou").count() as u64;
+        let asks = events.iter().filter(|e| e["ev"] == "Notification" && is_ask(&e["st"])).count() as u64;
         let t = t.unwrap_or_default();
         let has_t = tr.is_some();
         rows.push(SessionStats {
