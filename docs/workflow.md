@@ -93,12 +93,13 @@ At least one state is required; ids must be unique.
 
 Kinds of item (bug, feature…). `aliases` (*optional*) are other names that map to this type, compared
 case-insensitively: tracker sync and **New item** use them to translate a tracker's work item type
-(`User Story`, `Product Backlog Item`…) into a local type.
+(`User Story`, `Product Backlog Item`…) into a local type. `icon` (*optional*) is the icon shown next to the
+id in the **Items** grid (a name from `ui/src/icons.ts`: `bug`, `story`, `task`, `wrench`…).
 
 ```json
 "types": [
-  { "id": "bug", "labels": { "en": "Bug" } },
-  { "id": "feature", "labels": { "en": "Feature" }, "aliases": ["user story", "product backlog item", "epic"] }
+  { "id": "bug", "labels": { "en": "Bug" }, "icon": "bug" },
+  { "id": "feature", "labels": { "en": "Feature" }, "aliases": ["user story", "product backlog item", "epic"], "icon": "story" }
 ]
 ```
 
@@ -194,7 +195,7 @@ must be distinct.
 | `period` | `YYYY-MM`. If missing, derived from `due`. |
 | `hours` | Agreed hours (a number). Overrides the tracker's estimate. |
 | `sessions` | Agent sessions that worked on the item. Written by Workboard; not editable. |
-| `extra` | *Optional.* More single-line text fields: `[{ "key": "release_note", "noSpaces": false }]`. |
+| `extra` | *Optional.* More single-line text fields: `[{ "key": "release_note", "noSpaces": false }]`. Each one is also a column of the **Items** grid; `labels` (its name, default the key), `icon` and `link` are optional. `"link": "tracker"` means the value is a tracker work item id: the cell is a link that opens it. |
 
 All of them except `sessions` are editable from the UI, validated the same way by the UI, the MCP and
 plugins, and an empty value deletes the key. The frontmatter is a subset of YAML: `key: value` and

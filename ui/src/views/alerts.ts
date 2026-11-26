@@ -9,7 +9,8 @@ import { onAction, onChange, refresh, registerView, render, setAlertCounter } fr
 import { confirmDialog, daysUntil, esc, fmtAgo, promptDialog, toast } from "../dom";
 import { errorText, t } from "../i18n";
 import { ico } from "../icons";
-import { S, effectiveStatus, envLabel, isClosed, metaList, metaText, stateDef, statusOf, titleOf, typeLabel, wf } from "../state";
+import { S, effectiveStatus, envLabel, isClosed, matchesSearch, metaList, metaText, stateDef, statusOf, titleOf, typeLabel, wf } from "../state";
+import { noSearchResults, searchBox } from "../search";
 import type { Item } from "../types";
 import { gitAlerts, gitDesyncs, gitUncommitted } from "../git";
 import { sessionsOf } from "../sessions";
@@ -285,15 +286,16 @@ function blocks(list: Alert[], off: boolean): string {
 
 function renderAlerts(): string {
   ensureDismissed();
-  const list = allAlerts();
+  // La búsqueda global filtra la lista (no el contador del menú).
+  const list = allAlerts().filter((a) => (a.names ?? [a.item.name]).some((n) => matchesSearch(S.items.find((x) => x.name === n) ?? a.item)));
   const on = list.filter((a) => !isDismissed(a));
   const off = list.filter(isDismissed);
   const toggle = off.length
     ? `<label class="check"><input type="checkbox" data-change="alerts-show-dismissed" ${showDismissed ? "checked" : ""}>${esc(t("alerts.showDismissed", { n: off.length }))}</label>`
     : "";
   const dismissedBlock = showDismissed && off.length ? `<h2 class="muted">${esc(t("alerts.dismissedTitle"))}</h2>${blocks(off, true)}` : "";
-  return `<div class="page"><div class="toolbar"><h1>${esc(t("nav.alerts"))}</h1><span class="spacer"></span>${toggle}</div>
-    ${blocks(on, false) || `<p class="empty">${esc(t("alerts.none"))}</p>`}${dismissedBlock}</div>`;
+  return `<div class="page"><div class="toolbar"><h1>${esc(t("nav.alerts"))}</h1>${searchBox()}<span class="spacer"></span>${toggle}</div>
+    ${blocks(on, false) || `<p class="empty">${noSearchResults() || esc(t("alerts.none"))}</p>`}${dismissedBlock}</div>`;
 }
 
 registerView("alerts", renderAlerts);

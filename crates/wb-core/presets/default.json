@@ -11,10 +11,10 @@
     { "id": "cancelled", "category": "cancelled", "labels": { "en": "Cancelled", "es": "Cancelado" } }
   ],
   "types": [
-    { "id": "bug", "labels": { "en": "Bug", "es": "Bug" } },
-    { "id": "feature", "labels": { "en": "Feature", "es": "Funcionalidad" }, "aliases": ["user story", "product backlog item", "epic"] },
-    { "id": "task", "labels": { "en": "Task", "es": "Tarea" }, "aliases": ["issue", "impediment"] },
-    { "id": "chore", "labels": { "en": "Chore", "es": "Mantenimiento" } }
+    { "id": "bug", "labels": { "en": "Bug", "es": "Bug" }, "icon": "bug" },
+    { "id": "feature", "labels": { "en": "Feature", "es": "Funcionalidad" }, "aliases": ["user story", "product backlog item", "epic"], "icon": "story" },
+    { "id": "task", "labels": { "en": "Task", "es": "Tarea" }, "aliases": ["issue", "impediment"], "icon": "task" },
+    { "id": "chore", "labels": { "en": "Chore", "es": "Mantenimiento" }, "icon": "wrench" }
   ],
   "environments": [
     { "id": "dev", "labels": { "en": "Dev", "es": "Dev" } },

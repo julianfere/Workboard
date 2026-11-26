@@ -1,7 +1,7 @@
 // Estado de la UI y helpers del flujo de trabajo (qué clave del frontmatter es cada dato).
 
 import { label } from "./i18n";
-import type { AppInfo, Item, ItemDetail, MetaValue, Note, PresetSummary, Session, Settings, StateDef, Task, Workflow } from "./types";
+import type { AppInfo, Item, ItemDetail, MetaValue, Note, PresetSummary, Session, Settings, StateDef, Task, TrackerWorkItem, Workflow } from "./types";
 
 export type DetailTab = "summary" | "readme" | "files" | "git" | "deploy" | "notes" | "versions";
 
@@ -34,6 +34,8 @@ export const S = {
   sessions: [] as Session[],
   otherSessions: [] as Session[],
   sessionsRev: 0,
+  /** Búsqueda global (Trabajos, Alertas y Pendientes; no se guarda). */
+  search: "",
   /** Panel de terminales: visible, pestañas abiertas (ids) y la activa. */
   term: { open: false, tabs: [] as string[], active: null as string | null },
 };
@@ -83,8 +85,44 @@ export function effectiveStatus(it: Item): string {
 
 export const itemByName = (name: string) => S.items.find((i) => i.name === name);
 
-/** Título para mostrar: el del README o la carpeta. */
-export const titleOf = (it: Item) => it.title || it.name.split("/").pop()!;
+/** Lo último leído del tracker (la caché del sync). Lo conecta `views/grid.ts` con la config del tracker, para que
+ *  este módulo no dependa de las vistas. */
+export const trackerLookup = {
+  item: (_id: string): TrackerWorkItem | undefined => undefined,
+  /** Tipo del tracker → tipo del flujo ("" = sin equivalente). */
+  localType: (_type: string): string => "",
+};
+
+/** El work item del tracker de un item (el de su primer id, como la v1); los grupos no tienen. */
+export const trackerItemOf = (it: Item): TrackerWorkItem | undefined => (it.kind === "group" || !it.ids.length ? undefined : trackerLookup.item(it.ids[0]));
+
+/** Título para mostrar: el del tracker (último sync), si no el del README, si no la carpeta (v1 `displayTitle`). */
+export const titleOf = (it: Item) => trackerItemOf(it)?.title || it.title || it.name.split("/").pop()!;
+
+/** Tipo del flujo según el tracker ("" si no hay datos o no tiene equivalente). */
+export const trackerTypeOf = (it: Item) => {
+  const w = trackerItemOf(it);
+  return w?.type ? trackerLookup.localType(w.type) : "";
+};
+
+/** Tipo efectivo: el del README; si falta, el del tracker (v1 `tipoOf`). */
+export const typeOf = (it: Item) => it.type || trackerTypeOf(it);
+
+/** Ícono del tipo (sale del flujo). */
+export const typeIcon = (id: string) => wf().types.find((x) => x.id === id)?.icon ?? "";
+
+/** Búsqueda global: todas las palabras en carpeta, títulos (README y tracker), ids, resumen, rama, estado (local y del
+ *  tracker), archivos o tareas (v1 `matches`). */
+export function matchesSearch(it: Item, q = S.search): boolean {
+  const words = q.toLowerCase().split(/\s+/).filter(Boolean);
+  if (!words.length) return true;
+  const f = wf().fields;
+  const w = trackerItemOf(it);
+  const hay = [it.name, it.title, w?.title, w?.state, it.ids.join(" "), metaText(it, f.notes), metaText(it, f.branch), stateLabel(effectiveStatus(it)), ...it.files.map((x) => x.name), ...it.tasks.map((x) => x.text)]
+    .join(" ")
+    .toLowerCase();
+  return words.every((x) => hay.includes(x));
+}
 
 /** Nombre para mostrar de una carpeta de trabajos: su alias (`settings.aliases`) o el nombre de la carpeta. */
 export function folderName(path: string): string {

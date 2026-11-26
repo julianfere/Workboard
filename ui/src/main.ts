@@ -90,7 +90,7 @@ document.addEventListener("keydown", (ev) => {
   if (ev.key === "Escape" && S.detail) closeDetail();
   else if (ev.key === "Escape" && inGrid) clearSelection();
   else if (ev.key === "/") {
-    const search = document.querySelector<HTMLInputElement>("#items-search, #notes-search");
+    const search = document.querySelector<HTMLInputElement>("#global-search, #notes-search");
     if (search) {
       ev.preventDefault();
       search.focus();

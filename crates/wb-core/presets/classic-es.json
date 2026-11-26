@@ -13,10 +13,10 @@
     { "id": "desconocido", "category": "unknown", "labels": { "en": "Unknown", "es": "Desconocido" } }
   ],
   "types": [
-    { "id": "bug", "labels": { "en": "Bug", "es": "Bug" } },
-    { "id": "us", "labels": { "en": "User story", "es": "User story" }, "aliases": ["product backlog item", "feature", "epic"] },
-    { "id": "task", "labels": { "en": "Task", "es": "Task" }, "aliases": ["issue", "impediment"] },
-    { "id": "fix", "labels": { "en": "Fix (no work item)", "es": "Arreglo (sin WI)" } }
+    { "id": "bug", "labels": { "en": "Bug", "es": "Bug" }, "icon": "bug" },
+    { "id": "us", "labels": { "en": "User story", "es": "User story" }, "aliases": ["product backlog item", "feature", "epic"], "icon": "story" },
+    { "id": "task", "labels": { "en": "Task", "es": "Task" }, "aliases": ["issue", "impediment"], "icon": "task" },
+    { "id": "fix", "labels": { "en": "Fix (no work item)", "es": "Arreglo (sin WI)" }, "icon": "wrench" }
   ],
   "environments": [
     { "id": "dev", "labels": { "en": "DEV", "es": "DEV" } },
@@ -44,7 +44,9 @@
     "period": "periodo",
     "hours": "horas",
     "sessions": "sesiones",
-    "extra": [{ "key": "release_manual", "noSpaces": true }]
+    "extra": [
+      { "key": "release_manual", "noSpaces": true, "labels": { "en": "ReleaseManual", "es": "ReleaseManual" }, "icon": "package", "link": "tracker" }
+    ]
   },
   "tasks": { "heading": "Pendientes", "maxLen": 300 },
   "deployKeywords": ["deploy", "despleg", "promoci", "cómo correr", "como correr"],

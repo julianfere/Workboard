@@ -166,6 +166,34 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
 .items-grid.compact td { padding-top: 4px; padding-bottom: 4px; white-space: nowrap; }
 .items-grid.compact .title { white-space: nowrap; }
 .items-grid .id-cell { display: inline-flex; align-items: center; gap: 6px; color: var(--fg-2); white-space: nowrap; }
+/* Franja de estado por fila (a la izquierda, en la celda de la casilla) y barra de estados del grupo. */
+.items-grid tr.row > td.gc-check { box-shadow: inset 3px 0 0 var(--row-c, transparent); }
+.items-grid tr.cat-backlog { --row-c: var(--c-backlog); } .items-grid tr.cat-planned { --row-c: var(--c-planned); }
+.items-grid tr.cat-active { --row-c: var(--c-active); } .items-grid tr.cat-review { --row-c: var(--c-review); }
+.items-grid tr.cat-done { --row-c: var(--c-done); } .items-grid tr.cat-cancelled { --row-c: var(--c-cancelled); }
+.items-grid tr.cat-unknown { --row-c: var(--c-unknown); }
+.group-head .dist { display: inline-flex; gap: 1px; flex: none; max-width: 40%; overflow: hidden; }
+.group-head .dist i { width: 4px; height: 12px; border-radius: 1px; background: var(--c-unknown); }
+.group-head .dist i.backlog { background: var(--c-backlog); } .group-head .dist i.planned { background: var(--c-planned); }
+.group-head .dist i.active { background: var(--c-active); } .group-head .dist i.review { background: var(--c-review); }
+.group-head .dist i.done { background: var(--c-done); } .group-head .dist i.cancelled { background: var(--c-cancelled); }
+.tbadge { display: inline-flex; align-items: center; gap: 4px; color: var(--fg-2); flex: none; }
+.tbadge svg.i { width: 14px; height: 14px; }
+.items-grid .wi-id { overflow: hidden; text-overflow: ellipsis; }
+.sess-cell { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; border: 0; background: none; padding: 0; color: inherit; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sess-cell:hover span:last-child { text-decoration: underline; }
+/* Git por ambiente: check = en todos los repos; medio círculo = en algunos; punto = en ninguno. */
+.genv { display: inline-flex; align-items: center; gap: 3px; margin: 0 8px 2px 0; font-size: 12px; white-space: nowrap; }
+.genv svg.i { width: 12px; height: 12px; }
+.genv.ok { color: var(--ok); }
+.genv.partial { color: var(--warn); }
+.genv.no { color: var(--fg-2); }
+.genv .gmark { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid currentColor; }
+.genv.partial .gmark { background: linear-gradient(90deg, currentColor 50%, transparent 50%); }
+.genv.no .gmark { width: 6px; height: 6px; border: 0; background: currentColor; }
+.chip.alert-chip { color: var(--warn); margin: 0 4px 2px 0; }
+.xlink, .xval { display: inline-flex; align-items: center; gap: 4px; }
+.xlink svg.i, .xval svg.i { width: 13px; height: 13px; }
 .grp-tw { display: inline-grid; place-items: center; border: 0; background: none; padding: 0; width: 18px; height: 18px; border-radius: 4px; color: var(--fg-2); cursor: pointer; flex: none; }
 .grp-tw:hover { background: var(--hover); }
 .grp-tw svg.i, .group-head svg.tw { width: 14px; height: 14px; transition: transform .12s; }

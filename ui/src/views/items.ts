@@ -3,7 +3,8 @@
 // barra y menú contextual en lote, y deshacer. El modelo (columnas, filtros, vistas) está en `grid.ts`.
 
 import { api } from "../api";
-import { onAction, onAfterRender, onChange, openDetail, refresh, registerView, render } from "../app";
+import { onAction, onAfterRender, onChange, openDetail, refresh, refreshAll, registerView, render } from "../app";
+import { noSearchResults, searchBox } from "../search";
 import { $, confirmDialog, daysUntil, esc, fmtAgo, promptDialog, toast } from "../dom";
 import { errorText, label, t } from "../i18n";
 import { ico } from "../icons";
@@ -28,15 +29,18 @@ import {
   activeView,
   availableColumns,
   clearChip,
+  colLabel,
   cycleSort,
+  distBar,
   deleteView,
   discardView,
   ensurePrefs,
   exportRows,
   filterChips,
   folderOpen,
+  gridGroups,
   groupOpen,
-  groupTree,
+  matchesText,
   moveColumn,
   moveView,
   newView,
@@ -50,8 +54,10 @@ import {
   statusChipHtml,
   statusCounts,
   switchSavedView,
+  rowCategory,
   toggleColumn,
   toggleFlip,
+  toggleGroup,
   update,
   viewDirty,
   visibleColumns,
@@ -152,11 +158,12 @@ function toolbar(): string {
   const density = snap().density;
   const dirty = viewDirty();
   return `<div class="toolbar"><h1>${esc(t("nav.items"))}</h1>
-      <div class="search">${ico("search")}<input id="items-search" type="search" placeholder="${esc(t("items.search"))}" value="${esc(G.text)}"></div>
+      ${searchBox()}
       <button class="btn${chips.length ? " has" : ""}" data-action="grid-pop" data-kind="filters" aria-haspopup="true">${ico("filter")}${esc(t("grid.filters"))}${chips.length ? `<b class="fcount">${chips.length}</b>` : ""}${ico("chevronDown")}</button>
       ${groupSelects()}
       <span class="spacer"></span>
-      ${S.deletedCount ? `<button class="btn ghost" data-action="show-deleted" title="${esc(t("items.deleted"))}">${ico("trash")}${S.deletedCount}</button>` : ""}
+      <button class="btn ghost" data-action="show-deleted" title="${esc(t("grid.deletedHint"))}" aria-label="${esc(t("items.deleted"))}">${ico("trash")}${S.deletedCount ? S.deletedCount : ""}</button>
+      <button class="icon-btn" data-action="grid-reload" title="${esc(t("grid.reload"))}" aria-label="${esc(t("grid.reload"))}">${ico("refresh")}</button>
       ${trackerToolbar()}
       <button class="btn primary" data-action="new-item">${ico("plus")}${esc(t("items.new"))}</button>
     </div>
@@ -178,7 +185,7 @@ function toolbar(): string {
 function rowHtml(it: Item, cols: ReturnType<typeof visibleColumns>, cls = ""): string {
   G.order.push(it.name);
   const sel = G.selected.has(it.name);
-  return `<tr class="row ${cls}${sel ? " sel" : ""}" data-action="grid-row" data-name="${esc(it.name)}">
+  return `<tr class="row cat-${rowCategory(it)} ${cls}${sel ? " sel" : ""}" data-action="grid-row" data-name="${esc(it.name)}">
     <td class="gc-check"><input type="checkbox" data-action="select-item" data-name="${esc(it.name)}"${sel ? " checked" : ""} aria-label="${esc(t("items.select"))}"></td>
     ${cols.map((c) => `<td class="gc-${c.id}">${c.render(it)}</td>`).join("")}</tr>`;
 }
@@ -196,10 +203,10 @@ function rowsHtml(rows: Row[], cols: ReturnType<typeof visibleColumns>): string 
 
 function groupHtml(g: Group, depth: number, cols: ReturnType<typeof visibleColumns>): string {
   if (!g.title && !depth && !g.children) return rowsHtml(g.rows, cols);
-  const open = groupOpen(g);
+  const open = groupOpen(g, depth);
   const count = g.rows.reduce((n, r) => n + (r.item.kind === "group" ? r.shown.length || 1 : 1), 0);
-  const head = `<tr class="group-head d${depth}${g.cls ? ` ${g.cls}` : ""}${open ? " open" : ""}" data-action="grid-group" data-key="${esc(g.key)}">
-    <td colspan="${cols.length + 1}"><span class="gh" style="padding-left:${depth * 20}px">${ico("chevronRight", "tw")}<span class="gt">${g.title}</span>${g.sub ? `<span class="gs">${g.sub}</span>` : ""}<span class="gc">${count}</span></span></td></tr>`;
+  const head = `<tr class="group-head d${depth}${g.cls ? ` ${g.cls}` : ""}${open ? " open" : ""}" data-action="grid-group" data-key="${esc(g.key)}" data-depth="${depth}">
+    <td colspan="${cols.length + 1}"><span class="gh" style="padding-left:${depth * 20}px">${ico("chevronRight", "tw")}<span class="gt">${g.title}</span>${g.sub ? `<span class="gs">${g.sub}</span>` : ""}<span class="gc">${count}</span>${distBar(g)}</span></td></tr>`;
   if (!open) return head;
   return head + (g.children ? g.children.map((c) => groupHtml(c, depth + 1, cols)).join("") : rowsHtml(g.rows, cols));
 }
@@ -212,10 +219,12 @@ function table(): string {
   if (!rows.length) {
     const empty = !S.items.length
       ? esc(t("items.empty"))
-      : `${esc(t("items.noMatches"))} <button class="link" data-action="grid-chip" data-k="all">${esc(t("grid.clearFilters"))}</button>`;
+      : S.search.trim() && !S.items.some((it) => matchesText(it))
+        ? noSearchResults()
+        : `${esc(t("items.noMatches"))} <button class="link" data-action="grid-chip" data-k="all">${esc(t("grid.clearFilters"))}</button>`;
     return `<p class="empty">${empty}</p>`;
   }
-  const body = groupTree(rows, snap().groupBy)
+  const body = gridGroups(rows)
     .map((g) => groupHtml(g, 0, cols))
     .join("");
   const allSel = G.order.length > 0 && G.order.every((n) => G.selected.has(n));
@@ -223,7 +232,7 @@ function table(): string {
   const head = cols
     .map((c) => {
       const arrow = sort?.id === c.id ? ico("chevronDown", sort.dir > 0 ? "flip" : "") : "";
-      return `<th class="gc-${c.id}" aria-sort="${sort?.id === c.id ? (sort.dir > 0 ? "ascending" : "descending") : "none"}"><button class="th" data-action="grid-sort" data-col="${c.id}">${esc(t(c.label))}${arrow}</button><span class="col-rs" data-rs="${c.id}" title="${esc(t("grid.resize"))}"></span></th>`;
+      return `<th class="gc-${c.id}" aria-sort="${sort?.id === c.id ? (sort.dir > 0 ? "ascending" : "descending") : "none"}"><button class="th" data-action="grid-sort" data-col="${c.id}">${esc(colLabel(c))}${arrow}</button><span class="col-rs" data-rs="${c.id}" title="${esc(t("grid.resize"))}"></span></th>`;
     })
     .join("");
   return `<div class="grid-wrap"><table class="grid items-grid ${snap().density}" style="min-width:${minW}px">
@@ -301,7 +310,7 @@ function columnsMenu(): string {
   const ordered = [...visible, ...availableColumns().filter((c) => !on.has(c.id))];
   return `${head(t("grid.columns"), t("grid.columnsHint"))}${ordered
     .map(
-      (c) => `<div class="menu-check"><label class="grow"><input type="checkbox" data-change="grid-col-on" data-col="${c.id}"${on.has(c.id) ? " checked" : ""}${c.fixed ? " disabled" : ""}> ${esc(t(c.label))}</label>
+      (c) => `<div class="menu-check"><label class="grow"><input type="checkbox" data-change="grid-col-on" data-col="${c.id}"${on.has(c.id) ? " checked" : ""}${c.fixed ? " disabled" : ""}> ${esc(colLabel(c))}</label>
       ${on.has(c.id) ? `<button class="icon-btn sm" data-action="grid-col-move" data-col="${c.id}" data-d="-1" title="${esc(t("grid.moveUp"))}" aria-label="${esc(t("grid.moveUp"))}">${ico("chevronDown", "flip")}</button><button class="icon-btn sm" data-action="grid-col-move" data-col="${c.id}" data-d="1" title="${esc(t("grid.moveDown"))}" aria-label="${esc(t("grid.moveDown"))}">${ico("chevronDown")}</button>` : ""}</div>`,
     )
     .join("")}${sepHtml}<button class="link menu-link" data-action="grid-col-reset">${esc(t("grid.columnsReset"))}</button>`;
@@ -814,7 +823,8 @@ onAction("select-item", (el, ev) => {
 });
 onAction("bulk-clear", () => clearSelection());
 onAction("grid-sort", (el) => cycleSort(el.dataset.col!));
-onAction("grid-group", (el) => toggleFlip(el.dataset.key!));
+onAction("grid-group", (el) => toggleGroup(el.dataset.key!, Number(el.dataset.depth)));
+onAction("grid-reload", () => refreshAll());
 onAction("grid-folder", (el, ev) => {
   ev.stopPropagation();
   toggleFlip(`f:${el.dataset.name}`);
@@ -978,21 +988,3 @@ onChange("grid-f-type", (el) => update((s) => (s.type = (el as HTMLSelectElement
 onChange("grid-f-due", (el) => update((s) => (s.due = (el as HTMLSelectElement).value as typeof s.due)));
 onChange("grid-f-activity", (el) => update((s) => (s.activity = (el as HTMLSelectElement).value)));
 onChange("grid-col-on", (el) => toggleColumn(el.dataset.col!, (el as HTMLInputElement).checked));
-
-/** Pone el foco en la búsqueda de la grilla (`/`). */
-export function focusSearch(): void {
-  $<HTMLInputElement>("#items-search")?.focus();
-}
-
-// Búsqueda en vivo (sin esperar el `change`).
-document.addEventListener("input", (ev) => {
-  const el = ev.target as HTMLInputElement;
-  if (el.id !== "items-search") return;
-  G.text = el.value;
-  const pos = el.selectionStart;
-  render();
-  const input = $<HTMLInputElement>("#items-search");
-  input?.focus();
-  input?.setSelectionRange(pos, pos);
-});
-
