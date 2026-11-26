@@ -24,7 +24,7 @@ import type {
   Version,
   Workflow,
 } from "./types";
-import type { AssignedList, SyncPreview, TrackerConfig, TrackerFailure, TrackerItem } from "./types";
+import type { AssignedList, NewItemResult, SyncPreview, TrackerConfig, TrackerFailure, TrackerItem } from "./types";
 import type { BranchDiff, GitConfig, GitOverview, Promotion, RepoConfig } from "./types";
 import type { PluginList, PluginStep } from "./types";
 
@@ -86,8 +86,11 @@ export const api = {
   listVersions: (name: string) => call<Version[]>("list_versions", { name }),
   readVersion: (name: string, id: string) => call<string>("read_version", { name, id }),
   restoreVersion: (name: string, id: string) => call<Item>("restore_version", { name, id }),
-  createItem: (folder: string, title: string, type: string) => call<Item>("create_item", { folder, title, type }),
-  createGroup: (title: string, members: string[]) => call<{ group: string; members: string[] }>("create_group", { title, members }),
+  /** Item sin id; con `plan`, en el estado de planificación y con la sesión de Planear abierta. */
+  createItem: (data: { title: string; type: string; folder: string; description: string; plan: boolean; cols: number; rows: number }) =>
+    call<NewItemResult>("create_item", data),
+  createGroup: (title: string, members: string[]) =>
+    call<{ group: string; members: string[]; errors: TrackerFailure[] }>("create_group", { title, members }),
   moveFolder: (name: string, dest: string) => call<string>("move_folder", { name, dest }),
   renameFolder: (name: string, base: string) => call<string>("rename_folder", { name, base }),
   trash: (name: string) => call<string>("trash", { name }),
@@ -185,8 +188,10 @@ export const trackerApi = {
   assigned: (period: string) => call<AssignedList>("tracker_assigned", { period }),
   importItems: (ids: string[]) => call<{ done: string[]; skipped: string[]; errors: TrackerFailure[] }>("tracker_import", { ids }),
   item: (id: string) => call<TrackerItem>("tracker_item", { id }),
-  createItem: (data: { id: string; title: string; type: string; folder: string; description: string; criteria: string; trackerType: string; trackerState: string }) =>
-    call<Item>("tracker_create_item", data),
+  createItem: (data: {
+    id: string; title: string; type: string; folder: string; description: string; criteria: string; trackerType: string; trackerState: string;
+    plan: boolean; cols: number; rows: number;
+  }) => call<NewItemResult>("tracker_create_item", data),
   pushStates: (changes: { id: string; state: string }[], secret: string | null) =>
     call<{ done: { id: string; state: string }[]; errors: TrackerFailure[] }>("tracker_push_states", { changes, secret }),
   open: (id: string) => call<null>("tracker_open", { id }),

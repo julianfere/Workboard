@@ -8,7 +8,7 @@ import { $, confirmDialog, esc, fmtDate, toast } from "../dom";
 import { errorText, label, lang, t } from "../i18n";
 import { ico } from "../icons";
 import { S, envLabel, itemByName, stateDef, stateLabel, statusOf, titleOf, typeLabel, wf } from "../state";
-import type { ApiError, AssignedList, Item, SyncPreview, SyncRow, TrackerConfig, TrackerItem, TrackerWorkItem } from "../types";
+import type { ApiError, AssignedList, Item, NewItemResult, SyncPreview, SyncRow, TrackerConfig, TrackerItem, TrackerWorkItem } from "../types";
 
 // ---------- estado ----------
 
@@ -700,7 +700,8 @@ onAction("trk-push-go", async (el) => {
 
 // ---------- nuevo item con id del tracker ----------
 
-/** Datos del tracker para el id (sin conexión vuelve vacío: se completa a mano). */
+/** Datos del tracker para el id (sin conexión o con la credencial rechazada vuelve vacío, con `error`:
+ * se completa a mano, como la v1). */
 export function fetchTrackerItem(id: string): Promise<TrackerItem> {
   return trackerApi.item(id);
 }
@@ -710,17 +711,25 @@ export function createTrackedItem(data: {
   title: string;
   type: string;
   folder: string;
+  description: string;
+  criteria: string;
   fetched: TrackerItem | null;
-}): Promise<Item> {
+  plan: boolean;
+  cols: number;
+  rows: number;
+}): Promise<NewItemResult> {
   const f = data.fetched;
   return trackerApi.createItem({
     id: data.id,
     title: data.title,
     type: data.type,
     folder: data.folder,
-    description: f?.description ?? "",
-    criteria: f?.criteria ?? "",
+    description: data.description,
+    criteria: data.criteria,
     trackerType: f?.type ?? "",
     trackerState: f?.state ?? "",
+    plan: data.plan,
+    cols: data.cols,
+    rows: data.rows,
   });
 }
