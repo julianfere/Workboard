@@ -51,6 +51,67 @@ fn read(path: &Path) -> Json {
     serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap()
 }
 
+/// `periodStart` de la v1: el día 20 del mes a medianoche local, en ms.
+fn period_start_ms(y: i32, m: u32) -> i64 {
+    use chrono::TimeZone;
+    chrono::Local.with_ymd_and_hms(y, m, 20, 0, 0, 0).single().unwrap().timestamp_millis()
+}
+
+/// Preferencias de la ventana de la v1 (`setPref` de `ui/app.js`) para la carpeta `rs`.
+fn v1_prefs(rs: &str) -> Json {
+    let mut p = json!({
+        "theme": "dark",
+        "view": "backlog",
+        "hoursAll": true,
+        "hoursSort": "total",
+        "mxRange": "30",
+        "mxTipo": "bug",
+        "hideClosed": true,
+        "stateFilter": ["en-curso", "none", "borrado"],
+        "typeFilter": "bug",
+        "period": "4",
+        "pactFilter": "upto",
+        "groupBy": ["state", "prio", "raro"],
+        "gridCols": [{"id": "state"}, {"id": "wi", "w": 150}, {"id": "title"}, {"id": "azure"}, {"id": "rm"},
+                     {"id": "pactada"}, {"id": "real"}, {"id": "inventada"}],
+        "gridSort": {"id": "pactada", "dir": "asc"},
+        "density": "compacta",
+        "views": [
+            {"id": "mia", "name": "Mi vista", "stateFilter": [], "hideClosed": true, "groupBy": "week-last",
+             "gridCols": null, "gridSort": null, "density": "comoda"},
+            {"id": "qa", "name": "En QA", "stateFilter": ["qa"], "groupBy": "none"},
+            {"id": "vabc", "name": "Bugs", "typeFilter": "bug", "groupBy": ["periodo", "tipo"],
+             "gridSort": {"id": "last", "dir": "desc"}}
+        ],
+        "activeView": "vabc",
+        "hideHours": true,
+        "detailWidth": "max",
+        "detailWidthRestore": 900,
+        "tasksState": "plan",
+        "tasksSess": "none",
+        "tasksEnv": "QA",
+        "tasksPact": "late",
+        "tasksShowDone": true,
+    });
+    let root = |k: &str| format!("{k}@{rs}");
+    p[root("alertsOff")] = json!({
+        "wi100-algo|stale": "1760000000",
+        "wi100-algo|planincomplete": "plan,pendientes",
+        "wi100-algo|gitdesync": r#"[{"env":"PROD","ok":["web"],"missing":["api"]},{"env":"QA","ok":["api"],"missing":["web"]}]"#,
+        "wi100-algo|gituncommitted": r#"[{"repo":"api","branch":"wi100","count":1,"files":["a.sql"]}]"#,
+        "wi100-algo|noreadme": "",
+        "wi100-algo|inventada": "x"
+    });
+    // Inicio del período (día 20, medianoche local, como `periodStart` de la v1).
+    p[root("hoursPeriod")] = json!(period_start_ms(2026, 10));
+    p[root("heavyOff")] = json!({"s1": "larga", "s2": "alta", "s3": ""});
+    p[root("pinnedSess")] = json!(["s1"]);
+    p[root("keepSess")] = json!(["s2"]);
+    // Grupos abiertos: no se migran (las claves de grupo de la v2 son otras).
+    p[root("openGroups")] = json!(["2026-W40"]);
+    p
+}
+
 /// Una config de la v1 con todo lo que se migra (y algo de lo que no).
 fn fixture(tag: &str) -> Fx {
     let base = std::env::temp_dir().join(format!("wb-migrate-{tag}-{}", std::process::id()));
@@ -72,7 +133,7 @@ fn fixture(tag: &str) -> Fx {
         "root": rs,
         "recents": [rs, os, base.join("gone").display().to_string()],
         "aliases": {key(&rs): "Proyecto"},
-        "prefs": {"theme": "dark", "view": "board", "hideClosed": true},
+        "prefs": v1_prefs(&rs),
         "notesFolder": null,
         "agents": {"default": "copilot", "custom": {"label": "Mi agente", "command": "myagent", "args": "--id {session_id}", "resumeArgs": ""}},
         "git": {key(&rs): [{"name": "api", "path": repo.display().to_string(), "envs": {"DEV": "origin/develop", "QA": "origin/qa", "PROD": "origin/main"}}]},
@@ -96,7 +157,10 @@ fn fixture(tag: &str) -> Fx {
                 "numFields": [{"ref": "Custom.Horas", "name": "Horas"}],
                 "horasField": ""
             }},
-            "rm": {format!("{ORG}|shop"): {"repo": "db"}}
+            "rm": {format!("{ORG}|shop"): {"repo": "db", "base": "develop", "link": false, "visible": ["Custom.Req"],
+                    "form": [{"ref": "Custom.Req", "name": "Req", "type": "string", "required": true, "readOnly": false,
+                              "allowed": [], "default": null, "help": ""}],
+                    "formFetchedAt": 1_760_000_000.0, "last": {"Custom.Req": "x"}, "junk": 1}}
         }
     });
     write(&v1.join("config.json"), &serde_json::to_string_pretty(&config).unwrap());
@@ -277,12 +341,12 @@ fn migrates_everything_and_leaves_v1_untouched() {
         "migrate.ignored.log",
         "migrate.ignored.sessionFiles",
         "migrate.ignored.prefs",
-        "migrate.ignored.releaseManual",
         "migrate.ignored.deletedNotes",
         "migrate.ignored.removedTools",
     ] {
         assert!(r.ignored.contains(&k), "{k}");
     }
+    assert!(!r.ignored.contains(&"migrate.ignored.releaseManual"));
 
     // La app abre lo migrado: carpeta, flujo y conexión con sus dos credenciales.
     let api = Api::new(fx.v2.clone());
@@ -468,4 +532,189 @@ fn cli_prints_the_report() {
     let text = String::from_utf8(out).unwrap();
     assert!(text.contains("migrate-v1"), "{text}");
     assert!(!fx.v2.exists());
+}
+
+#[test]
+fn claude_plan_prefix_is_go_and_force_fixes_an_empty_one() {
+    let fx = fixture("planprefix");
+    let secrets = MemorySecrets::default();
+    // Sin `settings.json`: el valor por defecto de la v2 ya es el de la v1.
+    let r = run(&opts(&fx), &secrets);
+    let e = r.find("migrate.item.planPrefix");
+    assert_eq!(
+        (e[0].outcome, e[0].param("agent"), e[0].param("prefix")),
+        (Outcome::Same, Some("claude"), Some("/go"))
+    );
+    assert_eq!(read(&fx.v2.join("settings.json"))["agents"]["planPrefix"], json!({"claude": "/go "}));
+
+    // Un `planPrefix: {}` guardado antes de que existiera el valor por defecto: se conserva salvo `--force`.
+    let mut s = read(&fx.v2.join("settings.json"));
+    s["agents"]["planPrefix"] = json!({});
+    write(&fx.v2.join("settings.json"), &s.to_string());
+    let r = run(&opts(&fx), &secrets);
+    assert_eq!(outcome(&r, "migrate.item.planPrefix"), Outcome::Kept);
+    assert_eq!(read(&fx.v2.join("settings.json"))["agents"]["planPrefix"], json!({}));
+    let r = run(&Options { force: true, ..opts(&fx) }, &secrets);
+    assert_eq!(outcome(&r, "migrate.item.planPrefix"), Outcome::Done);
+    assert_eq!(read(&fx.v2.join("settings.json"))["agents"]["planPrefix"], json!({"claude": "/go "}));
+}
+
+#[test]
+fn release_manual_goes_to_the_private_plugin_data() {
+    let fx = fixture("rm");
+    let secrets = MemorySecrets::default();
+    let data = fx.v2.join("plugin-data/private.json");
+    write(
+        &data,
+        &json!({"other": {"keep": true}, "rm": {"https://dev.azure.com/x|y": {"repo": "otro"}}}).to_string(),
+    );
+    let r = run(&opts(&fx), &secrets);
+    assert!(!r.failed(), "{}", migrate::render(&r, "en"));
+    let e = r.find("migrate.item.releaseManual");
+    assert_eq!((e[0].outcome, e[0].param("project")), (Outcome::Done, Some("shop")));
+    let d = read(&data);
+    // Lo demás del archivo queda; la clave es la del plugin: `<org normalizada>|<proyecto>` en minúsculas.
+    assert_eq!(d["other"], json!({"keep": true}));
+    assert_eq!(d["rm"]["https://dev.azure.com/x|y"], json!({"repo": "otro"}));
+    let rm = &d["rm"]["https://dev.azure.com/contoso|shop"];
+    assert_eq!(rm["repo"], "db");
+    assert_eq!(rm["base"], "develop");
+    assert_eq!(rm["link"], false);
+    assert_eq!(rm["visible"], json!(["Custom.Req"]));
+    assert_eq!(rm["form"][0]["ref"], "Custom.Req");
+    assert_eq!(rm["formFetchedAt"], 1_760_000_000.0);
+    assert_eq!(rm["last"], json!({"Custom.Req": "x"}));
+    assert!(rm.get("junk").is_none(), "only the plugin's fields");
+    // El PAT de escritura es el compartido del tracker, el que usa el plugin (`host/tracker/writeToken`).
+    assert_eq!(secrets.get(&format!("azure-devops:write:{ORG}")).unwrap().as_deref(), Some(WRITE_PAT));
+
+    // Otro valor en la v2: se conserva salvo `--force`.
+    let mut d = d;
+    d["rm"]["https://dev.azure.com/contoso|shop"]["repo"] = json!("cambiado");
+    write(&data, &d.to_string());
+    let r = run(&opts(&fx), &secrets);
+    assert_eq!(outcome(&r, "migrate.item.releaseManual"), Outcome::Kept);
+    let r = run(&Options { force: true, ..opts(&fx) }, &secrets);
+    assert_eq!(outcome(&r, "migrate.item.releaseManual"), Outcome::Done);
+    let d = read(&data);
+    assert_eq!(d["rm"]["https://dev.azure.com/contoso|shop"]["repo"], "db");
+    assert_eq!(d["other"], json!({"keep": true}));
+}
+
+#[test]
+fn window_prefs_go_to_ui_prefs() {
+    let fx = fixture("uiprefs");
+    let secrets = MemorySecrets::default();
+    write(
+        &fx.v2.join("ui_prefs.json"),
+        &json!({"mine": 1, "sessionWeightHidden": {"s9": "heavy"}}).to_string(),
+    );
+    let r = run(&opts(&fx), &secrets);
+    assert!(!r.failed(), "{}", migrate::render(&r, "en"));
+    let ui = read(&fx.v2.join("ui_prefs.json"));
+    assert_eq!(ui["mine"], 1, "other keys are kept");
+
+    // Grilla: valores vigentes (`current`), vistas con los ids de fábrica de la v2 y la activa.
+    let g = &ui["grid"];
+    assert_eq!(
+        g["current"],
+        json!({
+            "status": ["en-curso", ""], "hideClosed": true, "type": "bug", "due": "upto", "activity": "4",
+            "groupBy": ["status", "priority"],
+            "columns": [{"id": "status"}, {"id": "id", "w": 150}, {"id": "title"}, {"id": "tracker"},
+                        {"id": "x:release_manual"}, {"id": "due"}, {"id": "worked"}],
+            "sort": {"id": "due", "dir": 1}, "density": "compact"
+        })
+    );
+    let ids: Vec<&str> = g["views"].as_array().unwrap().iter().map(|v| v["id"].as_str().unwrap()).collect();
+    assert_eq!(ids, ["mine", "review", "vabc"]);
+    assert_eq!(g["views"][0]["name"], "Mi vista");
+    assert_eq!(g["views"][0]["groupBy"], json!(["weekLast"]));
+    assert_eq!(g["views"][0]["columns"], Json::Null);
+    assert_eq!(g["views"][1]["status"], json!(["qa"]));
+    assert_eq!(g["views"][1]["groupBy"], json!([]));
+    assert_eq!(g["views"][2]["groupBy"], json!(["period", "type"]));
+    assert_eq!(g["views"][2]["sort"], json!({"id": "last", "dir": -1}));
+    assert_eq!(g["active"], "vabc");
+    let e = r.find("migrate.item.gridPrefs");
+    assert_eq!((e[0].param("views"), e[0].note), (Some("3"), Some("migrate.note.prefsDropped")));
+    // Desconocidos: un estado, una agrupación y una columna.
+    assert_eq!(e[0].param("dropped"), Some("3"));
+
+    assert_eq!(
+        ui["tasks"],
+        json!({"status": "plan", "session": "none", "env": "qa", "due": "late", "showDone": true})
+    );
+    assert_eq!(ui["detail"], json!({"width": 900, "max": true}));
+    assert_eq!(ui["hideHours"], true);
+    assert_eq!(ui["view"], "items");
+    let rs = fx.root.display().to_string();
+    assert_eq!(ui["hours"], json!({"all": true, "sort": "total", "period": {rs.as_str(): "2026-10"}}));
+    assert_eq!(ui["metrics"], json!({"range": "30", "type": "bug", "all": false}));
+    assert_eq!(ui["sessionWeightHidden"], json!({"s9": "heavy", "s1": "long", "s2": "heavy"}));
+
+    // Sesiones fijadas y reabiertas a mano.
+    let reg = read(&fx.v2.join("sessions/Proj-_work-12345678.json"));
+    assert_eq!(reg["sessions"][0]["pinned"], true);
+    assert_eq!(reg["sessions"][0]["keepOpen"], false);
+    assert_eq!(reg["sessions"][1]["pinned"], false);
+    assert_eq!(reg["sessions"][1]["keepOpen"], true);
+
+    // La app las lee igual.
+    let api = Api::new(fx.v2.clone());
+    assert_eq!(api.dispatch("ui_prefs", &json!({})).unwrap()["grid"]["active"], "vabc");
+
+    // Otro valor en la v2: se conserva salvo `--force`.
+    let mut ui = ui;
+    ui["detail"] = json!({"width": 700, "max": false});
+    write(&fx.v2.join("ui_prefs.json"), &ui.to_string());
+    let r = run(&opts(&fx), &secrets);
+    assert_eq!(outcome(&r, "migrate.item.detailWidth"), Outcome::Kept);
+    assert_eq!(outcome(&r, "migrate.item.gridPrefs"), Outcome::Same);
+    let r = run(&Options { force: true, ..opts(&fx) }, &secrets);
+    assert_eq!(outcome(&r, "migrate.item.detailWidth"), Outcome::Done);
+    assert_eq!(read(&fx.v2.join("ui_prefs.json"))["detail"], json!({"width": 900, "max": true}));
+}
+
+#[test]
+fn dismissed_alerts_keep_matching_the_v2_fingerprints() {
+    let fx = fixture("alerts");
+    let secrets = MemorySecrets::default();
+    let r = run(&opts(&fx), &secrets);
+    let e = r.find("migrate.item.alertsOff");
+    assert_eq!(e.len(), 1);
+    assert_eq!((e[0].outcome, e[0].param("count")), (Outcome::Done, Some("5")));
+    assert_eq!((e[0].param("dropped"), e[0].note), (Some("1"), Some("migrate.note.alertsDropped")));
+    assert_eq!(e[0].param("root"), Some(fx.root.display().to_string().as_str()));
+
+    // La app las encuentra con la carpeta abierta (misma clave de raíz que `alerts.rs`).
+    let api = Api::new(fx.v2.clone());
+    let off = api.dispatch("alerts_dismissed", &json!({})).unwrap();
+    assert_eq!(
+        off,
+        json!({
+            "wi100-algo|stale": "1760000000",
+            "wi100-algo|plan": "plan,tasks",
+            // Ambientes con los ids del flujo y en su orden (`gitDesyncs` de `git.ts`).
+            "wi100-algo|gitDesync": r#"[{"env":"qa","ok":["api"],"missing":["web"]},{"env":"prod","ok":["web"],"missing":["api"]}]"#,
+            "wi100-algo|gitDirty": r#"[{"repo":"api","branch":"wi100","count":1,"files":["a.sql"]}]"#,
+            "wi100-algo|noReadme": ""
+        })
+    );
+
+    // Se suman: lo que la v2 ya desestimó queda.
+    let path = fx.v2.join("alerts_off.json");
+    let mut store = read(&path);
+    let key = store.as_object().unwrap().keys().next().unwrap().clone();
+    store[&key]["wi100-algo|overdue"] = json!("2026-01-01");
+    store[&key]["wi100-algo|stale"] = json!("1");
+    write(&path, &store.to_string());
+    let r = run(&opts(&fx), &secrets);
+    let e = r.find("migrate.item.alertsOff");
+    assert_eq!((e[0].outcome, e[0].param("kept")), (Outcome::Kept, Some("1")));
+    assert_eq!(read(&path)[&key]["wi100-algo|overdue"], "2026-01-01");
+    let r = run(&Options { force: true, ..opts(&fx) }, &secrets);
+    assert_eq!(outcome(&r, "migrate.item.alertsOff"), Outcome::Done);
+    assert_eq!(read(&path)[&key]["wi100-algo|stale"], "1760000000");
+    assert_eq!(read(&path)[&key]["wi100-algo|overdue"], "2026-01-01");
 }
