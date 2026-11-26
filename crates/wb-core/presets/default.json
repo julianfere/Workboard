@@ -2,12 +2,12 @@
   "id": "default",
   "name": { "en": "Default", "es": "Predeterminado" },
   "states": [
-    { "id": "backlog", "category": "backlog", "labels": { "en": "Backlog", "es": "Pendiente" } },
-    { "id": "planned", "category": "planned", "labels": { "en": "Planned", "es": "Planificado" } },
-    { "id": "in-progress", "category": "active", "labels": { "en": "In progress", "es": "En curso" } },
-    { "id": "review", "category": "review", "labels": { "en": "In review", "es": "En revisión" } },
-    { "id": "testing", "category": "review", "labels": { "en": "Testing", "es": "En pruebas" } },
-    { "id": "done", "category": "done", "labels": { "en": "Done", "es": "Hecho" } },
+    { "id": "backlog", "category": "backlog", "progress": 0, "labels": { "en": "Backlog", "es": "Pendiente" } },
+    { "id": "planned", "category": "planned", "progress": 1, "labels": { "en": "Planned", "es": "Planificado" } },
+    { "id": "in-progress", "category": "active", "progress": 2, "labels": { "en": "In progress", "es": "En curso" } },
+    { "id": "review", "category": "review", "progress": 3, "labels": { "en": "In review", "es": "En revisión" } },
+    { "id": "testing", "category": "review", "progress": 4, "labels": { "en": "Testing", "es": "En pruebas" } },
+    { "id": "done", "category": "done", "progress": 5, "labels": { "en": "Done", "es": "Hecho" } },
     { "id": "cancelled", "category": "cancelled", "labels": { "en": "Cancelled", "es": "Cancelado" } }
   ],
   "mainPath": ["backlog", "planned", "in-progress", "review", "testing", "done"],
@@ -74,6 +74,7 @@
       { "id": "doc", "runnable": false, "kinds": ["PLAN", "HANDOFF", "QA"], "extensions": [".md", ".txt", ".docx", ".doc", ".pdf", ".drawio", ".dio", ".mmd", ".mermaid"], "labels": { "en": "Documentation", "es": "Documentación" } },
       { "id": "sql", "runnable": true, "extensions": [".sql"], "labels": { "en": "SQL", "es": "SQL" } }
     ],
+    "exampleKind": "DIAG",
     "fallbackCategory": { "id": "other", "runnable": false, "labels": { "en": "Other", "es": "Otros" } },
     "openFirst": ["migration", "fix"]
   },

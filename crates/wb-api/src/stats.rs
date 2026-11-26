@@ -94,7 +94,7 @@ impl Api {
         Ok(json!({"code": code, "description": description, "usage": usage}))
     }
 
-    /// Promueve un candidato (o vuelve a promover una tool cuyo script cambió).
+    /// Promueve un candidato, o reemplaza el script de una tool que existe (el suyo, si cambió, u otro).
     fn tool_promote(&self, a: &Args) -> ApiResult<Json> {
         let path = a.str("path")?;
         let name = a.str("name")?.trim().to_lowercase();
@@ -109,15 +109,12 @@ impl Api {
                 "sesiones": c.sessions.iter().map(|s| s.id.clone()).collect::<Vec<_>>(),
                 "wis": c.items,
             }),
-            (None, Some(t)) if replace && path_key(&t.path.display().to_string()) == key => {
-                t.meta.origin.clone()
-            }
+            // Reemplazar una tool que existe acepta otro script (como la v1): el origen sigue siendo el suyo.
+            (None, Some(t)) if replace => t.meta.origin.clone(),
             _ => return Err(ApiError::new("tools.error.notCandidate", &[])),
         };
+        // La descripción es opcional, como en la v1.
         let description = a.opt_str("description").unwrap_or("");
-        if description.trim().is_empty() {
-            return Err(ApiError::new("tools.error.noDescription", &[]));
-        }
         let t = tools::promote(
             &self.config_dir,
             Path::new(path),

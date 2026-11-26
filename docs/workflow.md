@@ -82,10 +82,12 @@ only at categories and order:
 | `done`, `cancelled` | **Closed**. Closed items are hidden from the MCP's `workboard_list_items` unless asked for; moving an item to a closed state checks its open tasks; a session whose items are all closed is closed automatically. |
 | `unknown` | Outside the scale (for example "we don't know where this is"). |
 
-Order matters too. The tracker sync ranks a state by `(category, position)` with categories in the order
-backlog < planned < active < review < done; a proposed state with a lower rank than the current one is a
-**move back** and is left unchecked. `cancelled` and `unknown` states are off the scale: they never count as
-moving back.
+Order matters too. `progress` (*optional*) is the state's step on the workflow scale; states with the same
+`progress` tie (in `classic-es`, `diag` ties with `en-curso`, as in v1). Without it, the state's position is
+used. Session metrics measure advance and rework with it, and the tracker sync ranks a state by
+`(category, progress)` with categories in the order backlog < planned < active < review < done; a proposed
+state with a lower rank than the current one is a **move back** and is left unchecked. `cancelled` and
+`unknown` states are off the scale: they never count as moving back.
 
 At least one state is required; ids must be unique.
 
@@ -292,6 +294,8 @@ environment.
   `<config>/runs.json`; the MCP tool `workboard_mark_ran` writes the same marks).
 - `fallbackCategory`: everything else.
 - `openFirst` (*optional*): category ids, in order; the **Files** tab of the item detail opens the newest file of the first one the item has (else its first text file).
+- `exampleKind` (*optional*): the kind the agent guide uses in its example file name
+  (`DIAG_WI<number>_<what it checks>.sql`); it must be listed in `kinds`. Default: the first kind.
 
 Agents are told about these prefixes in their guide, so the files they create land in the right category.
 

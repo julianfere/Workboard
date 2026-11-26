@@ -118,16 +118,27 @@ impl Settings {
         Ok(())
     }
 
-    /// Nombre para mostrar: el alias o el nombre de la carpeta.
+    /// Nombre para mostrar: el alias o, si no hay, el de la carpeta; una carpeta de trabajos tipo `_work`
+    /// (nombre que empieza con `_` o `.`) toma el de la carpeta que la contiene
+    /// (`…/ContractHub/_work` → `ContractHub`), como la v1.
     pub fn display_name(&self, path: &str) -> String {
-        self.alias_of(path).map_or_else(
-            || {
-                Path::new(path)
-                    .file_name()
-                    .map_or_else(|| path.to_string(), |n| n.to_string_lossy().into_owned())
-            },
-            String::from,
-        )
+        self.alias_of(path).map_or_else(|| folder_display_name(path), String::from)
+    }
+}
+
+/// Prefijos de una carpeta de trabajos "interna" de un proyecto (`_work`, `.work`).
+const INNER_ROOT_PREFIXES: [char; 2] = ['_', '.'];
+
+/// Nombre de una carpeta de trabajos sin alias (ver `Settings::display_name`).
+pub fn folder_display_name(path: &str) -> String {
+    let p = Path::new(path);
+    let Some(name) = p.file_name().map(|n| n.to_string_lossy().into_owned()) else {
+        return path.to_string();
+    };
+    let parent = p.parent().and_then(Path::file_name).map(|n| n.to_string_lossy().into_owned());
+    match parent {
+        Some(parent) if name.starts_with(INNER_ROOT_PREFIXES) && !parent.is_empty() => parent,
+        _ => name,
     }
 }
 
@@ -206,9 +217,25 @@ mod tests {
     }
 
     #[test]
+    fn claude_plans_with_go_by_default() {
+        let s = Settings::default();
+        assert_eq!(s.agents.plan_prefix.get("claude").map(String::as_str), Some("/go "));
+        assert_eq!(s.agents.plan_prefix.len(), 1);
+        let s: Settings = serde_json::from_str(r#"{"agents": {"default": "copilot"}}"#).unwrap();
+        assert_eq!(s.agents.plan_prefix.get("claude").map(String::as_str), Some("/go "));
+        // Vaciado a propósito por el usuario: se respeta.
+        let s: Settings = serde_json::from_str(r#"{"agents": {"planPrefix": {}}}"#).unwrap();
+        assert!(s.agents.plan_prefix.is_empty());
+    }
+
+    #[test]
     fn aliases_and_display_names() {
         let mut s = Settings::default();
-        assert_eq!(s.display_name("C:/x/_work"), "_work");
+        // Una carpeta tipo `_work` toma el nombre del proyecto que la contiene (v1).
+        assert_eq!(s.display_name("C:/x/_work"), "x");
+        assert_eq!(s.display_name("C:/x/.work"), "x");
+        assert_eq!(s.display_name("C:/x/trabajos"), "trabajos");
+        assert_eq!(s.display_name("_work"), "_work");
         s.set_alias("C:/x/_work", "  Contratos   (back) ").unwrap();
         assert_eq!(s.alias_of("c:/X/_WORK"), Some("Contratos (back)"));
         assert_eq!(s.display_name("C:/x/_work"), "Contratos (back)");

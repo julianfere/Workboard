@@ -53,6 +53,10 @@ pub struct StateDef {
     pub id: String,
     pub category: StateCategory,
     pub labels: Labels,
+    /// Escalón de avance (métricas de sesión y avanza/retrocede del sync). Estados con el mismo valor
+    /// empatan: pasar de uno a otro no es avance ni retroceso. Sin valor: su posición en el flujo.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub progress: Option<u32>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -242,6 +246,10 @@ pub struct FileRules {
     /// tenga). Sin ninguna, el primer archivo de texto.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub open_first: Vec<String>,
+    /// Tipo que usa la guía del agente en el ejemplo de nombre de archivo (`DIAG_WI<número>_….sql`).
+    /// Sin valor: el primero de `kinds`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub example_kind: Option<String>,
 }
 
 /// Reglas del panel Git (nada de nombres de ramas ni de remotes en el código).
@@ -401,6 +409,9 @@ impl Workflow {
         if let Some(s) = self.alerts.stale_states.iter().find(|s| !self.states.iter().any(|d| &d.id == *s)) {
             return bad(format!("alerts.staleStates uses unknown state {s}"));
         }
+        if let Some(k) = self.files.example_kind.as_ref().filter(|k| !self.files.kinds.contains(k)) {
+            return bad(format!("files.exampleKind uses unknown kind {k}"));
+        }
         let git_id = Regex::new(&self.git.id_pattern)
             .map_err(|e| WorkflowError::Invalid(format!("{}: git.idPattern: {e}", self.id)))?;
         if !git_id.capture_names().any(|n| n == Some("id")) {
@@ -493,6 +504,22 @@ impl Workflow {
     /// Posición del estado en el flujo (para ordenar y detectar retrocesos).
     pub fn state_rank(&self, id: &str) -> Option<usize> {
         self.states.iter().position(|s| s.id == id)
+    }
+
+    /// Escalón de avance de un estado (`progress` del preset o su posición). Cancelados y desconocidos
+    /// quedan fuera de la escala: nunca avanzan ni retroceden.
+    pub fn progress(&self, id: &str) -> Option<i64> {
+        let i = self.state_rank(id)?;
+        let s = &self.states[i];
+        if matches!(s.category, StateCategory::Cancelled | StateCategory::Unknown) {
+            return None;
+        }
+        Some(s.progress.map_or(i as i64, i64::from))
+    }
+
+    /// Tipo de archivo del ejemplo de la guía del agente.
+    pub fn example_kind(&self) -> Option<&str> {
+        self.files.example_kind.as_deref().or_else(|| self.files.kinds.first().map(String::as_str))
     }
 
     pub fn is_closed(&self, id: &str) -> bool {
@@ -606,6 +633,12 @@ mod tests {
         assert!(broken(&|v| v["fields"]["notes"] = "Notes".into()).is_err());
         assert!(broken(&|v| v["fields"]["notes"] = v["fields"]["status"].clone()).is_err());
         assert!(broken(&|v| v["files"]["categories"][1]["kinds"] = serde_json::json!(["NOPE"])).is_err());
+        assert!(broken(&|v| v["files"]["exampleKind"] = serde_json::json!("NOPE")).is_err());
+        let classic = Workflow::preset("classic-es").unwrap();
+        assert_eq!(classic.progress("diag"), classic.progress("en-curso"));
+        assert_eq!(classic.progress("prod"), Some(5));
+        assert_eq!(classic.progress("descartado"), None);
+        assert_eq!(classic.example_kind(), Some("DIAG"));
         assert!(broken(&|v| v["extra"] = 1.into()).is_err(), "unknown fields are rejected");
         assert!(broken(&|v| v["mainPath"] = serde_json::json!(["nope"])).is_err());
         assert!(broken(&|v| v["files"]["openFirst"] = serde_json::json!(["nope"])).is_err());

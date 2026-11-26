@@ -21,7 +21,7 @@ esperada y lo explica.
 - **Efecto**: `'set' object is not subscriptable` en vez de correr la tool en la carpeta del primer WI de
   la sesión. Ver `mcp.json` → `session`, última llamada.
 - **Decisión**: corregido en el port (Fase 3). Sin `item`, `workboard_run_tool` usa el primer item de la
-  sesión; el test del MCP espera ese comportamiento en vez del error de la v1.
+  sesión en el orden del registro (no el primero alfabético); el test del MCP espera ese comportamiento en vez del error de la v1.
 
 ## 3. La URL web del remote solo se arma para Azure DevOps
 

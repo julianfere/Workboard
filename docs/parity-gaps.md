@@ -53,22 +53,22 @@ Referencias: `v1 app.js:N` = `_v1/ui/app.js`.
 
 ## US-03 Sesiones, MCP y métricas (backend)
 
-- [ ] **(alta)** Planear con Claude empieza con `/go ` como la v1 (`harness.py:31, 263`): default del agente Claude, no
+- [x] **(alta)** Planear con Claude empieza con `/go ` como la v1 (`harness.py:31, 263`): default del agente Claude, no
       vacío. Migración: ver US-11.
-- [ ] Métricas: contar «pedidos» también con el `st` de la v1 (`te-necesita`) para las sesiones migradas
+- [x] Métricas: contar «pedidos» también con el `st` de la v1 (`te-necesita`) para las sesiones migradas
       (`stats.rs:398`). Anotar `st` en todos los eventos como la v1 (`sessions.py:434`).
-- [ ] Avance/retrabajo en stats y «avanza/retrocede» del sync: diag y en-curso empatan como en la v1
+- [x] Avance/retrabajo en stats y «avanza/retrocede» del sync: diag y en-curso empatan como en la v1
       (`sessionstats.py:28`, `STATE_RANK` app.js:1397). Rango por categoría del preset, no por posición.
-- [ ] Guía del agente (`mcp.guide`): recuperar lo que tenía la v1 (`harness.py:129-144`): tipos, qué muestra
+- [x] Guía del agente (`mcp.guide`): recuperar lo que tenía la v1 (`harness.py:129-144`): tipos, qué muestra
       `get_item` (prioridad, pactada, período, horas), un archivo por item cuando hay varios sin grupo, ejemplo
       `DIAG_…sql`, «la ruta está en el contexto de la sesión». Intro de las `instructions` (`mcp_server.py:178-190`).
-- [ ] `run_tool` sin `item`: el primero de la sesión, no el alfabético (`wb-mcp/src/lib.rs:646`). Evento con
+- [x] `run_tool` sin `item`: el primero de la sesión, no el alfabético (`wb-mcp/src/lib.rs:646`). Evento con
       `nombre args → código`; salida recortada con «…(recortado)».
-- [ ] Contexto: listar solo tools vigentes; línea aparte «README del grupo: …» (`harness.py:164, 194`).
-- [ ] Nombre de un proyecto en una carpeta `_work`/tipo trabajos: el de la carpeta que la contiene o su alias, en
+- [x] Contexto: listar solo tools vigentes; línea aparte «README del grupo: …» (`harness.py:164, 194`).
+- [x] Nombre de un proyecto en una carpeta `_work`/tipo trabajos: el de la carpeta que la contiene o su alias, en
       recientes, título de ventana y sesiones de otros proyectos (v1 `app.py:66-73, 246`).
-- [ ] Comando propio vacío = borrar la config; etiqueta por defecto «Comando propio».
-- [ ] Promover tool: descripción opcional; reemplazar acepta otra ruta si la tool existe (v1 `app.py:623-630`).
+- [x] Comando propio vacío = borrar la config; etiqueta por defecto «Comando propio».
+- [x] Promover tool: descripción opcional; reemplazar acepta otra ruta si la tool existe (v1 `app.py:623-630`).
 
 ## US-04 Alertas y Hoy
 

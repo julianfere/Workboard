@@ -2,13 +2,13 @@
   "id": "classic-es",
   "name": { "en": "Classic (Spanish, Workboard v1)", "es": "Clásico (Workboard v1)" },
   "states": [
-    { "id": "pendiente", "category": "backlog", "labels": { "en": "Pending", "es": "Pendiente" } },
-    { "id": "plan", "category": "planned", "labels": { "en": "Plan", "es": "Plan" } },
-    { "id": "en-curso", "category": "active", "labels": { "en": "In progress", "es": "En curso" } },
-    { "id": "diag", "category": "active", "labels": { "en": "Diagnosis", "es": "Diagnóstico" } },
-    { "id": "codeado", "category": "review", "labels": { "en": "Coded", "es": "Codeado" } },
-    { "id": "qa", "category": "review", "labels": { "en": "In QA", "es": "En QA" } },
-    { "id": "prod", "category": "done", "labels": { "en": "In PROD", "es": "En PROD" } },
+    { "id": "pendiente", "category": "backlog", "progress": 0, "labels": { "en": "Pending", "es": "Pendiente" } },
+    { "id": "plan", "category": "planned", "progress": 1, "labels": { "en": "Plan", "es": "Plan" } },
+    { "id": "en-curso", "category": "active", "progress": 2, "labels": { "en": "In progress", "es": "En curso" } },
+    { "id": "diag", "category": "active", "progress": 2, "labels": { "en": "Diagnosis", "es": "Diagnóstico" } },
+    { "id": "codeado", "category": "review", "progress": 3, "labels": { "en": "Coded", "es": "Codeado" } },
+    { "id": "qa", "category": "review", "progress": 4, "labels": { "en": "In QA", "es": "En QA" } },
+    { "id": "prod", "category": "done", "progress": 5, "labels": { "en": "In PROD", "es": "En PROD" } },
     { "id": "descartado", "category": "cancelled", "labels": { "en": "Discarded", "es": "Descartado" } },
     { "id": "desconocido", "category": "unknown", "labels": { "en": "Unknown", "es": "Desconocido" } }
   ],
@@ -78,6 +78,7 @@
       { "id": "doc", "runnable": false, "kinds": ["PLAN", "HANDOFF", "QA"], "extensions": [".md", ".txt", ".docx", ".doc", ".pdf", ".drawio", ".dio", ".mmd", ".mermaid"], "labels": { "en": "Documentation", "es": "Documentación" } },
       { "id": "sql", "runnable": true, "extensions": [".sql"], "labels": { "en": "Other SQL", "es": "Otros SQL" } }
     ],
+    "exampleKind": "DIAG",
     "fallbackCategory": { "id": "otro", "runnable": false, "labels": { "en": "Other", "es": "Otros" } },
     "openFirst": ["migracion", "fix"]
   },

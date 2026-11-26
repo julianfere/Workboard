@@ -33,16 +33,28 @@ pub struct AgentDef {
     pub fork: bool,
     /// Lee el transcript para el peso de la sesión.
     pub transcript: bool,
+    /// Con qué empieza por defecto el pedido de una sesión de planificación (`/go ` es la skill de
+    /// planificación de Claude, como en la v1). El usuario lo cambia en Ajustes.
+    pub plan_prefix: &'static str,
 }
 
 pub const AGENTS: [AgentDef; 3] = [
-    AgentDef { id: CLAUDE, exe: "claude", hooks: true, fork: true, transcript: true },
-    AgentDef { id: COPILOT, exe: "copilot", hooks: false, fork: false, transcript: false },
-    AgentDef { id: CUSTOM, exe: "", hooks: false, fork: false, transcript: false },
+    AgentDef { id: CLAUDE, exe: "claude", hooks: true, fork: true, transcript: true, plan_prefix: "/go " },
+    AgentDef { id: COPILOT, exe: "copilot", hooks: false, fork: false, transcript: false, plan_prefix: "" },
+    AgentDef { id: CUSTOM, exe: "", hooks: false, fork: false, transcript: false, plan_prefix: "" },
 ];
 
 pub fn agent(id: &str) -> Option<&'static AgentDef> {
     AGENTS.iter().find(|a| a.id == id)
+}
+
+/// Prefijos de planificación por defecto (los agentes que tienen uno).
+pub fn default_plan_prefixes() -> BTreeMap<String, String> {
+    AGENTS
+        .iter()
+        .filter(|a| !a.plan_prefix.is_empty())
+        .map(|a| (a.id.to_string(), a.plan_prefix.to_string()))
+        .collect()
 }
 
 /// Comando propio (`settings.json` → `agents.custom`).
@@ -68,7 +80,7 @@ impl CustomAgent {
 #[serde(rename_all = "camelCase")]
 pub struct Available {
     pub id: &'static str,
-    /// Solo el comando propio (los demás se traducen en la UI).
+    /// Solo el comando propio con etiqueta propia (los demás, y el propio sin etiqueta, se traducen en la UI).
     #[serde(skip_serializing_if = "String::is_empty")]
     pub label: String,
     pub found: bool,
@@ -160,11 +172,9 @@ pub fn available(custom: &CustomAgent, env: &BTreeMap<String, String>) -> Vec<Av
         .iter()
         .filter(|a| a.id != CUSTOM || custom.is_set())
         .map(|a| {
+            // Sin etiqueta, la UI muestra la del agente («Comando propio»).
             let (label, cmd) = if a.id == CUSTOM {
-                (
-                    if custom.label.is_empty() { custom.command.clone() } else { custom.label.clone() },
-                    custom.command.as_str(),
-                )
+                (custom.label.clone(), custom.command.as_str())
             } else {
                 (String::new(), a.exe)
             };
