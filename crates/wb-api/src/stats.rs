@@ -47,8 +47,11 @@ impl Api {
             "tool_remove" => a.str("name").and_then(|n| to_json(tools::remove(&self.config_dir, n)?)),
             "reflect_items" => self.reflect_items(a),
             "apply_learnings" => self.apply_learnings(a),
-            "save_export" => a.str("name").and_then(|n| self.save_export(n, a.str("text")?)),
-            "reveal_export" => a.str("path").and_then(reveal_export),
+            "save_export" => a.str("name").and_then(|n| match a.opt_str("path") {
+                Some(p) => self.save_export_to(n, a.str("text")?, p),
+                None => self.save_export(n, a.str("text")?),
+            }),
+            "reveal_export" => a.str("path").and_then(|p| self.reveal_export(p)),
             _ => return None,
         };
         Some(out)
@@ -209,24 +212,94 @@ impl Api {
         std::fs::write(&path, data).map_err(wb_core::error::CoreError::from)?;
         Ok(json!(path.display().to_string()))
     }
-}
 
-/// Muestra en el explorador un archivo exportado (solo de la carpeta de descargas).
-fn reveal_export(path: &str) -> ApiResult<Json> {
-    let p = PathBuf::from(path);
-    let inside = p.parent().is_some_and(|d| {
-        path_key(&d.display().to_string()) == path_key(&wb_platform::downloads_dir().display().to_string())
-    });
-    if !inside {
-        return Err(ApiError::new("error.badArgument", &[("name", "path")]));
+    /// «Guardar como»: el texto va a la ruta que eligió el usuario en el diálogo nativo (absoluta, con la
+    /// extensión del nombre propuesto y fuera de la carpeta de trabajos, donde la app no escribe archivos).
+    fn save_export_to(&self, name: &str, text: &str, path: &str) -> ApiResult<Json> {
+        let bad = || ApiError::new("error.badArgument", &[("name", "path")]);
+        let p = PathBuf::from(path);
+        let ext = |x: &Path| x.extension().map(|e| e.to_string_lossy().to_lowercase());
+        let want = ext(Path::new(&safe_file_name(name)));
+        if !p.is_absolute() || want.is_none() || ext(&p) != want || p.is_dir() {
+            return Err(bad());
+        }
+        let parent = p.parent().filter(|d| d.is_dir()).ok_or_else(bad)?;
+        let parent = dunce::canonicalize(parent).map_err(wb_core::error::CoreError::from)?;
+        if let Some(root) = self.settings().root
+            && let Ok(root) = dunce::canonicalize(&root)
+            && parent.starts_with(&root)
+        {
+            return Err(ApiError::new("export.insideRoot", &[]));
+        }
+        let p = parent.join(p.file_name().ok_or_else(bad)?);
+        let mut data = "\u{feff}".as_bytes().to_vec();
+        data.extend_from_slice(text.as_bytes());
+        std::fs::write(&p, data).map_err(wb_core::error::CoreError::from)?;
+        self.exports.lock().expect("exports lock").push(p.clone());
+        Ok(json!(p.display().to_string()))
     }
-    wb_platform::reveal_path(&p).map_err(wb_core::error::CoreError::from)?;
-    Ok(Json::Null)
+
+    /// Muestra en el explorador un archivo exportado: de la carpeta de descargas o guardado con «Guardar como».
+    fn reveal_export(&self, path: &str) -> ApiResult<Json> {
+        let p = PathBuf::from(path);
+        let in_downloads = p.parent().is_some_and(|d| {
+            path_key(&d.display().to_string())
+                == path_key(&wb_platform::downloads_dir().display().to_string())
+        });
+        let saved = self
+            .exports
+            .lock()
+            .expect("exports lock")
+            .iter()
+            .any(|x| path_key(&x.display().to_string()) == path_key(path));
+        if !(in_downloads || saved) {
+            return Err(ApiError::new("error.badArgument", &[("name", "path")]));
+        }
+        wb_platform::reveal_path(&p).map_err(wb_core::error::CoreError::from)?;
+        Ok(Json::Null)
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn save_as_writes_with_bom_outside_the_root_only() {
+        let base = std::env::temp_dir().join(format!("wb-api-saveas-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&base);
+        let root = base.join("work");
+        std::fs::create_dir_all(root.join("wi1-a")).unwrap();
+        std::fs::write(root.join("wi1-a/README.md"), "# A\n").unwrap();
+        std::fs::create_dir_all(base.join("out")).unwrap();
+        let api = Api::new(base.join("cfg"));
+        api.dispatch("open_root", &json!({"path": root})).unwrap();
+        let target = base.join("out").join("horas.csv");
+        let saved = api
+            .dispatch("save_export", &json!({"name": "horas.csv", "text": "a;b", "path": target}))
+            .unwrap();
+        assert_eq!(std::fs::read(&target).unwrap(), "\u{feff}a;b".as_bytes());
+        assert!(saved.as_str().unwrap().ends_with("horas.csv"));
+        // Queda como exportado (se puede mostrar en el explorador); otra ruta no.
+        assert!(api.exports.lock().unwrap().iter().any(|p| p.ends_with("horas.csv")));
+        let err =
+            api.dispatch("reveal_export", &json!({"path": base.join("cfg/settings.json")})).unwrap_err();
+        assert_eq!(err.code, "error.badArgument");
+        for (path, code) in [
+            (root.join("x.csv"), "export.insideRoot"),
+            (root.join("wi1-a").join("x.csv"), "export.insideRoot"),
+            (base.join("out").join("x.exe"), "error.badArgument"),
+            (base.join("missing").join("x.csv"), "error.badArgument"),
+            (PathBuf::from("rel.csv"), "error.badArgument"),
+        ] {
+            let err = api
+                .dispatch("save_export", &json!({"name": "h.csv", "text": "x", "path": path}))
+                .unwrap_err();
+            assert_eq!(err.code, code, "{}", path.display());
+        }
+        assert!(!root.join("x.csv").exists());
+        let _ = std::fs::remove_dir_all(&base);
+    }
 
     #[test]
     fn export_names_are_safe() {

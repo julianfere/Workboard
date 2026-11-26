@@ -1,5 +1,6 @@
 // Paleta `Ctrl+K`: busca trabajos, tareas, archivos y comandos; con un trabajo arriba, ofrece sus acciones.
-// `>` al principio = solo comandos. ↑↓ para moverse, Enter para ejecutar, Esc para cerrar (como la v1).
+// `>` al principio = solo comandos. ↑↓ para moverse (dan la vuelta), Enter para ejecutar, Esc o `Ctrl+K` para cerrar
+// (como la v1).
 
 import { api } from "./api";
 import { hoursHidden, toggleDiscreet } from "./discreet";
@@ -12,11 +13,11 @@ import { pluginCommands } from "./plugins";
 import { fmtDay } from "./planning";
 import { openProjectMenu } from "./projects";
 import { newSessionModal, openSession, sessionsOf } from "./sessions";
-import { S, effectiveStatus, isClosed, metaText, stateDef, stateLabel, titleOf, wf } from "./state";
+import { S, effectiveStatus, isClosed, itemByName, metaText, stateDef, stateLabel, titleOf, wf } from "./state";
 import { toggleTerminal } from "./terminal";
 import type { FileEntry, Item } from "./types";
 import { selectFile } from "./views/detail-files";
-import { matchesText } from "./views/grid";
+import { G, matchesText } from "./views/grid";
 import { statusChip } from "./views/items";
 import { trackerConnected } from "./views/tracker";
 
@@ -47,7 +48,7 @@ function commands(): Entry[] {
   );
   out.push({ icon: "settings", text: t("nav.settings"), hint: go, run: () => goView("settings") });
   out.push({ icon: "plus", text: t("items.new"), hint: "", run: () => runAction("new-item") });
-  out.push({ icon: "play", text: t("palette.cmd.newSession"), hint: "", run: () => void newSessionModal(S.detail ? [S.detail] : []) });
+  out.push({ icon: "play", text: t("palette.cmd.newSession"), hint: "", run: () => void newSessionModal(sessionTargets()) });
   if (trackerConnected()) out.push({ icon: "cloud", text: t("palette.cmd.sync"), hint: "", run: () => runAction("trk-sync") });
   out.push({ icon: "trash", text: t("palette.cmd.deleted"), hint: "", run: () => runAction("show-deleted") });
   out.push({ icon: "download", text: t("palette.cmd.export"), hint: "", run: () => runAction("grid-export") });
@@ -59,6 +60,12 @@ function commands(): Entry[] {
   out.push({ icon: "folder", text: t("projects.openFolder"), hint: "", run: () => openProjectMenu() });
   out.push(...pluginCommands());
   return out;
+}
+
+/** «Nueva sesión»: el item abierto o, si no hay, los marcados en la grilla (como la v1). */
+function sessionTargets(): string[] {
+  if (S.detail) return [S.detail];
+  return [...G.selected].filter((n) => itemByName(n));
 }
 
 async function setTheme(theme: "light" | "dark"): Promise<void> {
@@ -187,8 +194,14 @@ function sections(q: string): Section[] {
   return out;
 }
 
+export const paletteOpen = () => !!document.querySelector(".palette");
+
+export function closePalette(): void {
+  document.querySelector(".palette")?.closest(".modal-back")?.remove();
+}
+
 export function openPalette(): void {
-  if (document.querySelector(".palette")) return;
+  if (paletteOpen()) return;
   const back = document.createElement("div");
   back.className = "modal-back";
   back.innerHTML = `<div class="modal palette" role="dialog" aria-modal="true" aria-label="${esc(t("palette.open"))}">
@@ -226,8 +239,12 @@ export function openPalette(): void {
     draw();
   };
   input.onkeydown = (e) => {
-    if (e.key === "ArrowDown") { sel = Math.min(sel + 1, flat.length - 1); draw(); e.preventDefault(); }
-    else if (e.key === "ArrowUp") { sel = Math.max(sel - 1, 0); draw(); e.preventDefault(); }
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      const n = Math.max(flat.length, 1);
+      sel = (sel + (e.key === "ArrowDown" ? 1 : -1) + n) % n;
+      draw();
+      e.preventDefault();
+    }
     else if (e.key === "Enter") { pick(sel); e.preventDefault(); }
     else if (e.key === "Escape") { close(); e.stopPropagation(); }
   };

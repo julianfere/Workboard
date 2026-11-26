@@ -1494,5 +1494,12 @@
   "viewer.drawio.render": "No se pudo dibujar la página",
   "viewer.diagram.empty": "La página está vacía",
   "viewer.mermaid.error": "Mermaid: {msg}",
-  "settings.shortcuts": "Atajos: Ctrl+K buscar o hacer · Ctrl+J terminal · / buscar en la lista · 1…6 vistas · Ctrl+S guardar · Esc cerrar · F5 releer · Supr eliminar la selección · Ctrl+A marcar todo · Alt+1…9 vistas guardadas · Ctrl+Shift+H modo discreto"
+  "settings.shortcuts": "Atajos: Ctrl+K buscar o hacer · Ctrl+J terminal · / buscar en la lista · 1…6 vistas · Ctrl+S guardar · Esc cerrar · F5 releer · Supr eliminar la selección · Ctrl+A marcar todo · Alt+1…9 vistas guardadas · Ctrl+Shift+H modo discreto",
+  "prefs.saveFailed": "No se pudo guardar la preferencia: {message}",
+  "hours.groupItems": "{n} WI",
+  "hours.sessionsHint": "Horas por sesión y por período",
+  "hours.csv.due": "Fecha pactada",
+  "hours.csv.source": "Origen",
+  "settings.sections": "Secciones de ajustes",
+  "export.insideRoot": "Lo exportado no se puede guardar dentro de la carpeta de trabajos: elegí otra carpeta"
 }

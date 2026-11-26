@@ -163,7 +163,8 @@ export const api = {
   toolRemove: (name: string) => call<null>("tool_remove", { name }),
   reflectItems: (names: string[], cols: number, rows: number) => call<{ session: Session; evidence: string }>("reflect_items", { names, cols, rows }),
   applyLearnings: (id: string, which: string, cols: number, rows: number) => call<{ session: Session }>("apply_learnings", { id, which, cols, rows }),
-  saveExport: (name: string, text: string) => call<string>("save_export", { name, text }),
+  /** Sin `path`: a Descargas (navegador); con `path`: la ruta elegida en «Guardar como» (app). */
+  saveExport: (name: string, text: string, path?: string) => call<string>("save_export", { name, text, ...(path ? { path } : {}) }),
   revealExport: (path: string) => call<null>("reveal_export", { path }),
 };
 
@@ -173,6 +174,17 @@ export async function pickFolder(): Promise<string | null> {
   const { open } = await import("@tauri-apps/plugin-dialog");
   const res = await open({ directory: true, multiple: false });
   return typeof res === "string" ? res : null;
+}
+
+/** «Guardar como» nativo para exportar (empieza en Descargas). `null` = se canceló; en el navegador no hay
+ *  diálogo (`undefined`: se guarda en Descargas, como la v1 sin ventana). */
+export async function pickSavePath(name: string): Promise<string | null | undefined> {
+  if (!inTauri) return undefined;
+  const [{ save }, { downloadDir, join }] = await Promise.all([import("@tauri-apps/plugin-dialog"), import("@tauri-apps/api/path")]);
+  const ext = name.includes(".") ? name.slice(name.lastIndexOf(".") + 1) : "";
+  const defaultPath = await downloadDir().then((d) => join(d, name)).catch(() => name);
+  const res = await save({ defaultPath, ...(ext ? { filters: [{ name: ext.toUpperCase(), extensions: [ext] }] } : {}) });
+  return res ?? null;
 }
 
 // ---------- trackers (Azure DevOps): comandos `tracker_*` ----------

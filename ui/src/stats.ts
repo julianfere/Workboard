@@ -1,7 +1,7 @@
 // Datos y helpers que comparten las vistas Horas, Métricas y Tools: el tiempo trabajado y las métricas de
 // las sesiones (se calculan en el backend a pedido), períodos, formato y exportar a CSV.
 
-import { api } from "./api";
+import { api, pickSavePath } from "./api";
 import { render } from "./app";
 import { todayIso, toast } from "./dom";
 import { errorText, lang, t } from "./i18n";
@@ -181,9 +181,12 @@ export function toCsv(rows: (string | number | null | undefined)[][]): string {
 /** Número para el CSV, con el separador decimal del idioma. */
 export const csvNum = (n: number | null | undefined) => (n === null || n === undefined ? "" : (Math.round(n * 100) / 100).toLocaleString(lang(), { useGrouping: false }));
 
+/** Exportar con «Guardar como» en la app (en el navegador, a Descargas). Cancelar no hace nada. */
 export async function exportCsv(name: string, csv: string): Promise<void> {
   try {
-    const path = await api.saveExport(name, csv);
+    const target = await pickSavePath(name);
+    if (target === null) return;
+    const path = await api.saveExport(name, csv, target);
     toast(t("metrics.exported", { path }), { label: t("metrics.reveal"), run: () => void api.revealExport(path) });
   } catch (err) {
     toast(errorText(err), undefined, "error");

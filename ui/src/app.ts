@@ -5,6 +5,7 @@ import { api, inTauri } from "./api";
 import { $, esc, toast } from "./dom";
 import { errorText, setLang, t } from "./i18n";
 import { ico } from "./icons";
+import { setPref } from "./prefs";
 import { folderName, S, type ViewId } from "./state";
 import type { Theme } from "./types";
 
@@ -175,6 +176,8 @@ export function goView(view: ViewId): void {
 function showView(view: ViewId): void {
   // En modo discreto (clase `discreet` en `<html>`, ver `discreet.ts`) la vista Horas no está.
   S.view = view === "hours" && document.documentElement.classList.contains("discreet") ? "today" : view;
+  // Se abre en la última vista usada (pref `view`, como la v1).
+  setPref("view", S.view);
   S.detail = null;
   S.detailData = null;
   render();

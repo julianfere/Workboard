@@ -122,6 +122,24 @@ mod tests {
     }
 
     #[test]
+    fn marking_a_run_needs_an_existing_file_inside_the_root() {
+        let (api, root, base) = setup("ran-missing");
+        std::fs::write(base.join("outside.sql"), "x").unwrap();
+        for path in ["grp-pay/wi111111-a/NOPE.sql", "grp-pay/wi111111-a", "../outside.sql"] {
+            let err = api.dispatch("mark_ran", &json!({"path": path, "env": "dev", "on": true})).unwrap_err();
+            assert!(["core.ws.fileNotFound", "core.ws.outsideRoot"].contains(&err.code.as_str()), "{path}");
+        }
+        assert!(
+            !base.join("cfg/runs.json").exists()
+                || !std::fs::read_to_string(base.join("cfg/runs.json")).unwrap().contains("NOPE")
+        );
+        assert!(root.join("grp-pay/wi111111-a/FIX_a.sql").is_file());
+        api.dispatch("mark_ran", &json!({"path": "grp-pay/wi111111-a/FIX_a.sql", "env": "dev", "on": true}))
+            .unwrap();
+        let _ = std::fs::remove_dir_all(&base);
+    }
+
+    #[test]
     fn opening_a_missing_folder_in_vscode_fails() {
         let (api, _root, base) = setup("code");
         let err = api.dispatch("open_in_vscode", &json!({"path": "nope"})).unwrap_err();

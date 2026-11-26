@@ -25,6 +25,14 @@ export function focusSearch(): void {
   $<HTMLInputElement>(`#${ID}`)?.focus();
 }
 
+/** `Esc` con el foco en la búsqueda: la vacía y le saca el foco (como la v1). */
+export function clearSearch(input: HTMLInputElement): void {
+  input.blur();
+  if (!S.search) return;
+  S.search = "";
+  render();
+}
+
 onAction("search-clear", () => {
   S.search = "";
   render();

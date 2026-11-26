@@ -70,6 +70,14 @@ svg.chev { width: 14px; height: 14px; color: var(--nav-fg-2); }
 .page.wide { max-width: none; }
 .page h1 { font-size: 22px; line-height: 30px; margin: 0; font-weight: 600; }
 .page > h1 { margin-bottom: 18px; }
+/* Ajustes: navegación por secciones a la izquierda (como la v1). */
+.st-wrap { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; max-width: 1180px; }
+.st-nav { flex: 0 0 190px; display: flex; flex-direction: column; gap: 2px; position: sticky; top: 0; }
+.st-link { display: flex; align-items: center; height: 34px; padding: 0 12px; border: 0; border-radius: var(--r); background: none; color: var(--fg-2); font: inherit; font-weight: 500; text-align: left; cursor: pointer; }
+.st-link:hover { background: var(--hover); color: var(--fg); }
+.st-main { flex: 999 1 520px; min-width: 0; }
+.st-sec { scroll-margin-top: 16px; }
+@media (max-width: 760px) { .st-nav { position: static; flex-direction: row; flex-wrap: wrap; flex-basis: 100%; } }
 .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; margin-bottom: 16px; }
 .toolbar h1 { margin-right: 8px; }
 .spacer, .grow { flex: 1; min-width: 0; }

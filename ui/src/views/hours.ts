@@ -6,6 +6,8 @@ import { esc } from "../dom";
 import { t } from "../i18n";
 import { ico } from "../icons";
 import { S, effectiveStatus, isClosed, itemByName, stateLabel, titleOf, typeLabel } from "../state";
+import { dueOf, hoursOf, lateTag, periodRel, type Source } from "../planning";
+import { pref, setPref } from "../prefs";
 import {
   D,
   csvNum,
@@ -28,8 +30,44 @@ import type { Item } from "../types";
 import { agentLabel } from "../sessions";
 import { statusChip } from "./items";
 import { periodKey } from "./today";
+import { TR } from "./tracker";
 
-const V = { all: false, period: "", sort: "dev" as "dev" | "plan" | "inP" | "total" | "title" };
+type SortKey = "dev" | "plan" | "inP" | "total" | "title";
+const SORTS: SortKey[] = ["dev", "plan", "inP", "total", "title"];
+const V = { all: false, period: "", sort: "dev" as SortKey };
+
+/** Pref `hours` (como la v1): `{all, sort, period: {<raíz>: "AAAA-MM"}}`; el período es por carpeta de trabajos. */
+interface HoursPref {
+  all?: boolean;
+  sort?: string;
+  period?: Record<string, string>;
+}
+const PREF = "hours";
+
+function loadV(): void {
+  const p = pref<HoursPref>(PREF) ?? {};
+  V.all = p.all === true;
+  V.sort = SORTS.includes(p.sort as SortKey) ? (p.sort as SortKey) : "dev";
+  const k = p.period?.[S.root];
+  V.period = typeof k === "string" && /^\d{4}-\d{2}$/.test(k) ? k : curPeriod();
+}
+
+function saveV(): void {
+  const p = pref<HoursPref>(PREF) ?? {};
+  setPref(PREF, { all: V.all, sort: V.sort, period: { ...(p.period ?? {}), [S.root]: V.period } });
+}
+
+/** Marca de origen de las horas pactadas: local (README), el tracker o el grupo (como la v1). */
+function srcLabel(src: Source): string {
+  if (src === "local") return t("grid.local");
+  if (src === "tracker") return TR.cfg?.source || t("tracker.kind");
+  if (src === "group") return t("hours.group");
+  return "";
+}
+function srcTag(src: Source): string {
+  if (!src) return "";
+  return `<span class="src-tag${src === "local" ? " local" : ""}" title="${esc(t(`grid.hours.src.${src}`))}">${esc(srcLabel(src))}</span>`;
+}
 
 interface Row {
   it: Item;
@@ -69,7 +107,7 @@ function table(list: Row[], k: string | null, withPeriod: boolean): string {
     title: (r) => titleOf(r.it).toLowerCase(),
   };
   const sorted = [...list].sort((a, b) => (key[V.sort](a) > key[V.sort](b) ? 1 : key[V.sort](a) < key[V.sort](b) ? -1 : 0));
-  const th = (id: typeof V.sort, label: string, cls = "") =>
+  const th = (id: SortKey, label: string, cls = "") =>
     `<th class="${cls}"><button class="th" data-action="hours-sort" data-key="${id}">${esc(label)}${V.sort === id ? ico("chevronDown") : ""}</button></th>`;
   const tot = sorted.reduce((a, r) => ({ plan: a.plan + (r.plan ?? 0), inP: a.inP + r.inP, total: a.total + r.total }), { plan: 0, inP: 0, total: 0 });
   const body = sorted
@@ -77,12 +115,14 @@ function table(list: Row[], k: string | null, withPeriod: boolean): string {
       const i = r.it;
       const per = itemPeriod(i);
       const ns = sessionsWithTime(i).length;
-      return `<tr class="row" data-action="hours-item" data-name="${esc(i.name)}"><td>${statusChip(effectiveStatus(i))}</td>
-        <td class="muted">${i.kind === "group" ? ico("layers") : esc(i.ids.join(", ") || "—")}</td>
-        <td class="h-title">${esc(titleOf(i))}</td>
+      const id = i.kind === "group" ? `<span class="chip">${ico("layers")}${esc(t("hours.groupItems", { n: i.members.length }))}</span>` : esc(i.ids.join(", ") || "—");
+      return `<tr class="row" data-action="hours-open" data-name="${esc(i.name)}"><td>${statusChip(effectiveStatus(i))}</td>
+        <td class="muted">${id}</td>
+        <td class="h-title" title="${esc(titleOf(i))}">${esc(titleOf(i))}${lateTag(i)}</td>
         ${withPeriod ? `<td class="muted">${per ? esc(periodRange(per)) : esc(t("hours.unplanned"))}</td>` : ""}
-        <td class="num">${fmtH(r.plan)}</td>${k !== null ? `<td class="num">${r.inP ? fmtH(r.inP) : "—"}</td>` : ""}
-        <td class="num">${r.total ? fmtH(r.total) : "—"}</td><td>${bar(r.total, r.plan)}</td><td class="num">${ns || "—"}</td></tr>`;
+        <td class="num">${fmtH(r.plan)}${r.plan !== null ? srcTag(hoursOf(i).src) : ""}</td>${k !== null ? `<td class="num">${r.inP ? fmtH(r.inP) : "—"}</td>` : ""}
+        <td class="num">${r.total ? fmtH(r.total) : "—"}</td><td>${bar(r.total, r.plan)}</td>
+        <td class="num">${ns ? `<button class="link" data-action="hours-item" data-name="${esc(i.name)}" title="${esc(t("hours.sessionsHint"))}">${ns}</button>` : "—"}</td></tr>`;
     })
     .join("");
   return `<table class="grid h-table"><thead><tr><th>${esc(t("hours.col.status"))}</th><th>${esc(t("hours.col.id"))}</th>${th("title", t("hours.col.title"))}
@@ -95,12 +135,12 @@ function table(list: Row[], k: string | null, withPeriod: boolean): string {
 
 function renderHours(): string {
   const time = timeReady();
-  if (!V.period) V.period = curPeriod();
+  loadV();
   const k = V.all ? null : V.period;
   const head = `<div class="toolbar"><h1>${esc(t("nav.hours"))}</h1>
     <div class="seg"><button class="${V.all ? "" : "on"}" data-action="hours-mode" data-all="0">${esc(t("hours.byPeriod"))}</button><button class="${V.all ? "on" : ""}" data-action="hours-mode" data-all="1">${esc(t("hours.all"))}</button></div>
     ${V.all ? "" : `<span class="h-nav"><button class="icon-btn" data-action="hours-period" data-step="-1" title="${esc(t("hours.prev"))}" aria-label="${esc(t("hours.prev"))}">${ico("chevronLeft")}</button>
-      <b>${esc(periodRange(V.period))}</b>
+      <b>${esc(periodRange(V.period))} <span class="muted">· ${esc(periodRel(V.period))}</span></b>
       <button class="icon-btn" data-action="hours-period" data-step="1" title="${esc(t("hours.next"))}" aria-label="${esc(t("hours.next"))}">${ico("chevronRight")}</button>
       ${V.period !== curPeriod() ? `<button class="btn" data-action="hours-period" data-step="0">${esc(t("hours.current"))}</button>` : ""}</span>`}
     <span class="spacer"></span><span class="muted">${esc(D.timeLoading ? t("hours.loading") : t("hours.workedIs"))}</span>
@@ -134,28 +174,33 @@ registerView("hours", renderHours);
 
 onAction("hours-mode", (el) => {
   V.all = el.dataset.all === "1";
+  saveV();
   render();
 });
 onAction("hours-period", (el) => {
   const step = Number(el.dataset.step);
   V.period = step === 0 ? curPeriod() : periodShift(V.period || curPeriod(), step);
+  saveV();
   render();
 });
 onAction("hours-sort", (el, ev) => {
   ev.stopPropagation();
-  V.sort = el.dataset.key as typeof V.sort;
+  V.sort = el.dataset.key as SortKey;
+  saveV();
   render();
 });
 onAction("hours-refresh", () => loadTime(true));
 onAction("hours-export", async () => {
-  const k = V.all ? null : V.period || curPeriod();
+  loadV();
+  const k = V.all ? null : V.period;
   const { planned, other } = rows(k);
   const out: (string | number | null)[][] = [
-    ["group", "folder", "ids", "type", "status", "title", "period", "planned", "inPeriod", "total", "progress"].map((c) => t(`hours.csv.${c}`)),
+    ["group", "folder", "ids", "type", "status", "title", "period", "due", "planned", "source", "inPeriod", "total", "progress"].map((c) => t(`hours.csv.${c}`)),
   ];
   for (const [g, r] of [...planned.map((r) => ["planned", r] as const), ...other.map((r) => ["other", r] as const)]) {
     const i = r.it;
     const per = itemPeriod(i);
+    const due = dueOf(i).date;
     out.push([
       t(g === "planned" ? "hours.csv.groupPlanned" : "hours.csv.other"),
       i.name,
@@ -164,7 +209,9 @@ onAction("hours-export", async () => {
       stateLabel(effectiveStatus(i)),
       titleOf(i),
       per ? periodRange(per) : "",
+      due,
       csvNum(r.plan),
+      r.plan !== null ? srcLabel(hoursOf(i).src) : "",
       k ? csvNum(r.inP) : "",
       csvNum(r.total),
       r.plan ? Math.round((r.total / r.plan) * 100) : "",
@@ -175,7 +222,11 @@ onAction("hours-export", async () => {
 
 // ---------- desglose de un item ----------
 
-onAction("hours-item", (el) => {
+// Clic en la fila: el detalle; en el número de sesiones: el desglose (como la v1).
+onAction("hours-open", (el) => openDetail(el.dataset.name!));
+
+onAction("hours-item", (el, ev) => {
+  ev.stopPropagation();
   const it = itemByName(el.dataset.name!);
   if (!it || !D.time) return;
   const list = sessionsWithTime(it);

@@ -6,10 +6,12 @@ import { applyTheme, goView, installEvents, NAV, onFsRefresh, refresh, refreshAl
 import { esc } from "./dom";
 import { errorText, setLang, t } from "./i18n";
 import { loadDiscreet, toggleDiscreet } from "./discreet";
-import { openPalette } from "./palette";
+import { closePalette, openPalette, paletteOpen } from "./palette";
+import { loadPrefs, pref } from "./prefs";
+import { clearSearch } from "./search";
 import "./projects";
 import { loadSessions, startSessionPolling, toggleDock } from "./sessions";
-import { S } from "./state";
+import { S, type ViewId } from "./state";
 import { installTerminalPanel, retheme } from "./terminal";
 import "./views/alerts";
 import "./views/detail";
@@ -39,7 +41,9 @@ document.addEventListener("keydown", (ev) => {
   const typing = target.matches("input, textarea, select");
   if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === "k") {
     ev.preventDefault();
-    openPalette();
+    // `Ctrl+K` también la cierra (como la v1).
+    if (paletteOpen()) closePalette();
+    else openPalette();
     return;
   }
   if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === "j") {
@@ -75,6 +79,14 @@ document.addEventListener("keydown", (ev) => {
     switchSavedView(Number(ev.code.slice(5)) - 1);
     return;
   }
+  // `Esc`, aun con el foco en un campo (como la v1): cierra el detalle; si no, limpia la selección de la grilla
+  // (fuera de un campo) o la búsqueda que tiene el foco.
+  if (ev.key === "Escape" && !ctrl && !ev.altKey) {
+    if (S.detail) void requestCloseDetail();
+    else if (inGrid && selectionSize() && !typing) clearSelection();
+    else if (target.id === "global-search") clearSearch(target as HTMLInputElement);
+    return;
+  }
   if (typing) return;
   if (ctrl && !ev.altKey && ev.key.toLowerCase() === "a" && inGrid) {
     ev.preventDefault();
@@ -87,9 +99,7 @@ document.addEventListener("keydown", (ev) => {
     void deleteSelection();
     return;
   }
-  if (ev.key === "Escape" && S.detail) void requestCloseDetail();
-  else if (ev.key === "Escape" && inGrid) clearSelection();
-  else if (ev.key === "/") {
+  if (ev.key === "/") {
     const search = document.querySelector<HTMLInputElement>("#global-search, #notes-search");
     if (search) {
       ev.preventDefault();
@@ -101,9 +111,18 @@ document.addEventListener("keydown", (ev) => {
   }
 });
 
+/** La última vista usada (pref `view`); por defecto Hoy, como la v1. Horas no, en modo discreto. */
+function startView(): ViewId {
+  const v = pref<string>("view");
+  const ok = v === "settings" || NAV.some((n) => n.id === v);
+  if (!ok || (v === "hours" && document.documentElement.classList.contains("discreet"))) return "today";
+  return v as ViewId;
+}
+
 async function boot(): Promise<void> {
   try {
-    [S.settings, S.presets, S.info, S.workflow] = await Promise.all([api.getSettings(), api.workflowPresets(), api.appInfo(), api.workflow(), loadPlugins(), loadDiscreet()]);
+    [S.settings, S.presets, S.info, S.workflow] = await Promise.all([api.getSettings(), api.workflowPresets(), api.appInfo(), api.workflow(), loadPlugins(), loadDiscreet(), loadPrefs()]);
+    S.view = startView();
     setLang(S.settings.lang);
     applyTheme(S.settings.theme);
     if (S.settings.root) {
