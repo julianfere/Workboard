@@ -90,19 +90,20 @@ Referencias: `v1 app.js:N` = `_v1/ui/app.js`.
 
 ## US-05 Grilla de Trabajos y búsqueda
 
-- [ ] Columna Git (✓ / ◐ / ● por ambiente, repos, ordenable; v1 app.js:398, 781-803).
-- [ ] Columnas Alertas (chips) y ReleaseManual (link al WI; columna aportada por el plugin o campo con link).
-- [ ] Columna Sesión con el punto de estado y el nombre (v1 `sessionCell`, app.js:396).
-- [ ] Título y tipo desde Azure cuando el README no los tiene (v1 `displayTitle` app.js:432, `tipoOf` app.js:112) en
-      grilla, detalle, pendientes y alertas; pista «(Azure: X)» en el select de tipo.
-- [ ] Columnas por defecto, vistas de fábrica («Mi vista», «Activos», «En QA», «Todo») y agrupación «Semana ·
+- [x] Columna Git (✓ / ◐ / ● por ambiente, repos, ordenable; v1 app.js:398, 781-803).
+- [x] Columnas Alertas (chips) y ReleaseManual (link al WI; columna aportada por el plugin o campo con link).
+- [x] Columna Sesión con el punto de estado y el nombre (v1 `sessionCell`, app.js:396).
+- [x] Título y tipo desde Azure cuando el README no los tiene (v1 `displayTitle` app.js:432, `tipoOf` app.js:112) en
+      grilla, detalle, pendientes y alertas; pista «(Azure: X)» en el select de tipo (la pista la pone US-08 con
+      `trackerTypeOf` de `state.ts`).
+- [x] Columnas por defecto, vistas de fábrica («Mi vista», «Activos», «En QA», «Todo») y agrupación «Semana ·
       actividad» como la v1 (app.js:415, 467-477).
-- [ ] Grupos abiertos al entrar: los dos primeros, recordar los abiertos, único grupo forzado (app.js:622-629).
-- [ ] Barra de colores por estado en el encabezado de grupo, franja de estado por fila, ícono del tipo en ID
+- [x] Grupos abiertos al entrar: los dos primeros, recordar los abiertos, único grupo forzado (app.js:622-629).
+- [x] Barra de colores por estado en el encabezado de grupo, franja de estado por fila, ícono del tipo en ID
       (app.js:392, 632, 699).
-- [ ] Búsqueda global (Alertas y Pendientes también; app.js:836, 846, 910) que incluye estado y título de Azure
+- [x] Búsqueda global (Alertas y Pendientes también; app.js:836, 846, 910) que incluye estado y título de Azure
       (app.js:333). «Limpiar búsqueda» cuando no hay resultados (app.js:605).
-- [ ] Botón «Releer (F5)»; Eliminados siempre visible (app.js:597-598).
+- [x] Botón «Releer (F5)»; Eliminados siempre visible (app.js:597-598).
 
 ## US-06 Menú contextual, lote y eliminados
 
