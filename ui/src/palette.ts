@@ -15,7 +15,7 @@ import { newSessionModal, openSession, sessionsOf } from "./sessions";
 import { S, effectiveStatus, isClosed, metaText, stateDef, stateLabel, titleOf, wf } from "./state";
 import { toggleTerminal } from "./terminal";
 import type { FileEntry, Item } from "./types";
-import { openFileViewer } from "./viewer";
+import { selectFile } from "./views/detail-files";
 import { matchesText } from "./views/grid";
 import { statusChip } from "./views/items";
 import { trackerConnected } from "./views/tracker";
@@ -137,11 +137,11 @@ async function setDue(it: Item): Promise<void> {
 
 /** Abre el detalle en la pestaña Archivos con ese archivo en el visor. */
 async function openFile(it: Item, file: FileEntry): Promise<void> {
+  selectFile(file.path);
   await openDetail(it.name);
   if (S.detail !== it.name) return;
   S.detailTab = "files";
   render();
-  openFileViewer(file);
 }
 
 function sections(q: string): Section[] {

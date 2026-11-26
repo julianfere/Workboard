@@ -1,15 +1,17 @@
 // Archivos del detalle: en un grupo también los de sus items (con la etiqueta del dueño), bloques por
 // categoría del flujo que se pliegan (se recuerda por categoría), marcas «nuevo» / «modificado» respecto de las
 // de ejecutado y los botones «corrido en <ambiente>» (en la lista, en «Scripts para correr» y en el visor).
+// La pestaña muestra la lista y el visor lado a lado (como la v1): abre el primer archivo de las categorías
+// `files.openFirst` del flujo (o el primero de texto) y el visor sobrevive a los re-render de la página.
 
 import { api } from "../api";
-import { loadDetail, onAction, render } from "../app";
+import { loadDetail, onAction, onAfterRender, render } from "../app";
 import { esc, fmtAgo, fmtDateTimeFull, fmtSize } from "../dom";
 import { label, t } from "../i18n";
 import { ico } from "../icons";
 import { S, itemByName, wf } from "../state";
 import type { FileCategory, FileEntry, Item } from "../types";
-import { openFileViewer } from "../viewer";
+import { inlineFileViewer, type InlineViewer, type RunToggles } from "../viewer";
 
 /** Los archivos que se ven en el detalle: los propios y, en un grupo, los de sus items. */
 export function allFiles(it: Item): FileEntry[] {
@@ -81,7 +83,7 @@ function fileRow(it: Item, f: FileEntry): string {
   const runnable = isRunnable(f);
   const rel = relPath(it, f);
   const dir = rel.split("/").slice(0, -1).join("/");
-  return `<li class="file ${runState(f)}"><span class="grow">${ownerChip(it, f)}<button class="link" data-action="view-file" data-path="${esc(f.path)}">${esc(f.name)}</button>
+  return `<li class="file ${runState(f)}${f.path === shownFile(it)?.path ? " sel" : ""}"><span class="grow">${ownerChip(it, f)}<button class="link" data-action="view-file" data-path="${esc(f.path)}">${esc(f.name)}</button>
       ${dir ? `<span class="muted">${esc(dir)}</span>` : ""}${stateBadge(f)}</span>
     <span class="envs">${runnable ? envToggles(f) : ""}</span><span class="muted size">${esc(fmtSize(f.size))}</span><span class="muted">${esc(fmtAgo(f.mtime))}</span>
     <button class="icon-btn" data-action="reveal" data-path="${esc(f.path)}" title="${esc(t("detail.reveal"))}">${ico("folder")}</button></li>`;
@@ -107,6 +109,66 @@ function setClosedCats(set: Set<string>): void {
   }
 }
 
+// ---------- archivo abierto en el visor ----------
+
+/** Archivo elegido (se mantiene al cambiar de item si existe en el otro; si no, el de siempre). */
+let picked: string | null = null;
+let viewer: InlineViewer | null = null;
+
+/** Elige el archivo que muestra la pestaña Archivos (paleta, «Scripts para correr»). */
+export function selectFile(path: string | null): void {
+  picked = path;
+}
+
+/** El archivo del visor: el elegido o el primero de `files.openFirst`, o el primero de texto, o el primero. */
+function shownFile(it: Item): FileEntry | null {
+  const files = allFiles(it);
+  const own = picked ? files.find((f) => f.path === picked) : undefined;
+  if (own) return own;
+  const newest = (list: FileEntry[]) => [...list].sort((a, b) => b.mtime - a.mtime)[0];
+  for (const cat of wf().files.openFirst ?? []) {
+    const f = newest(files.filter((x) => x.cat === cat));
+    if (f) return f;
+  }
+  const order = categories().map((c) => c.id);
+  const sorted = [...files].sort((a, b) => order.indexOf(a.cat) - order.indexOf(b.cat) || b.mtime - a.mtime);
+  return sorted.find((f) => f.text) ?? sorted[0] ?? null;
+}
+
+function runTogglesOf(f: FileEntry): RunToggles | undefined {
+  if (!isRunnable(f)) return undefined;
+  const name = S.detail!;
+  return {
+    envs: wf().environments.map((e) => ({ id: e.id, label: label(e.labels, e.id) })),
+    marks: { ...marksOf(f) },
+    toggle: async (env, on) => {
+      const marks = await api.markRan(f.path, env, on);
+      if (S.detail === name) await loadDetail(name);
+      return marks;
+    },
+  };
+}
+
+// Después de cada render: el visor vuelve a su lugar (o se arma, o se descarta si ya no se ve).
+onAfterRender(() => {
+  const slot = document.querySelector<HTMLElement>("#viewer-slot");
+  const path = slot?.dataset.path ?? "";
+  // Un archivo que cambió en disco (tamaño o fecha) se vuelve a leer.
+  const stamp = slot?.dataset.stamp ?? "";
+  if (viewer && (viewer.path !== path || viewer.el.dataset.stamp !== stamp)) {
+    viewer.dispose();
+    viewer = null;
+  }
+  if (!slot || !path || !S.detailData) return;
+  if (!viewer) {
+    const f = allFiles(S.detailData.item).find((x) => x.path === path);
+    if (!f) return;
+    viewer = inlineFileViewer(f, runTogglesOf(f));
+    viewer.el.dataset.stamp = stamp;
+  } else viewer.setMarks(S.detailData.runs[path] ?? {});
+  if (viewer.el.parentElement !== slot) slot.append(viewer.el);
+});
+
 export function filesTab(it: Item): string {
   const files = allFiles(it);
   const closed = closedCats();
@@ -120,7 +182,10 @@ export function filesTab(it: Item): string {
         <span class="muted">${of.length}</span>${newBadge(n)}</h2>${open ? `<ul class="files">${of.map((f) => fileRow(it, f)).join("")}</ul>` : ""}</section>`;
     })
     .join("");
-  return blocks || `<p class="empty">${esc(t("detail.noFiles"))}</p>`;
+  if (!blocks) return `<p class="empty">${esc(t("detail.noFiles"))}</p>`;
+  const f = shownFile(it);
+  return `<div class="files-split"><div class="file-list">${blocks}</div>
+    <div class="viewer-slot" id="viewer-slot" data-path="${esc(f?.path ?? "")}" data-stamp="${esc(f ? `${f.size}:${f.mtime}` : "")}"></div></div>`;
 }
 
 /** «Scripts para correr» del Resumen: los archivos de categorías que se corren, con sus marcas. */
@@ -158,23 +223,9 @@ onAction("toggle-ran", async (el) => {
   await loadDetail(S.detail!);
 });
 
+// Ver un archivo: lo muestra en la pestaña Archivos (desde «Scripts para correr» también).
 onAction("view-file", (el) => {
-  const it = S.detailData!.item;
-  const f = allFiles(it).find((x) => x.path === el.dataset.path);
-  if (!f) return;
-  const name = S.detail!;
-  openFileViewer(
-    f,
-    isRunnable(f)
-      ? {
-          envs: wf().environments.map((e) => ({ id: e.id, label: label(e.labels, e.id) })),
-          marks: { ...marksOf(f) },
-          toggle: async (env, on) => {
-            const marks = await api.markRan(f.path, env, on);
-            if (S.detail === name) await loadDetail(name);
-            return marks;
-          },
-        }
-      : undefined,
-  );
+  picked = el.dataset.path ?? null;
+  S.detailTab = "files";
+  render();
 });
