@@ -180,7 +180,6 @@
   "items.deleted": "Deleted",
   "items.id": "ID",
   "items.type": "Type",
-  "items.typeFromTracker": "No type ({source}: {type})",
   "items.title": "Title",
   "items.notes": "Summary",
   "items.tasks": "Tasks",

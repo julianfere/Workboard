@@ -180,7 +180,6 @@
   "items.deleted": "Eliminados",
   "items.id": "ID",
   "items.type": "Tipo",
-  "items.typeFromTracker": "Sin tipo ({source}: {type})",
   "items.title": "Título",
   "items.notes": "Resumen",
   "items.tasks": "Pendientes",

@@ -13,7 +13,7 @@ import { canReflect, reflectItems } from "../reflect";
 import { pluginItemCard } from "../plugins";
 import { canReview, openReview } from "../review";
 import { addToSessionModal, launched, loadSessions, newSessionModal, planItem, sessionById } from "../sessions";
-import { S, effectiveStatus, inSession, itemByName, metaList, metaText, stateDef, stateLabel, statusOf, titleOf, trackerTypeOf, typeLabel, typeOf, wf, type DetailTab } from "../state";
+import { S, effectiveStatus, inSession, itemByName, metaList, metaText, stateDef, stateLabel, statusOf, titleOf, wf, type DetailTab } from "../state";
 import { termSize } from "../terminal";
 import type { ApiError, Item, StateDef } from "../types";
 import { statusChip } from "./items";
@@ -317,7 +317,7 @@ function fieldsCard(it: Item): string {
     )
     .join("");
   return `<section class="card"><h2>${esc(t("detail.fields"))}</h2>
-    <label class="field">${esc(t("items.type"))}<select data-change="field" data-key="${esc(f.type)}"><option value="">${!it.type && trackerTypeOf(it) ? esc(t("items.typeFromTracker", { source: TR.cfg?.source ?? "", type: typeLabel(trackerTypeOf(it)) })) : ""}</option>${types}</select>${fieldError(f.type)}</label>
+    <label class="field">${esc(t("items.type"))}<select data-change="field" data-key="${esc(f.type)}"><option value=""></option>${types}</select>${fieldError(f.type)}</label>
     <div class="field">${esc(t("detail.environments"))}<div class="checks">${envBoxes}</div>${fieldError(f.environments)}</div>
     ${textField(f.branch, t("detail.branch"))}
     ${textField(f.title, t("items.title"), "text", it.title)}
@@ -469,7 +469,7 @@ function head(it: Item): string {
   const parent = it.group ? itemByName(it.group) : null;
   const status = statusOf(it);
   const next = isGroup(it) ? null : nextState(status);
-  const typeText = typeOf(it) ? typeLabel(typeOf(it)) : "";
+  const typeText = it.type ? label(wf().types.find((x) => x.id === it.type)?.labels ?? {}, it.type) : "";
   const meta = [
     isGroup(it) ? esc(t("detail.group.label", { n: it.members.length })) : typeText ? esc(typeText) : "",
     it.ids.length ? esc(it.ids.map((x) => `#${x}`).join(" ")) : "",
