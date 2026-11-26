@@ -52,6 +52,19 @@
   "inboxTitle": "Bandeja",
   "plan": { "heading": "Plan", "placeholder": "*(lo completa la sesión de planificación)*", "minChars": 40 },
   "sections": { "description": "Descripción", "criteria": "Criterios de aceptación" },
+  "newItem": {
+    "defaultType": "fix",
+    "folderTemplate": "{type}-{slug}",
+    "origin": "> {type} #{id}",
+    "originState": " · Azure: {state}",
+    "unknownType": "Work item",
+    "originNoId": "> Arreglo del proyecto (sin work item)"
+  },
+  "group": {
+    "origin": "> Grupo de WI{ids}. Cada WI tiene su carpeta (y su estado) adentro; acá va lo compartido entre ellos.",
+    "ids": ": {list}",
+    "deployHeading": "Cómo deployar"
+  },
   "files": {
     "kinds": ["ROLLBACK", "MIGRATION", "FIX", "SEED", "DIAG", "VERIF", "PLAN", "HANDOFF", "QA"],
     "categories": [

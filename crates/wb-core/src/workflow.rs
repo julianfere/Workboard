@@ -172,6 +172,38 @@ pub struct SectionTitles {
     pub criteria: String,
 }
 
+/// Cómo arranca el README de un item nuevo (además de las secciones de descripción, criterios, plan y
+/// tareas). Los textos van en el idioma del preset, como los títulos de sección. Un texto vacío no se
+/// escribe (presets anteriores a estos campos).
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default, deny_unknown_fields)]
+pub struct NewItemRules {
+    /// Tipo de un item sin id del tracker (el «arreglo» del proyecto).
+    pub default_type: String,
+    /// Carpeta de un item sin id: `{type}` y `{slug}` (sin plantilla, solo el slug).
+    pub folder_template: String,
+    /// Línea de origen con id: `{type}` (el del tracker, o `unknownType`) y `{id}`.
+    pub origin: String,
+    /// Se agrega a `origin` si se conoce el estado en el tracker: `{source}` y `{state}`.
+    pub origin_state: String,
+    /// Tipo para `origin` cuando el tracker no lo dio.
+    pub unknown_type: String,
+    /// Línea de origen sin id.
+    pub origin_no_id: String,
+}
+
+/// README de un grupo nuevo.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default, deny_unknown_fields)]
+pub struct GroupRules {
+    /// Línea de origen: `{ids}` es `ids` con la lista, o nada si los items no tienen id.
+    pub origin: String,
+    /// `{list}`: los ids de los items (`#1, #2`).
+    pub ids: String,
+    /// Sección para lo compartido al deployar (vacío: no se agrega).
+    pub deploy_heading: String,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct FileCategory {
@@ -248,6 +280,12 @@ pub struct Workflow {
     pub inbox_title: String,
     pub plan: PlanRules,
     pub sections: SectionTitles,
+    /// README de un item nuevo (línea de origen, tipo y carpeta sin id).
+    #[serde(default)]
+    pub new_item: NewItemRules,
+    /// README de un grupo nuevo.
+    #[serde(default)]
+    pub group: GroupRules,
     pub files: FileRules,
     /// Panel Git: cómo se reconocen los items en ramas y commits, y las ramas de cada ambiente.
     #[serde(default)]
@@ -315,6 +353,10 @@ impl Workflow {
             if let Some(k) = c.kinds.iter().find(|k| !self.files.kinds.contains(k)) {
                 return bad(format!("category {} uses unknown kind {k}", c.id));
             }
+        }
+        let t = &self.new_item.default_type;
+        if !t.is_empty() && !self.types.iter().any(|c| &c.id == t) {
+            return bad(format!("newItem.defaultType uses unknown type {t}"));
         }
         let git_id = Regex::new(&self.git.id_pattern)
             .map_err(|e| WorkflowError::Invalid(format!("{}: git.idPattern: {e}", self.id)))?;
